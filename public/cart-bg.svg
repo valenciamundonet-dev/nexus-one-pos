@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+  <defs>
+    <linearGradient id="cartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="wheelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#475569;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#334155;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#6366f1" flood-opacity="0.25"/>
+    </filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background circle glow -->
+  <circle cx="200" cy="140" r="110" fill="#6366f1" opacity="0.06"/>
+  <circle cx="200" cy="140" r="85" fill="#6366f1" opacity="0.08"/>
+  <circle cx="200" cy="140" r="60" fill="#6366f1" opacity="0.06"/>
+
+  <!-- Cart body -->
+  <g filter="url(#shadow)">
+    <!-- Main cart basket -->
+    <path d="M80 70 L110 70 L140 180 L310 180 L335 100 L130 100 Z" fill="url(#cartGrad)" stroke="#4f46e5" stroke-width="2" stroke-linejoin="round"/>
+    
+    <!-- Cart handle -->
+    <path d="M80 70 L60 40 L55 40" stroke="#4f46e5" stroke-width="6" stroke-linecap="round" fill="none"/>
+    
+    <!-- Cart rim highlight -->
+    <path d="M110 70 L130 100 L335 100" stroke="#818cf8" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    
+    <!-- Inner lines on basket -->
+    <line x1="155" y1="110" x2="150" y2="175" stroke="#818cf8" stroke-width="1.5" opacity="0.5"/>
+    <line x1="210" y1="110" x2="215" y2="175" stroke="#818cf8" stroke-width="1.5" opacity="0.5"/>
+    <line x1="265" y1="110" x2="275" y2="175" stroke="#818cf8" stroke-width="1.5" opacity="0.5"/>
+    
+    <!-- Horizontal lines on basket -->
+    <line x1="128" y1="135" x2="320" y2="135" stroke="#818cf8" stroke-width="1" opacity="0.3"/>
+  </g>
+
+  <!-- Wheels -->
+  <g filter="url(#shadow)">
+    <!-- Left wheel -->
+    <circle cx="170" cy="210" r="18" fill="url(#wheelGrad)" stroke="#1e293b" stroke-width="2"/>
+    <circle cx="170" cy="210" r="8" fill="#64748b"/>
+    <circle cx="170" cy="210" r="3" fill="#94a3b8"/>
+    
+    <!-- Right wheel -->
+    <circle cx="285" cy="210" r="18" fill="url(#wheelGrad)" stroke="#1e293b" stroke-width="2"/>
+    <circle cx="285" cy="210" r="8" fill="#64748b"/>
+    <circle cx="285" cy="210" r="3" fill="#94a3b8"/>
+  </g>
+
+  <!-- Floating items above cart -->
+  <!-- Product box 1 -->
+  <g opacity="0.85">
+    <rect x="160" y="15" width="35" height="30" rx="4" fill="#fbbf24" stroke="#f59e0b" stroke-width="1.5"/>
+    <rect x="167" y="22" width="21" height="3" rx="1.5" fill="#f59e0b" opacity="0.5"/>
+    <rect x="167" y="29" width="14" height="3" rx="1.5" fill="#f59e0b" opacity="0.5"/>
+  </g>
+  
+  <!-- Product box 2 -->
+  <g opacity="0.7">
+    <rect x="215" y="5" width="28" height="25" rx="4" fill="#34d399" stroke="#10b981" stroke-width="1.5"/>
+    <circle cx="229" cy="17" r="6" fill="#10b981" opacity="0.5"/>
+  </g>
+
+  <!-- Product box 3 -->
+  <g opacity="0.6">
+    <rect x="255" y="20" width="25" height="22" rx="4" fill="#f472b6" stroke="#ec4899" stroke-width="1.5"/>
+    <rect x="261" y="26" width="13" height="2" rx="1" fill="#ec4899" opacity="0.5"/>
+    <rect x="261" y="31" width="9" height="2" rx="1" fill="#ec4899" opacity="0.5"/>
+  </g>
+
+  <!-- Sparkle effects -->
+  <g filter="url(#glow)">
+    <circle cx="320" cy="50" r="3" fill="#fbbf24" opacity="0.8"/>
+    <circle cx="55" cy="90" r="2.5" fill="#818cf8" opacity="0.6"/>
+    <circle cx="350" cy="130" r="2" fill="#34d399" opacity="0.7"/>
+    <circle cx="45" cy="160" r="2" fill="#f472b6" opacity="0.6"/>
+  </g>
+</svg>

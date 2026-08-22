@@ -1,0 +1,69 @@
+# Nexus One POS — .gitignore
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+
+# Build
+dist/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Environment
+.env
+.env.local
+.env*.local
+
+# Database
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-wal
+prisma/backups/
+respaldos/
+
+# Logs
+dev.log
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project-specific (sandbox artifacts)
+skills/
+tool-results/
+upload/
+myecommerce-repo/
+download/
+*.bat
+*.vbs
+*.hta
+PROGRESS.hta
+
+# Cache
+cache/
+.cache/
+.eslintcache
+
+# Misc
+LEAME-PROYECTO.md
+LEEME.txt
+VERSIONES.md
+generar-licencia.js

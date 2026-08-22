@@ -1,0 +1,579 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Product {
+  id                String     @id @default(cuid())
+  name              String
+  description       String     @default("")
+  barcode           String     @default("")
+  secondaryBarcode  String     @default("")
+  price             Float
+  cost              Float      @default(0)
+  marginPercent     Float      @default(0)
+  taxType           String     @default("general")  // exento, reducido(8%), general(16%) SENIAT
+  stock             Float      @default(0)
+  minStock          Float      @default(5)
+  icon              String     @default("")
+  image             String     @default("")
+  wholesalePrice    Float      @default(0)
+  wholesaleCost     Float      @default(0)
+  wholesaleMarginPercent Float @default(0)
+  minWholesaleQty   Int        @default(0)
+  noStock           Boolean    @default(false)
+  vendePorPeso      Boolean    @default(false)
+  unidadPeso        String     @default("")
+  location          String     @default("")          // Ej: Pasillo 4, Anaquel C
+  expirationDate    DateTime?
+  lotNumber         String     @default("")
+  isCombo           Boolean    @default(false)
+  loyaltyPoints     Int        @default(0)
+  unitsPerBox       Int        @default(0)
+  boxPrice          Float      @default(0)
+  boxMarginPercent  Float      @default(0)
+  // Gran Mayor (GM) - precio basado en tasa Euro/USDT vs BCV
+  granMayorPrice    Float      @default(0)
+  isGranMayor       Boolean    @default(false)
+  categoryId        String?
+  category          Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brandId           String?
+  brand             Brand?     @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  active            Boolean    @default(true)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+  saleItems         SaleItem[]
+  devolutionItems   DevolutionItem[]
+  purchaseItems     PurchaseItem[]
+  comboItems          ComboItem[]
+  comboItemsRef       ComboItem[] @relation("ProductComboItems")
+  inventoryMovements  InventoryMovement[]
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  icon     String    @default("")
+  color    String    @default("#6366f1")
+  active   Boolean   @default(true)
+  products Product[]
+}
+
+model Brand {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  active   Boolean   @default(true)
+  products Product[]
+}
+
+model Client {
+  id             String   @id @default(cuid())
+  type           String   @default("natural")
+  docType        String   @default("V")
+  docNumber      String   @unique
+  fullName       String
+  firstName      String   @default("")
+  lastName       String   @default("")
+  businessName   String   @default("")
+  phone          String   @default("")
+  email          String   @default("")
+  address        String   @default("")
+  taxInfo        String   @default("")
+  isFinalClient  Boolean  @default(false)
+  creditBalance  Float    @default(0)
+  creditLimit    Float    @default(0)
+  isActive       Boolean  @default(true)
+  sales          Sale[]
+  creditPayments CreditPayment[]
+  heldSales      HeldSale[]
+  quotes         Quote[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([docNumber])
+  @@index([fullName])
+  @@index([type])
+}
+
+model Sale {
+  id                String       @id @default(cuid())
+  date              DateTime
+  subtotal          Float
+  taxAmount         Float        @default(0)
+  discount          Float        @default(0)
+  total             Float
+  totalBs           Float
+  exchangeRate      Float
+  paymentMethod     String       @default("efectivo")
+  referenceNumber   String       @default("")
+  mixedPaymentJson  String       @default("")
+  customerName      String       @default("")
+  clientDocType     String       @default("")
+  clientDocNumber   String       @default("")
+  clientName        String       @default("")
+  clientAddress     String       @default("")
+  sellerName        String       @default("")
+  sellerRole        String       @default("")
+  isCredit          Boolean      @default(false)
+  creditPaid        Float        @default(0)
+  creditDays        Int        @default(30)
+  creditDueDate     DateTime?
+  notes             String       @default("")
+  invoiceNumber     String       @unique
+  items             SaleItem[]
+  devolutions       Devolution[]
+  creditPayments    CreditPayment[]
+  clientId          String?
+  client            Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  createdAt         DateTime     @default(now())
+
+  @@index([date])
+  @@index([clientId])
+}
+
+model SaleItem {
+  id        String  @id @default(cuid())
+  saleId    String
+  productId String
+  quantity  Float
+  unitPrice Float
+  total     Float
+  product   Product @relation(fields: [productId], references: [id])
+  sale      Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+}
+
+model Settings {
+  id              String @id @default(cuid())
+  storeName       String @default("Mi Tienda")
+  storeAddress    String @default("")
+  storePhone      String @default("")
+  storeRif        String @default("")
+  bcvRate         Float  @default(36.50)
+  taxRate         Float  @default(0)
+  currency        String @default("USD")
+  allowZeroStock  Boolean @default(false)
+  enableDiscount  Boolean @default(false)
+  maxDiscountPct  Int    @default(20)
+  theme           String @default("blue")
+  // Ticket printer settings
+  ticketFontSize       Int    @default(8)
+  ticketFontFamily     String @default("monospace")
+  ticketHeaderMsg      String @default("")
+  ticketFooterMsg      String @default("Gracias por su compra!")
+  ticketShowPhone      Boolean @default(true)
+  ticketShowSeller     Boolean @default(true)
+  ticketShowExchange   Boolean @default(true)
+  ticketCurrencyMode    String @default("dual")
+  ticketShowSlogan     Boolean @default(false)
+  ticketBold           Boolean @default(true)
+  ticketPaperWidth     String @default("58mm")
+  ticketMarginLeft     Float  @default(0)
+  ticketMarginRight    Float  @default(0)
+  ticketUseAgent       Boolean @default(true)
+  ticketAgentUrl       String @default("http://localhost:9100")
+  ticketShowCashReceived Boolean @default(true)
+  ticketShowLogo        Boolean @default(true)
+  // Logo del negocio
+  storeLogo            String  @default("")
+  businessType         String  @default("general")
+  // IVA global
+  taxMode              String  @default("included")
+  // Theme mode (light, dark, professional)
+  themeMode            String  @default("light")
+  // Tasa paralela Euro/USDT para Gran Mayor
+  euroUsdtRate          Float   @default(0)
+  // Promo configurable
+  promoActive          Boolean @default(true)
+  promoLabel           String  @default("PRECIO EXCLUSIVO")
+  promoOldPrice        Float   @default(280)
+  promoCurrentPrice    Float   @default(180)
+  promoExpiryDate      String  @default("")
+  updatedAt       DateTime @updatedAt
+}
+
+model Devolution {
+  id           String   @id @default(cuid())
+  saleId       String
+  sale         Sale     @relation(fields: [saleId], references: [id])
+  date         DateTime @default(now())
+  reason       String
+  totalUsd     Float
+  totalBs      Float
+  exchangeRate Float
+  items        DevolutionItem[]
+  status       String   @default("completada")
+  createdAt    DateTime @default(now())
+
+  @@index([date])
+  @@index([saleId])
+}
+
+model DevolutionItem {
+  id           String     @id @default(cuid())
+  devolutionId String
+  productId    String
+  productName  String
+  quantity     Float
+  unitPrice    Float
+  total        Float
+  product      Product    @relation(fields: [productId], references: [id])
+  devolution   Devolution @relation(fields: [devolutionId], references: [id], onDelete: Cascade)
+}
+
+model License {
+  id                String   @id @default(cuid())
+  machineId         String   @unique
+  licenseKey        String   @default("")
+  licenseType       String   @default("trial")
+  activatedAt       DateTime @default(now())
+  expiresAt         DateTime
+  maxProducts       Int      @default(30)
+  maxDailySales     Int      @default(15)
+  maxUsers          Int      @default(1)
+  isActive          Boolean  @default(true)
+  maxActivations    Int      @default(1)
+  activationCount   Int      @default(1)
+  previousMachines  String   @default("")
+  blockedReason     String   @default("")
+  ownerName         String   @default("")
+  ownerEmail        String   @default("")
+  ownerPhone        String   @default("")
+  ownerRif          String   @default("")
+  notes             String   @default("")
+  updatedAt         DateTime @updatedAt
+}
+
+model CashClosing {
+  id              String   @id @default(cuid())
+  date            DateTime
+  closingType     String   @default("final")
+  sellerName      String   @default("")
+  sellerRole      String   @default("")
+  totalSalesUsd   Float    @default(0)
+  totalSalesBs    Float    @default(0)
+  totalReturnsUsd Float    @default(0)
+  totalReturnsBs  Float    @default(0)
+  netTotalUsd     Float    @default(0)
+  netTotalBs      Float    @default(0)
+  salesCount      Int      @default(0)
+  returnsCount    Int      @default(0)
+  cashUsd         Float    @default(0)
+  cashBs          Float    @default(0)
+  cardUsd         Float    @default(0)
+  cardBs          Float    @default(0)
+  checkUsd        Float    @default(0)
+  checkBs         Float    @default(0)
+  transferUsd     Float    @default(0)
+  transferBs      Float    @default(0)
+  mobileUsd       Float    @default(0)
+  mobileBs        Float    @default(0)
+  efectivoUsdUsd   Float    @default(0)
+  efectivoUsdBs    Float    @default(0)
+  creditSalesUsd    Float    @default(0)
+  creditSalesBs     Float    @default(0)
+  creditSalesCount  Int      @default(0)
+  casheaSalesUsd    Float    @default(0)
+  casheaSalesBs     Float    @default(0)
+  casheaSalesCount  Int      @default(0)
+  zelleUsd          Float    @default(0)
+  zelleBs           Float    @default(0)
+  usdtUsd           Float    @default(0)
+  usdtBs            Float    @default(0)
+  breakdownJson     String   @default("{}")
+  exchangeRate    Float    @default(0)
+  observations    String   @default("")
+  createdAt       DateTime @default(now())
+
+  @@index([date])
+}
+
+model User {
+  id          String   @id @default(cuid())
+  username    String   @unique
+  password    String
+  fullName    String   @default("")
+  role        String   @default("cajero")
+  isActive    Boolean  @default(true)
+  permissions String   @default("")
+  avatar      String   @default("")
+  lastLogin   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  expenses    Expense[]
+}
+
+model RoleConfig {
+  id          String   @id @default(cuid())
+  roleName    String   @unique
+  label       String   @default("")
+  permissions String   @default("{}")
+  color       String   @default("#6366f1")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Supplier {
+  id         String     @id @default(cuid())
+  name       String
+  rif        String     @default("")
+  phone      String     @default("")
+  email      String     @default("")
+  address    String     @default("")
+  contact    String     @default("")
+  notes      String     @default("")
+  isActive   Boolean    @default(true)
+  purchases  Purchase[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([name])
+}
+
+model Purchase {
+  id           String         @id @default(cuid())
+  date         DateTime       @default(now())
+  number       String         @default("")
+  supplierId   String?
+  supplier     Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  totalUsd     Float          @default(0)
+  totalBs      Float          @default(0)
+  exchangeRate Float          @default(0)
+  notes        String         @default("")
+  items        PurchaseItem[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([date])
+  @@index([supplierId])
+}
+
+model ComboItem {
+  id        String  @id @default(cuid())
+  comboId   String
+  productId String
+  quantity  Int     @default(1)
+  combo     Product @relation(fields: [comboId], references: [id], onDelete: Cascade)
+  product   Product @relation("ProductComboItems", fields: [productId], references: [id])
+}
+
+model PurchaseItem {
+  id           String   @id @default(cuid())
+  purchaseId   String
+  productId    String?
+  productName  String   @default("")
+  quantity     Float
+  unitCost     Float
+  total        Float
+  isBox        Boolean  @default(false)
+  unitsPerBox  Float    @default(0)
+  boxQty       Float    @default(0)
+  boxCost      Float    @default(0)
+  calcUnitCost Float    @default(0)
+  calcMargin   Float    @default(0)
+  calcPrice    Float    @default(0)
+  product      Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  purchase     Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+}
+
+model CreditPayment {
+  id           String   @id @default(cuid())
+  saleId       String
+  sale         Sale     @relation(fields: [saleId], references: [id])
+  clientId     String?
+  client       Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  date         DateTime @default(now())
+  amount       Float
+  exchangeRate Float
+  amountBs     Float
+  method       String   @default("efectivo")
+  reference    String   @default("")
+  notes        String   @default("")
+  createdBy    String   @default("")
+  createdAt    DateTime @default(now())
+
+  @@index([date])
+  @@index([saleId])
+  @@index([clientId])
+}
+
+// ===== KARDEX DE INVENTARIO =====
+model InventoryMovement {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  date        DateTime @default(now())
+  movementType String   // venta, compra, devolucion, ajuste_entrada, ajuste_salida, merma, nota_entrega
+  concept     String   @default("")   // Descripcion del movimiento
+  quantity    Float                   // Cantidad (positiva para entrada, negativa para salida en calculo)
+  absQuantity  Float                   // Cantidad absoluta siempre positiva
+  unitCost    Float    @default(0)    // Costo unitario al momento del movimiento
+  totalCost   Float    @default(0)    // Costo total del movimiento
+  // Saldos acumulados despues del movimiento
+  balanceQty       Float @default(0) // Saldo en cantidad
+  balanceTotalCost Float @default(0) // Saldo en costo total
+  balanceAvgCost   Float @default(0) // Costo promedio ponderado acumulado
+  // Auditoria
+  userId      String   @default("")
+  userName   String   @default("")
+  userRole   String   @default("")
+  referenceId String  @default("")   // ID de la venta, compra, devolucion, etc.
+  createdAt  DateTime @default(now())
+
+  @@index([productId])
+  @@index([date])
+  @@index([movementType])
+}
+
+// ===== FACTURAS EN ESPERA =====
+model HeldSale {
+  id             String       @id @default(cuid())
+  number         Int          @default(0)
+  userId         String       @default("")
+  userName       String       @default("")
+  clientName     String       @default("")
+  clientId       String?
+  client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  subtotal       Float        @default(0)
+  taxAmount      Float        @default(0)
+  discount       Float        @default(0)
+  total          Float        @default(0)
+  totalBs        Float        @default(0)
+  exchangeRate   Float        @default(0)
+  paymentMethod  String       @default("efectivo")
+  notes          String       @default("")
+  status         String       @default("espera") // espera, recuperada, cancelada
+  items          HeldSaleItem[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model HeldSaleItem {
+  id          String   @id @default(cuid())
+  heldSaleId  String
+  productId   String
+  productName String   @default("")
+  quantity    Float
+  unitPrice   Float
+  total       Float
+  taxType     String   @default("general")
+  heldSale    HeldSale @relation(fields: [heldSaleId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+// ===== PRESUPUESTOS / COTIZACIONES =====
+model Quote {
+  id             String       @id @default(cuid())
+  number         Int          @default(0)
+  userId         String       @default("")
+  userName       String       @default("")
+  clientName     String       @default("")
+  clientId       String?
+  client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  subtotal       Float        @default(0)
+  taxAmount      Float        @default(0)
+  discount       Float        @default(0)
+  total          Float        @default(0)
+  totalBs        Float        @default(0)
+  exchangeRate   Float        @default(0)
+  notes          String       @default("")
+  validUntil     String       @default("")  // Fecha de validez
+  status         String       @default("pendiente") // pendiente, aprobada, convertida, vencida
+  items          QuoteItem[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+model QuoteItem {
+  id          String   @id @default(cuid())
+  quoteId     String
+  productId   String
+  productName String   @default("")
+  quantity    Float
+  unitPrice   Float
+  total       Float
+  taxType     String   @default("general")
+  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+// ===== NOTAS DE ENTREGA =====
+model DeliveryNote {
+  id             String            @id @default(cuid())
+  number         Int               @default(0)
+  userId         String            @default("")
+  userName       String            @default("")
+  recipientName  String            @default("")
+  recipientDoc   String            @default("")
+  recipientAddr  String            @default("")
+  reason         String            @default("")
+  notes          String            @default("")
+  totalUsd       Float             @default(0)
+  totalBs        Float             @default(0)
+  exchangeRate   Float             @default(0)
+  status         String            @default("emitida") // emitida, recibida, anulada
+  items          DeliveryNoteItem[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model DeliveryNoteItem {
+  id             String   @id @default(cuid())
+  deliveryNoteId String
+  productId      String
+  productName    String   @default("")
+  quantity       Float
+  unitCost       Float    @default(0)
+  totalCost      Float    @default(0)
+  deliveryNote   DeliveryNote @relation(fields: [deliveryNoteId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+}
+
+// ========== MODULO DE GASTOS ==========
+model ExpenseCategory {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String    @default("")
+  icon        String    @default("receipt")
+  color       String    @default("#ef4444")
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  expenses    Expense[]
+}
+
+model Expense {
+  id            String          @id @default(cuid())
+  categoryId    String
+  category      ExpenseCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  description   String
+  amount        Float
+  amountBs      Float           @default(0)
+  exchangeRate  Float           @default(0)
+  date          DateTime
+  paymentMethod String          @default("efectivo")
+  reference     String          @default("")
+  notes         String          @default("")
+  userId        String?
+  user          User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([date])
+  @@index([categoryId])
+  @@index([userId])
+}
