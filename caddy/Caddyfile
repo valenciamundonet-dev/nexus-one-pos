@@ -1,0 +1,19 @@
+# Caddyfile - MyeCommerce POS
+# HTTPS con certificado CA interno de Caddy
+# El navegador mostrara el candado verde (sin advertencias)
+# porque la CA de Caddy se instala en Windows con 'caddy trust'
+
+# Redirigir HTTP a HTTPS (dominio local)
+http://myecommerce.ve {
+    redir https://myecommerce.ve{uri}
+}
+
+# Servir HTTPS con certificado interno (acceso desde la PC)
+myecommerce.ve {
+    tls internal
+    reverse_proxy localhost:3000
+}
+
+# NOTA: El acceso movil por :8443 se maneja con un PROCESO INDEPENDIENTE
+# de Caddy usando Caddyfile-mobile. NO se incluye aqui para evitar
+# conflictos de puerto cuando ambos procesos arrancan simultaneamente.

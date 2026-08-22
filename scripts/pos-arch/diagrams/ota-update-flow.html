@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f4f5f5;
+    width: 1200px; height: 500px;
+    padding: 30px;
+    color: #131514;
+  }
+  .title { font-size: 18px; font-weight: 700; margin-bottom: 24px; color: #324e40; }
+  
+  .flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+  
+  .step {
+    background: white;
+    border: 1px solid #e8ebe9;
+    border-radius: 8px;
+    padding: 14px 18px;
+    text-align: center;
+    min-width: 140px;
+    position: relative;
+  }
+  .step.active {
+    border-color: #1f9259;
+    background: #f0faf4;
+  }
+  .step-num {
+    display: inline-block;
+    background: #324e40;
+    color: white;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    line-height: 22px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .step.active .step-num { background: #1f9259; }
+  .step-title { font-size: 12px; font-weight: 700; color: #324e40; margin-bottom: 4px; }
+  .step-desc { font-size: 10px; color: #747e79; line-height: 1.4; }
+  
+  .arrow { font-size: 20px; color: #acc5b9; }
+  
+  .details {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+  
+  .detail-card {
+    background: white;
+    border: 1px solid #e8ebe9;
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .detail-card h3 {
+    font-size: 13px; font-weight: 700; color: #324e40; margin-bottom: 8px;
+  }
+  .detail-card p {
+    font-size: 11px; color: #747e79; line-height: 1.6;
+  }
+  .detail-card ul {
+    font-size: 11px; color: #747e79; line-height: 1.8;
+    padding-left: 16px;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="title">Flujo de Actualizacion OTA (Over-The-Air)</div>
+
+<div class="flow">
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-title">Deteccion</div>
+    <div class="step-desc">Timer cada 4h<br>o al iniciar</div>
+  </div>
+  <div class="arrow">&#9654;</div>
+  <div class="step active">
+    <div class="step-num">2</div>
+    <div class="step-title">Descarga</div>
+    <div class="step-desc">Background<br>Delta patches<br>Checksum SHA-256</div>
+  </div>
+  <div class="arrow">&#9654;</div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-title">Verificacion</div>
+    <div class="step-desc">Firma Ed25519<br>Integridad<br>Compatible version</div>
+  </div>
+  <div class="arrow">&#9654;</div>
+  <div class="step active">
+    <div class="step-num">4</div>
+    <div class="step-title">Preparacion</div>
+    <div class="step-desc">Backup DB<br>Staging files<br>Sin interrumpir POS</div>
+  </div>
+  <div class="arrow">&#9654;</div>
+  <div class="step">
+    <div class="step-num">5</div>
+    <div class="step-title">Aplicacion</div>
+    <div class="step-desc">Al cerrar dia<br>o inicio de dia<br>Swap atomico</div>
+  </div>
+  <div class="arrow">&#9654;</div>
+  <div class="step">
+    <div class="step-num">6</div>
+    <div class="step-title">Rollback</div>
+    <div class="step-desc">Si falla boot<br>Restaurar backup<br>Auto-report</div>
+  </div>
+</div>
+
+<div class="details">
+  <div class="detail-card">
+    <h3>Silencioso e Invisible</h3>
+    <p>El cajero nunca ve la descarga. Se ejecuta con prioridad baja de CPU y se pausa automaticamente si la venta esta activa. Reanuda automaticamente al quedar inactivo.</p>
+  </div>
+  <div class="detail-card">
+    <h3>Seguridad Criptografica</h3>
+    <ul>
+      <li>Firma Ed25519 del paquete</li>
+      <li>Checksum SHA-256 por archivo</li>
+      <li>Cadena de confianza PIN-to-PUB</li>
+      <li>Verificacion pre-instalacion</li>
+    </ul>
+  </div>
+  <div class="detail-card">
+    <h3>Tolerancia a Fallos</h3>
+    <ul>
+      <li>Backup completo de SQLite antes</li>
+      <li>Swap atomico de archivos</li>
+      <li>Auto-rollback si falla arranque</li>
+      <li>Reporte automatico al servidor</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

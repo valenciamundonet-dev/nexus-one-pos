@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #f4f5f5;
+    width: 1200px; height: 750px;
+    padding: 30px;
+    color: #131514;
+  }
+  .title { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #324e40; }
+  
+  .pos-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    grid-template-rows: 52px 1fr 64px;
+    gap: 0;
+    background: white;
+    border: 2px solid #e8ebe9;
+    border-radius: 10px;
+    overflow: hidden;
+    height: 620px;
+  }
+  
+  .pos-header {
+    grid-column: 1 / -1;
+    background: #324e40;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+  }
+  .pos-header span { font-size: 13px; font-weight: 600; }
+  .pos-header .right { font-size: 11px; opacity: 0.8; }
+  
+  .pos-main {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 0;
+  }
+  
+  .search-panel {
+    background: #f4f5f5;
+    padding: 12px;
+    border-right: 1px solid #e8ebe9;
+  }
+  .search-box {
+    background: white;
+    border: 2px solid #1f9259;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #1f9259;
+    font-weight: 600;
+  }
+  .search-box .icon { font-size: 16px; }
+  .cat-list { font-size: 11px; line-height: 2; color: #747e79; }
+  .cat-list .active { color: #1f9259; font-weight: 700; background: #e8ebe9; padding: 2px 8px; border-radius: 4px; }
+  
+  .products-grid {
+    padding: 12px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    align-content: start;
+  }
+  .product-card {
+    background: #f4f5f5;
+    border: 1px solid #e8ebe9;
+    border-radius: 6px;
+    padding: 10px;
+    text-align: center;
+  }
+  .product-card .name { font-size: 10px; font-weight: 600; margin-bottom: 4px; }
+  .product-card .price { font-size: 12px; font-weight: 700; color: #324e40; }
+  .product-card .code { font-size: 9px; color: #acc5b9; }
+  
+  .cart-panel {
+    background: #fafbfb;
+    border-left: 1px solid #e8ebe9;
+    display: flex;
+    flex-direction: column;
+  }
+  .cart-header {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #324e40;
+    border-bottom: 1px solid #e8ebe9;
+  }
+  .cart-items { flex: 1; padding: 8px 16px; font-size: 11px; overflow: hidden; }
+  .cart-item {
+    display: flex; justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px dashed #e8ebe9;
+  }
+  .cart-item .qty { color: #1f9259; font-weight: 700; min-width: 24px; }
+  .cart-item .item-name { flex: 1; }
+  .cart-item .item-price { font-weight: 600; }
+  .cart-total {
+    padding: 12px 16px;
+    border-top: 2px solid #324e40;
+    margin-top: auto;
+  }
+  .cart-total .label { font-size: 11px; color: #747e79; }
+  .cart-total .amount { font-size: 22px; font-weight: 700; color: #324e40; }
+  
+  .pos-footer {
+    grid-column: 1 / -1;
+    background: #f4f5f5;
+    border-top: 1px solid #e8ebe9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 20px;
+  }
+  .action-btn {
+    background: #1f9259;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 28px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .action-btn.secondary { background: #e8ebe9; color: #324e40; }
+  .action-btn.danger { background: #a25b54; }
+  .shortcut-hint {
+    font-size: 9px;
+    color: #acc5b9;
+    margin-left: 4px;
+  }
+  
+  .annotations {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .annotation {
+    background: white;
+    border: 1px solid #e8ebe9;
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .annotation .ann-title { font-size: 11px; font-weight: 700; color: #1f9259; margin-bottom: 4px; }
+  .annotation .ann-desc { font-size: 10px; color: #747e79; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="title">POS Screen - Layout "Cero Friccion"</div>
+<div class="pos-layout">
+  <div class="pos-header">
+    <span>MyeCommerce POS</span>
+    <div class="right">Modo: Efectivo | Cliente: Generico | Caja: #01</div>
+  </div>
+  <div class="pos-main">
+    <div class="search-panel">
+      <div class="search-box"><span class="icon">&#128269;</span> Escanear o buscar producto...</div>
+      <div class="cat-list">
+        <div class="active">Todos</div>
+        <div>Bebidas</div>
+        <div>Snacks</div>
+        <div>Lacteos</div>
+        <div>Limpieza</div>
+        <div>Carnes</div>
+        <div>Verduras</div>
+        <div>Panaderia</div>
+      </div>
+    </div>
+    <div class="products-grid">
+      <div class="product-card"><div class="name">Coca-Cola 500ml</div><div class="price">$1.50</div><div class="code">780123456</div></div>
+      <div class="product-card"><div class="name">Pepsi 600ml</div><div class="price">$1.40</div><div class="code">780654321</div></div>
+      <div class="product-card"><div class="name">Agua Mineral 1L</div><div class="price">$0.80</div><div class="code">780111111</div></div>
+      <div class="product-card"><div class="name">Leche Entera 1L</div><div class="price">$1.20</div><div class="code">780222222</div></div>
+      <div class="product-card"><div class="name">Pan Integral</div><div class="price">$2.00</div><div class="code">780333333</div></div>
+      <div class="product-card"><div class="name">Arroz 1kg</div><div class="price">$1.80</div><div class="code">780444444</div></div>
+      <div class="product-card"><div class="name">Aceite 500ml</div><div class="price">$3.50</div><div class="code">780555555</div></div>
+      <div class="product-card"><div class="name">Azucar 1kg</div><div class="price">$1.60</div><div class="code">780666666</div></div>
+      <div class="product-card"><div class="name">Cafe 250g</div><div class="price">$4.00</div><div class="code">780777777</div></div>
+    </div>
+  </div>
+  <div class="cart-panel">
+    <div class="cart-header">Ticket Actual (3 items)</div>
+    <div class="cart-items">
+      <div class="cart-item"><span class="qty">x2</span><span class="item-name">Coca-Cola 500ml</span><span class="item-price">$3.00</span></div>
+      <div class="cart-item"><span class="qty">x1</span><span class="item-name">Pan Integral</span><span class="item-price">$2.00</span></div>
+      <div class="cart-item"><span class="qty">x3</span><span class="item-name">Arroz 1kg</span><span class="item-price">$5.40</span></div>
+    </div>
+    <div class="cart-total">
+      <div class="label">Total</div>
+      <div class="amount">$10.40</div>
+    </div>
+  </div>
+  <div class="pos-footer">
+    <button class="action-btn secondary">Limpiar <span class="shortcut-hint">[Esc]</span></button>
+    <button class="action-btn secondary">Suspender <span class="shortcut-hint">[F2]</span></button>
+    <button class="action-btn secondary">Buscar <span class="shortcut-hint">[F3]</span></button>
+    <button class="action-btn">Cobrar <span class="shortcut-hint">[Enter]</span></button>
+    <button class="action-btn danger">Descuento <span class="shortcut-hint">[F5]</span></button>
+  </div>
+</div>
+<div class="annotations">
+  <div class="annotation"><div class="ann-title">Auto-Focus</div><div class="ann-desc">Cursor vuelve al buscador tras cada escaneo. Cero clics extra.</div></div>
+  <div class="annotation"><div class="ann-title">Atajos de Teclado</div><div class="ann-desc">Enter = Cobrar, Esc = Limpiar, F2 = Suspender, F5 = Descuento.</div></div>
+  <div class="annotation"><div class="ann-title">Modo Privacidad</div><div class="ann-desc">Oculta precios del display lateral cuando hay clientes cerca.</div></div>
+  <div class="annotation"><div class="ann-title">Responsive</div><div class="ann-desc">Se reorganiza automaticamente en tablet y terminal de mano.</div></div>
+</div>
+</body>
+</html>

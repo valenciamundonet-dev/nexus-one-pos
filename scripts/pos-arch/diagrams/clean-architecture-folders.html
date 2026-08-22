@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    background: #f4f5f5;
+    width: 1200px; height: 900px;
+    padding: 30px;
+    color: #131514;
+  }
+  .title { font-family: 'Segoe UI', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 20px; color: #324e40; }
+  
+  .tree-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  
+  .tree-section {
+    background: white;
+    border: 1px solid #e8ebe9;
+    border-radius: 8px;
+    padding: 18px;
+  }
+  
+  .tree-section-title {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: white;
+    background: #324e40;
+    padding: 6px 12px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+    display: inline-block;
+  }
+  
+  .tree { font-size: 11px; line-height: 1.9; color: #131514; }
+  .tree .dir { color: #324e40; font-weight: 600; }
+  .tree .file { color: #747e79; }
+  .tree .accent { color: #1f9259; }
+  .tree .comment { color: #acc5b9; font-style: italic; }
+  .tree .indent1 { padding-left: 18px; }
+  .tree .indent2 { padding-left: 36px; }
+  .tree .indent3 { padding-left: 54px; }
+  .tree .indent4 { padding-left: 72px; }
+</style>
+</head>
+<body>
+<div class="title">Clean Architecture - Estructura de Carpetas</div>
+<div class="tree-container">
+  <div class="tree-section">
+    <div class="tree-section-title">src/domain/</div>
+    <div class="tree">
+      <span class="dir">domain/</span> <span class="comment">// Capa de Dominio (pura, sin dependencias)</span>
+      <div class="indent1"><span class="dir">entities/</span></div>
+      <div class="indent2"><span class="file">Sale.ts</span> <span class="comment">// Entidad Venta</span></div>
+      <div class="indent2"><span class="file">Product.ts</span> <span class="comment">// Entidad Producto</span></div>
+      <div class="indent2"><span class="file">Client.ts</span></div>
+      <div class="indent2"><span class="file">InventoryMovement.ts</span></div>
+      <div class="indent1"><span class="dir">value-objects/</span></div>
+      <div class="indent2"><span class="file">Money.ts</span> <span class="comment">// Preciso (BigInt)</span></div>
+      <div class="indent2"><span class="file">Quantity.ts</span></div>
+      <div class="indent2"><span class="file">Percentage.ts</span></div>
+      <div class="indent1"><span class="dir">events/</span></div>
+      <div class="indent2"><span class="file">SaleCreatedEvent.ts</span></div>
+      <div class="indent2"><span class="file">StockDepletedEvent.ts</span></div>
+      <div class="indent1"><span class="dir">interfaces/</span> <span class="comment">// Puertos</span></div>
+      <div class="indent2"><span class="file">ISaleRepository.ts</span></div>
+      <div class="indent2"><span class="file">IProductRepository.ts</span></div>
+      <div class="indent2"><span class="file">IPrinterAdapter.ts</span></div>
+    </div>
+  </div>
+  
+  <div class="tree-section">
+    <div class="tree-section-title">src/application/</div>
+    <div class="tree">
+      <span class="dir">application/</span> <span class="comment">// Casos de Uso</span>
+      <div class="indent1"><span class="dir">use-cases/</span></div>
+      <div class="indent2"><span class="file">CreateSale.usecase.ts</span></div>
+      <div class="indent2"><span class="file">ProcessPayment.usecase.ts</span></div>
+      <div class="indent2"><span class="file">ManageInventory.usecase.ts</span></div>
+      <div class="indent2"><span class="file">SyncToCloud.usecase.ts</span></div>
+      <div class="indent2"><span class="file">GenerateReport.usecase.ts</span></div>
+      <div class="indent1"><span class="dir">services/</span></div>
+      <div class="indent2"><span class="file">PricingService.ts</span> <span class="accent">// Logica de precios</span></div>
+      <div class="indent2"><span class="file">TaxCalculator.ts</span></div>
+      <div class="indent2"><span class="file">ChangeCalculator.ts</span></div>
+      <div class="indent1"><span class="dir">dto/</span></div>
+      <div class="indent2"><span class="file">SaleDTO.ts</span></div>
+      <div class="indent2"><span class="file">ProductDTO.ts</span></div>
+      <div class="indent1"><span class="dir">validators/</span></div>
+      <div class="indent2"><span class="file">ZodSchemas.ts</span> <span class="comment">// Validacion</span></div>
+    </div>
+  </div>
+  
+  <div class="tree-section">
+    <div class="tree-section-title">src/infrastructure/</div>
+    <div class="tree">
+      <span class="dir">infrastructure/</span> <span class="comment">// Adaptadores e Implementaciones</span>
+      <div class="indent1"><span class="dir">persistence/</span></div>
+      <div class="indent2"><span class="file">SQLiteSaleRepository.ts</span></div>
+      <div class="indent2"><span class="file">PrismaClient.ts</span></div>
+      <div class="indent2"><span class="file">migrations/</span></div>
+      <div class="indent1"><span class="dir">hardware/</span></div>
+      <div class="indent2"><span class="file">EscposPrinterAdapter.ts</span></div>
+      <div class="indent2"><span class="file">ScannerAdapter.ts</span></div>
+      <div class="indent2"><span class="file">DisplayAdapter.ts</span></div>
+      <div class="indent1"><span class="dir">sync/</span></div>
+      <div class="indent2"><span class="file">CRDTSyncEngine.ts</span> <span class="accent">// Sincronizacion</span></div>
+      <div class="indent2"><span class="file">OfflineQueue.ts</span></div>
+      <div class="indent2"><span class="file">CloudApiClient.ts</span></div>
+    </div>
+  </div>
+  
+  <div class="tree-section">
+    <div class="tree-section-title">src/presentation/</div>
+    <div class="tree">
+      <span class="dir">presentation/</span> <span class="comment">// UI Components</span>
+      <div class="indent1"><span class="dir">components/</span></div>
+      <div class="indent2"><span class="file">POSScreen.tsx</span></div>
+      <div class="indent2"><span class="file">Dashboard.tsx</span></div>
+      <div class="indent2"><span class="file">InventoryTable.tsx</span></div>
+      <div class="indent2"><span class="file">PaymentModal.tsx</span></div>
+      <div class="indent1"><span class="dir">hooks/</span></div>
+      <div class="indent2"><span class="file">useSale.ts</span></div>
+      <div class="indent2"><span class="file">useKeyboardShortcuts.ts</span></div>
+      <div class="indent2"><span class="file">useOfflineStatus.ts</span></div>
+      <div class="indent1"><span class="dir">stores/</span> <span class="accent">// Zustand</span></div>
+      <div class="indent2"><span class="file">cartStore.ts</span></div>
+      <div class="indent2"><span class="file">uiStore.ts</span></div>
+      <div class="indent1"><span class="dir">design-system/</span></div>
+      <div class="indent2"><span class="file">tokens.ts</span> <span class="comment">// Design tokens</span></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #f4f5f5;
+    width: 1200px; height: 850px;
+    padding: 30px;
+    color: #131514;
+  }
+  .title { font-size: 18px; font-weight: 700; margin-bottom: 20px; color: #324e40; }
+  
+  /* Main grid */
+  .arch-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto auto;
+    gap: 14px;
+  }
+  
+  .layer-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 2px; color: #747e79;
+    grid-column: 1 / -1;
+    padding: 4px 0;
+    border-bottom: 1px solid #acc5b9;
+    margin-top: 6px;
+  }
+  
+  .box {
+    background: white;
+    border: 1px solid #e8ebe9;
+    border-radius: 8px;
+    padding: 14px 16px;
+    position: relative;
+  }
+  .box.highlight {
+    border-color: #1f9259;
+    border-width: 2px;
+    background: #f0faf4;
+  }
+  .box-title {
+    font-size: 13px; font-weight: 700; margin-bottom: 6px;
+    color: #324e40;
+  }
+  .box-items {
+    font-size: 11px; color: #747e79; line-height: 1.6;
+  }
+  .box-items span {
+    display: inline-block;
+    background: #e8ebe9;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin: 2px 3px 2px 0;
+    font-size: 10px;
+    color: #324e40;
+  }
+  
+  .full-width { grid-column: 1 / -1; }
+  
+  /* Arrow connectors */
+  .arrow-row {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 20px;
+  }
+  .arrow-row svg { width: 100%; height: 20px; }
+  
+  .badge {
+    position: absolute; top: -8px; right: 12px;
+    background: #1f9259; color: white;
+    font-size: 9px; font-weight: 600;
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .badge.blue { background: #507aa4; }
+  .badge.orange { background: #8c7443; }
+</style>
+</head>
+<body>
+<div class="title">Arquitectura del Sistema MyeCommerce Global</div>
+<div class="arch-grid">
+  
+  <div class="layer-label">Capa de Presentacion (Tauri + React)</div>
+  
+  <div class="box highlight">
+    <div class="box-title">POS Terminal</div>
+    <div class="box-items">
+      <span>Facturacion</span><span>Carrito</span><span>Busqueda</span><br>
+      <span>Pagos</span><span>Impresion</span><span>Offline</span>
+    </div>
+    <div class="badge">LOCAL-FIRST</div>
+  </div>
+  
+  <div class="box highlight">
+    <div class="box-title">Dashboard Admin</div>
+    <div class="box-items">
+      <span>Reportes</span><span>Inventario</span><span>Clientes</span><br>
+      <span>Compras</span><span>Config</span><span>Kardex</span>
+    </div>
+    <div class="badge">LOCAL-FIRST</div>
+  </div>
+  
+  <div class="box">
+    <div class="box-title">Motor de UI</div>
+    <div class="box-items">
+      <span>React 19</span><span>TypeScript</span><span>Tailwind 4</span><br>
+      <span>Zustand</span><span>Recharts</span><span>PWA</span>
+    </div>
+  </div>
+  
+  <div class="arrow-row"><svg><line x1="50%" y1="0" x2="50%" y2="20" stroke="#acc5b9" stroke-width="2"/><polygon points="498,18 600,18 550,2" fill="#acc5b9" transform="translate(-548,0)"/></svg></div>
+  
+  <div class="layer-label">Capa de Aplicacion (Domain Services)</div>
+  
+  <div class="box">
+    <div class="box-title">Sale Service</div>
+    <div class="box-items">
+      Transacciones ACID<br>Calculos de precio<br>Descuentos e impuestos
+    </div>
+  </div>
+  
+  <div class="box">
+    <div class="box-title">Inventory Service</div>
+    <div class="box-items">
+      Control de stock<br>Kardex automatico<br>Alertas de reposicion
+    </div>
+  </div>
+  
+  <div class="box">
+    <div class="box-title">Sync Engine</div>
+    <div class="box-items">
+      <span>CRDTs</span><span>Conflict Resolution</span><br>
+      <span>Delta Sync</span><span>Queue Offline</span>
+    </div>
+    <div class="badge blue">HIBRIDO</div>
+  </div>
+  
+  <div class="arrow-row"><svg><line x1="50%" y1="0" x2="50%" y2="20" stroke="#acc5b9" stroke-width="2"/></svg></div>
+  
+  <div class="layer-label">Capa de Infraestructura (Data & Hardware)</div>
+  
+  <div class="box">
+    <div class="box-title">SQLite Local</div>
+    <div class="box-items">
+      <span>27 Modelos</span><span>Prisma ORM</span><br>
+      WAL Mode<br>Encriptacion AES-256
+    </div>
+    <div class="badge orange">CIFRADO</div>
+  </div>
+  
+  <div class="box">
+    <div class="box-title">Hardware Bridge</div>
+    <div class="box-items">
+      <span>ESC/POS</span><span>Escáner</span><span>Lector</span><br>
+      <span>Display</span><span>Drawer</span><span>Worker Threads</span>
+    </div>
+  </div>
+  
+  <div class="box">
+    <div class="box-title">Cloud Sync</div>
+    <div class="box-items">
+      <span>PGLite</span><span>PostgreSQL</span><br>
+      <span>API REST</span><span>WebSocket</span><br>
+      Solo cuando hay internet
+    </div>
+  </div>
+</div>
+</body>
+</html>
