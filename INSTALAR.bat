@@ -68,27 +68,72 @@ reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "NexusOnePOS"
 :: PASO 3/9: Verificar Node.js 18+ (44%%)
 :: ============================================================
 call :showProgress 44 "Verificando Node.js..."
+
+:: Refrescar PATH desde el registro (por si se instalo Node.js recientemente)
+set "SYS_PATH="
+set "USR_PATH="
+for /f "tokens=2,*" %%A in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v Path 2^>nul ^| findstr /i "Path"') do set "SYS_PATH=%%B"
+for /f "tokens=2,*" %%A in ('reg query "HKCU\Environment" /v Path 2^>nul ^| findstr /i "Path"') do set "USR_PATH=%%B"
+if defined SYS_PATH set "PATH=!SYS_PATH;!PATH!"
+if defined USR_PATH set "PATH=!USR_PATH;!PATH!"
+
+:: Buscar node.exe - primero con where, luego en rutas comunes
+set "NODE_FOUND=0"
 where node >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
+if !ERRORLEVEL! EQU 0 (
+    set "NODE_FOUND=1"
+) else (
+    echo   [INFO] where no encontro node, buscando en rutas tipicas...
+    for %%P in (
+        "%ProgramFiles%\nodejs\node.exe"
+        "%ProgramFiles(x86)%\nodejs\node.exe"
+        "%LocalAppData%\Programs\nodejs\node.exe"
+        "C:\Program Files\nodejs\node.exe"
+        "C:\Program Files (x86)\nodejs\node.exe"
+    ) do (
+        if exist %%P (
+            set "PATH=!PATH!;%%~dP%%~pP"
+            set "NODE_FOUND=1"
+            echo   [OK] Encontrado en: %%P
+        )
+    )
+)
+
+if "!NODE_FOUND!"=="0" (
     echo.
-    echo   [ERROR] Node.js no esta instalado.
-    echo   Descarguelo de https://nodejs.org (version 20 LTS recomendada).
+    echo   [ERROR] Node.js no esta instalado o no esta en el PATH.
+    echo.
+    echo   Si acaba de instalar Node.js:
+    echo     1. CIERRA esta ventana
+    echo     2. ABRA UNA NUEVA ventana CMD
+    echo     3. Vuelve a ejecutar INSTALAR.bat
+    echo.
+    echo   O descarguelo de: https://nodejs.org
     echo.
     pause
     exit /b 1
 )
-for /f "tokens=*" %%i in ('node -v') do set NODEVER=%%i
-echo   Node.js detectado: %NODEVER%
-set MAJOR=0
-for /f "tokens=1 delims=v." %%a in ("%NODEVER%") do set MAJOR=%%a
-if %MAJOR% LSS 18 (
+
+:: Obtener version de Node.js de forma robusta
+for /f "tokens=*" %%i in ('node -v 2^>^&1') do set "NODEVER=%%i"
+set "NODEVER=!NODEVER: =!"
+
+:: Extraer numero mayor: quitar la 'v' inicial, luego tomar todo antes del primer '.'
+set "VER_CLEAN=!NODEVER:v=!"
+set "MAJOR=0"
+for /f "tokens=1 delims=." %%a in ("!VER_CLEAN!") do set "MAJOR=%%a"
+
+echo   Node.js detectado: !NODEVER! (version mayor: !MAJOR!)
+
+if !MAJOR! LSS 18 (
     echo.
-    echo   [ERROR] Node.js %NODEVER% es demasiado antiguo. Se requiere v18+.
+    echo   [ERROR] Node.js !NODEVER! es demasiado antiguo. Se requiere v18+.
+    echo   Descargue una version reciente de https://nodejs.org
     echo.
     pause
     exit /b 1
 )
-call :showProgress 50 "Node.js %NODEVER% - Version compatible"
+call :showProgress 50 "Node.js !NODEVER! - Version compatible"
 echo.
 
 :: ============================================================
@@ -96,7 +141,7 @@ echo.
 :: ============================================================
 call :showProgress 55 "Verificando conexion a internet..."
 ping -n 1 -w 3000 registry.npmjs.org >nul 2>&1
-if %ERRORLEVEL% NEQ 0 (
+if !ERRORLEVEL! NEQ 0 (
     echo.
     echo   [ADVERTENCIA] No se detecto conexion a internet.
     echo   Presione ENTER para continuar o Ctrl+C para cancelar...
@@ -120,18 +165,18 @@ if not exist "package.json" (
 
 call :showProgress 65 "Instalando dependencias con Bun..."
 where bun >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if !ERRORLEVEL! EQU 0 (
     call bun install
-    if %ERRORLEVEL% EQU 0 goto DEPS_OK
+    if !ERRORLEVEL! EQU 0 goto DEPS_OK
     echo   [AVISO] Bun fallo, intentando con npm...
 )
 call :showProgress 70 "Instalando dependencias con npm (fallback)..."
 call npm install --legacy-peer-deps
-if %ERRORLEVEL% EQU 0 goto DEPS_OK
+if !ERRORLEVEL! EQU 0 goto DEPS_OK
 echo   [AVISO] Primer intento fallo, reintentando con --force...
 if exist node_modules rd /s /q node_modules 2>nul
 call npm install --legacy-peer-deps --force
-if %ERRORLEVEL% NEQ 0 (
+if !ERRORLEVEL! NEQ 0 (
     echo.
     echo   [ERROR] No se pudieron instalar las dependencias.
     echo   Soluciones: actualice Node.js, verifique conexion, o ejecute
@@ -149,12 +194,12 @@ echo.
 :: ============================================================
 call :showProgress 80 "Generando cliente Prisma..."
 where bun >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if !ERRORLEVEL! EQU 0 (
     call bunx prisma generate
 ) else (
     call npx prisma generate
 )
-if %ERRORLEVEL% NEQ 0 (
+if !ERRORLEVEL! NEQ 0 (
     echo.
     echo   [ERROR] Fallo la generacion de Prisma.
     echo.
@@ -164,12 +209,12 @@ if %ERRORLEVEL% NEQ 0 (
 
 call :showProgress 83 "Creando base de datos SQLite..."
 where bun >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if !ERRORLEVEL! EQU 0 (
     call bunx prisma db push
 ) else (
     call npx prisma db push
 )
-if %ERRORLEVEL% NEQ 0 (
+if !ERRORLEVEL! NEQ 0 (
     echo.
     echo   [ERROR] Fallo la creacion de la base de datos.
     echo.
@@ -189,8 +234,8 @@ if not exist ".env" (
         echo   .env creado desde .env.example
     ) else (
         echo DATABASE_URL="file:./dev.db"> .env
-        echo NEXTAUTH_SECRET=nexus-pos-secret-change-me>> .env
-        echo NEXTAUTH_URL=http://localhost:3000>> .env
+        echo APP_PORT=3000>> .env
+        echo NODE_ENV=production>> .env
         echo   .env creado con valores predeterminados
     )
 ) else (

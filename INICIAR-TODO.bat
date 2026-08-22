@@ -6,6 +6,10 @@ setlocal enabledelayedexpansion
 
 cd /d "%~dp0"
 
+:: Refrescar PATH desde el registro
+for /f "tokens=2,*" %%A in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v Path 2^>nul ^| findstr /i "Path"') do set "PATH=%%B;!PATH!"
+for /f "tokens=2,*" %%A in ('reg query "HKCU\Environment" /v Path 2^>nul ^| findstr /i "Path"') do set "PATH=%%B;!PATH!"
+
 echo.
 echo  ╔══════════════════════════════════════════════════════════╗
 echo  ║              Nexus One POS v2.9.73                      ║
@@ -28,10 +32,10 @@ echo.
 echo  [2/5] Detectando IP local para acceso movil...
 set LOCAL_IP=desconocida
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /R /C:"IPv4"') do (
-    for /f "tokens=*" %%b in ("%%a") do set LOCAL_IP=%%b
+    for /f "tokens=*" %%b in ("%%a") do set "LOCAL_IP=%%~b"
 )
-set LOCAL_IP=%LOCAL_IP: =%
-echo         IP local: %LOCAL_IP%
+set "LOCAL_IP=!LOCAL_IP: =!"
+echo         IP local: !LOCAL_IP!
 echo.
 
 :: ============================================================
@@ -52,26 +56,28 @@ echo.
 :: ============================================================
 echo  [4/5] Preparando base de datos y compilacion...
 
-:: Generar cliente Prisma silenciosamente
+:: Detectar gestor de paquetes
+set "PKG=bun"
 where bun >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if !ERRORLEVEL! NEQ 0 set "PKG=npm"
+
+:: Generar cliente Prisma silenciosamente
+if "!PKG!"=="bun" (
     call bunx prisma generate >nul 2>&1
 ) else (
     call npx prisma generate >nul 2>&1
 )
-
-echo         Prisma generado.
+echo         Prisma generado (!PKG!).
 
 :: Verificar si existe el build de produccion
 if not exist ".next\server" (
     echo         No se encontro build de produccion, compilando...
-    where bun >nul 2>&1
-    if %ERRORLEVEL% EQU 0 (
+    if "!PKG!"=="bun" (
         call bun run build
     ) else (
         call npm run build
     )
-    if %ERRORLEVEL% NEQ 0 (
+    if !ERRORLEVEL! NEQ 0 (
         echo.
         echo  [ERROR] La compilacion fallo. Revise los errores arriba.
         echo.
@@ -93,7 +99,7 @@ echo  ┌───────────────────────�
 echo  │  Nexus One POS v2.9.73 - SERVIDOR ACTIVO               │
 echo  │                                                          │
 echo  │  Local:   http://localhost:3000                          │
-echo  │  Red:     http://%LOCAL_IP%:3000%                        │
+echo  │  Red:     http://!LOCAL_IP!:3000                          │
 echo  │                                                          │
 echo  │  Presione Ctrl+C para detener el servidor.              │
 echo  └──────────────────────────────────────────────────────────┘
@@ -105,8 +111,7 @@ start http://localhost:3000
 echo.
 
 :: Iniciar el servidor de produccion
-where bun >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
+if "!PKG!"=="bun" (
     call bun run start
 ) else (
     call npm run start
