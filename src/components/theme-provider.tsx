@@ -32,7 +32,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem("myecommerce-theme");
+    const saved = localStorage.getItem("nexus-one-pos-theme");
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -55,7 +55,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       root.classList.remove("dark");
       root.setAttribute("data-theme", "blue");
     }
-    localStorage.setItem("myecommerce-theme", JSON.stringify({ mode, colorTheme }));
+    localStorage.setItem("nexus-one-pos-theme", JSON.stringify({ mode, colorTheme }));
   }, [mode, colorTheme, mounted]);
 
   const resolvedTheme = `${mode}-${colorTheme}`;

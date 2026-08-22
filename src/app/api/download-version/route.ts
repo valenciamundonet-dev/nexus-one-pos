@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { existsSync, statSync, createReadStream } from 'fs';
 import { join } from 'path';
 
-const GITHUB_REPO = 'csglider/MyeCommerce-v2.9.20';
+const GITHUB_REPO = 'csglider/Nexus One-v2.9.20';
 
 export async function GET(req: NextRequest) {
   try {
@@ -22,10 +22,10 @@ export async function GET(req: NextRequest) {
 
     // === Opcion 1: Buscar ZIP local en carpeta releases/ ===
     const localPatterns = [
-      join(BASE, 'releases', `MyeCommerce-${tagName}.zip`),
-      join(BASE, 'releases', `MyeCommerce-v2.9.20-${version}.zip`),
+      join(BASE, 'releases', `Nexus One-${tagName}.zip`),
+      join(BASE, 'releases', `Nexus One-v2.9.20-${version}.zip`),
       join(BASE, 'releases', `${tagName}.zip`),
-      join(BASE, 'public', `MyeCommerce-v2.9.20-${version}.zip`),
+      join(BASE, 'public', `Nexus One-v2.9.20-${version}.zip`),
     ];
 
     for (const filePath of localPatterns) {
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
           headers: {
             'Content-Type': 'application/zip',
             'Content-Length': String(fileStat.size),
-            'Content-Disposition': `attachment; filename="MyeCommerce-${tagName}.zip"`,
+            'Content-Disposition': `attachment; filename="Nexus One-${tagName}.zip"`,
           },
         });
       }
@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
       return new Response(dlRes.body, {
         headers: {
           'Content-Type': 'application/zip',
-          'Content-Disposition': `attachment; filename="MyeCommerce-${tagName}.zip"`,
+          'Content-Disposition': `attachment; filename="Nexus One-${tagName}.zip"`,
         },
       });
     }

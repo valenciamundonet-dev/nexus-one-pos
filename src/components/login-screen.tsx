@@ -13,7 +13,7 @@ interface LoginScreenProps {
   storeName?: string;
 }
 
-export default function LoginScreen({ onLogin, storeName = "MyeCommerce" }: LoginScreenProps) {
+export default function LoginScreen({ onLogin, storeName = "Nexus One" }: LoginScreenProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -92,9 +92,9 @@ export default function LoginScreen({ onLogin, storeName = "MyeCommerce" }: Logi
 
       // Store token JWT and user data
       if (data.token) {
-        localStorage.setItem("myecommerce_token", data.token);
+        localStorage.setItem("nexus-one-pos_token", data.token);
       }
-      localStorage.setItem("myecommerce_user", JSON.stringify(data));
+      localStorage.setItem("nexus-one-pos_user", JSON.stringify(data));
       onLogin(data);
       toast.success(`Bienvenido, ${data.fullName || data.username}`);
     } catch {
@@ -142,9 +142,9 @@ export default function LoginScreen({ onLogin, storeName = "MyeCommerce" }: Logi
       // Contraseña cambiada — guardar nuevo token si viene
       if (pendingUser) {
         if (data.token) {
-          localStorage.setItem("myecommerce_token", data.token);
+          localStorage.setItem("nexus-one-pos_token", data.token);
         }
-        localStorage.setItem("myecommerce_user", JSON.stringify(pendingUser));
+        localStorage.setItem("nexus-one-pos_user", JSON.stringify(pendingUser));
         onLogin(pendingUser);
         toast.success("Contrasena actualizada correctamente");
       }
@@ -237,7 +237,7 @@ export default function LoginScreen({ onLogin, storeName = "MyeCommerce" }: Logi
           </Card>
 
           <p className="text-center text-slate-500 text-xs mt-6">
-            MyeCommerce POS v{appVer}
+            Nexus One POS v{appVer}
           </p>
         </div>
       </div>
@@ -323,7 +323,7 @@ export default function LoginScreen({ onLogin, storeName = "MyeCommerce" }: Logi
         </Card>
 
         <p className="text-center text-slate-500 text-xs mt-6">
-          MyeCommerce POS v{appVer} &bull; Doble Moneda $/Bs
+          Nexus One POS v{appVer} &bull; Doble Moneda $/Bs
         </p>
       </div>
     </div>

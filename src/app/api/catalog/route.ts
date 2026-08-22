@@ -300,7 +300,7 @@ export async function GET(req: NextRequest) {
     <!-- PIE DE PAGINA -->
     <div class="footer">
       <p>${storeName} &middot; ${storeRif} &middot; Generado el ${dateStr}</p>
-      <p style="margin-top:4px;">Catalogo generado por MyeCommerce POS v{getAppVersion()}</p>
+      <p style="margin-top:4px;">Catalogo generado por Nexus One POS v{getAppVersion()}</p>
     </div>
   </div>
 </body>

@@ -6,6 +6,6 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   return NextResponse.json({
     version: getAppVersion(),
-    name: 'MyeCommerce POS',
+    name: 'Nexus One POS',
   });
 }

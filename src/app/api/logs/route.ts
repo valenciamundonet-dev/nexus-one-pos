@@ -74,7 +74,7 @@ export async function DELETE(req: NextRequest) {
 
     if (action === 'clear') {
       if (existsSync(LOG_FILE)) {
-        const header = `=== MyeCommerce System Log === Cleared at ${new Date().toISOString()} ===\n`;
+        const header = `=== Nexus One System Log === Cleared at ${new Date().toISOString()} ===\n`;
         writeFileSync(LOG_FILE, header, 'utf-8');
         logInfo('logs', 'Log limpiado por administrador');
       }

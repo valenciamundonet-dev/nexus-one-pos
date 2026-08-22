@@ -320,7 +320,7 @@ export default function ProductsTab({ products, categories, brands, bcvRate, eur
       let errMsg = "Error al iniciar escaner.";
       if (m.includes("permission") || m.includes("notallowederror")) errMsg = "Permiso de camara denegado. Active la camara en el navegador (icono de candado) y recargue la pagina.";
       else if (m.includes("notfound") || m.includes("notfounderror")) errMsg = "No se encontro camara. Verifique que este conectada y no este en uso por otra app.";
-      else if (m.includes("notsecure") || m.includes("secure context")) errMsg = "La camara requiere conexion segura (HTTPS). Use https://myecommerce.ve en lugar de http://localhost.";
+      else if (m.includes("notsecure") || m.includes("secure context")) errMsg = "La camara requiere conexion segura (HTTPS). Use https://nexus-one-pos.ve en lugar de http://localhost.";
       else if (m.includes("notreadable") || m.includes("aborterror")) errMsg = "La camara esta siendo usada por otra aplicacion. Cierre otras apps que usen la camara.";
       setScannerError(errMsg);
     }

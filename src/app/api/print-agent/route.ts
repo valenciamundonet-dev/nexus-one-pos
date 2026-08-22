@@ -5,7 +5,7 @@ const AGENT_TIMEOUT = 15000; // 15s timeout para el agente
 
 /**
  * Server-side proxy to printer-agent.
- * Avoids mixed-content errors when the app runs on https://myecommerce.ve
+ * Avoids mixed-content errors when the app runs on https://nexus-one-pos.ve
  * and the agent runs on http://localhost:9100.
  */
 

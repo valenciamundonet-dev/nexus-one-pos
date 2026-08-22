@@ -1,5 +1,5 @@
 /**
- * MyeCommerce POS - Agente de Impresion ESC/POS v3.0
+ * Nexus One POS - Agente de Impresion ESC/POS v3.0
  *
  * IMPRESION USB EN WINDOWS SIN DEPENDENCIAS EXTERNAS.
  * Usa la API winspool.drv de Windows para enviar bytes ESC/POS crudos
@@ -202,7 +202,7 @@ var server = http.createServer(function(req, res) {
   var allowedOrigins = [
     'http://localhost', 'http://127.0.0.1',
     'https://localhost', 'https://127.0.0.1',
-    'https://myecommerce.ve',
+    'https://nexus-one-pos.ve',
   ];
   var origin = req.headers.origin || '';
   if (allowedOrigins.some(function(o) { return origin.indexOf(o) === 0; })) {
@@ -348,7 +348,7 @@ var server = http.createServer(function(req, res) {
 function start() {
   console.log('');
   console.log('+---------------------------------------------------+');
-  console.log('|   MyeCommerce POS - Agente de Impresion v3.1      |');
+  console.log('|   Nexus One POS - Agente de Impresion v3.1      |');
   console.log('|   Impresion USB Windows (winspool.drv directo)  |');
   console.log('+---------------------------------------------------+');
   console.log('');

@@ -6,7 +6,7 @@ import { join } from 'path';
 import { pipeline } from 'stream/promises';
 import { Readable } from 'stream';
 
-const GITHUB_REPO = 'csglider/MyeCommerce-v2.9.20';
+const GITHUB_REPO = 'csglider/Nexus One-v2.9.20';
 
 // Carpetas y archivos que se PRESERVAN al actualizar
 const PRESERVE_LIST = [
@@ -262,7 +262,7 @@ export async function POST(req: NextRequest) {
           for (const entry of extractEntries) {
             const fullPath = join(tempExtract, entry);
             const s = await stat(fullPath);
-            if (s.isDirectory() && entry.includes('MyeCommerce')) {
+            if (s.isDirectory() && entry.includes('Nexus One')) {
               extractedDir = fullPath;
               break;
             }

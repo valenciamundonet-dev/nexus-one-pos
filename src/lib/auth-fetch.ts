@@ -1,8 +1,8 @@
 // Wrapper centralizado de fetch con autenticacion JWT.
 // Todas las llamadas a la API pasan por aqui para inyectar el token automaticamente.
 
-const TOKEN_KEY = 'myecommerce_token';
-const USER_KEY = 'myecommerce_user';
+const TOKEN_KEY = 'nexus-one-pos_token';
+const USER_KEY = 'nexus-one-pos_user';
 
 /**
  * Obtiene el token JWT almacenado.

@@ -180,7 +180,7 @@ export default function Home() {
   // Auth: load user from localStorage
   useEffect(() => {
     const stored = getStoredUser();
-    const token = localStorage.getItem("myecommerce_token");
+    const token = localStorage.getItem("nexus-one-pos_token");
     if (stored && token) {
       setCurrentUser(stored);
     } else {
@@ -209,7 +209,7 @@ export default function Home() {
 
   const handleUserUpdate = (updated: CurrentUser) => {
     setCurrentUser(updated);
-    const token = localStorage.getItem("myecommerce_token");
+    const token = localStorage.getItem("nexus-one-pos_token");
     if (token) {
       storeSession(token, updated);
     }
@@ -356,7 +356,7 @@ export default function Home() {
 
   // Show loading screen
   if (loading || !authReady) {
-    return (<div className="flex items-center justify-center min-h-screen"><div className="text-center space-y-3"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" /><p className="text-muted-foreground">Cargando MyeCommerce...</p></div></div>);
+    return (<div className="flex items-center justify-center min-h-screen"><div className="text-center space-y-3"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" /><p className="text-muted-foreground">Cargando Nexus One...</p></div></div>);
   }
   // Show login screen
   if (!currentUser) {
@@ -763,7 +763,7 @@ export default function Home() {
       {showWatermark && <div className="fixed bottom-12 right-4 text-yellow-500/30 text-6xl font-bold pointer-events-none select-none rotate-[-15deg] z-50">TRIAL</div>}
 
       <footer className="border-t py-2 text-center text-xs text-muted-foreground">
-        <p>MyeCommerce POS v{appVersion} - Sistema Punto de Venta Venezuela | Doble Moneda $/Bs{showWatermark && " | Version de Prueba"}</p>
+        <p>Nexus One POS v{appVersion} - Sistema Punto de Venta Venezuela | Doble Moneda $/Bs{showWatermark && " | Version de Prueba"}</p>
       </footer>
 
       {/* MODALES */}

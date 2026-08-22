@@ -417,7 +417,7 @@ export default function CashClosingTab({ bcvRate, currency }: CashClosingTabProp
 
       ${c.observations ? `<h2>Observaciones</h2><p style="font-size:11px;padding:8px;background:#f9f9f9;border-radius:4px">${c.observations}</p>` : ''}
 
-      <div class="footer">Generado por MyeCommerce POS v{appVer}</div>
+      <div class="footer">Generado por Nexus One POS v{appVer}</div>
       <script>window.onload=function(){window.print();window.close();}</script>
       </body></html>`);
     printWindow.document.close();

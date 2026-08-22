@@ -271,7 +271,7 @@ export default function PurchasesTab({ bcvRate = 36.5 }: { bcvRate?: number }) {
       </div>
       ${purchase.notes ? `<div class="line" style="margin-top:6px"></div><div class="s" style="font-style:italic">Nota: ${purchase.notes}</div>` : ''}
       <div class="line" style="margin-top:8px"></div>
-      <div class="c s">MyeCommerce POS</div>
+      <div class="c s">Nexus One POS</div>
       <div class="c s">Comprobante de compra - No fiscal</div>
       <script>window.onload=function(){window.print()}</script>
     </body></html>`);

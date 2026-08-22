@@ -723,7 +723,7 @@ export default function ConfigTab({ settings, onSettingsChange, licenseFeatures 
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `myecommerce_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `nexus-one-pos_backup_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success("Datos exportados");

@@ -30,7 +30,7 @@ export default function BackupTab() {
         setBackupVersion(data.version || "");
       }
     } catch {}
-    const stored = localStorage.getItem("myecommerce_last_backup");
+    const stored = localStorage.getItem("nexus-one-pos_last_backup");
     if (stored) setLastBackup(stored);
   };
 
@@ -50,7 +50,7 @@ export default function BackupTab() {
       const a = document.createElement("a");
       a.href = url;
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-      a.download = `myecommerce_respaldo_${timestamp}.json`;
+      a.download = `nexus-one-pos_respaldo_${timestamp}.json`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -58,7 +58,7 @@ export default function BackupTab() {
 
       // Save last backup time
       const now = new Date().toLocaleString("es-VE");
-      localStorage.setItem("myecommerce_last_backup", now);
+      localStorage.setItem("nexus-one-pos_last_backup", now);
       setLastBackup(now);
       toast.success("Respaldo descargado correctamente");
     } catch (error: any) {
@@ -91,7 +91,7 @@ export default function BackupTab() {
 
       // Validate backup structure
       if (!data.products && !data.sales) {
-        throw new Error("El archivo no parece un respaldo valido de MyeCommerce");
+        throw new Error("El archivo no parece un respaldo valido de Nexus One");
       }
 
       const res = await authFetch("/api/backup", {

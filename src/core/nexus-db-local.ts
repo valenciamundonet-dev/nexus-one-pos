@@ -1,5 +1,5 @@
 /**
- * Nexus One POS — Local-First Database v1.0
+ * Nexus One POS — Local-First Database v1.1
  * 
  * Capa de persistencia ultra-resiliente con tolerancia a fallos.
  * 
@@ -33,6 +33,15 @@ const BUSY_RETRY_DELAY_MS = 50;
 const CHECKPOINT_INTERVAL = 1000; // escrituras entre checkpoints
 const HEALTH_CHECK_INTERVAL_MS = 30000;
 
+// Detectar si estamos en build-time de Next.js (no hay DB disponible)
+const isBuildTime = typeof process !== 'undefined' &&
+  (process.env.NEXT_PHASE === 'phase-production-build' ||
+   process.env.__NEXT_TEST_MODE ||
+   !process.env.DATABASE_URL);
+
+// Detectar si estamos en el navegador
+const isBrowser = typeof window !== 'undefined';
+
 // ─── Prisma Client with enhanced settings ───────────────────
 function createResilientClient(): PrismaClient {
   return new PrismaClient({
@@ -42,16 +51,14 @@ function createResilientClient(): PrismaClient {
   });
 }
 
-// ─── Singleton ─────────────────────────────────────────────
+// ─── Singleton placeholder ─────────────────────────────────
 const globalForDb = globalThis as unknown as {
   nexusDb: NexusLocalDB | undefined;
 };
 
-export const nexusDb = globalForDb.nexusDb ?? new NexusLocalDB();
-if (process.env.NODE_ENV !== 'production') globalForDb.nexusDb = nexusDb;
-
 // ═══════════════════════════════════════════════════════════════
-// MAIN CLASS
+// MAIN CLASS — Definida ANTES del singleton para evitar
+// ReferenceError por hoisting en produccion (minificado)
 // ═══════════════════════════════════════════════════════════════
 
 export class NexusLocalDB {
@@ -62,12 +69,41 @@ export class NexusLocalDB {
   private queryTimes: number[] = [];
   private isShuttingDown = false;
   private healthCheckTimer: ReturnType<typeof setInterval> | null = null;
+  private walEnabled = false;
 
   constructor() {
     this.client = createResilientClient();
-    this.enableWALMode();
+    // NO llamar metodos async en el constructor.
+    // Se inicializan de forma lazy o via init().
+    if (!isBuildTime && !isBrowser) {
+      this.lazyInit();
+    }
+  }
+
+  /** Inicializacion lazy — se ejecuta en primer uso real */
+  private _initPromise: Promise<void> | null = null;
+  private lazyInit(): void {
+    if (!this._initPromise) {
+      this._initPromise = this._doInit().catch(err => {
+        console.error('[Nexus One DB] Init failed:', err);
+        this._initPromise = null; // Permitir reintento
+      });
+    }
+  }
+
+  private async _doInit(): Promise<void> {
+    try {
+      await this.enableWALMode();
+    } catch (err) {
+      console.warn('[Nexus One DB] WAL mode setup deferred:', err);
+    }
     this.startHealthMonitor();
     this.setupGracefulShutdown();
+  }
+
+  /** Esperar a que la inicializacion este lista */
+  async ready(): Promise<void> {
+    if (this._initPromise) await this._initPromise;
   }
 
   // ─── Access underlying Prisma client ──────────────────────
@@ -77,6 +113,7 @@ export class NexusLocalDB {
 
   // ─── Enable WAL mode for non-blocking writes ──────────────
   private async enableWALMode(): Promise<void> {
+    if (isBuildTime || isBrowser) return;
     try {
       await this.client.$executeRawUnsafe('PRAGMA journal_mode = WAL;');
       await this.client.$executeRawUnsafe('PRAGMA synchronous = NORMAL;');
@@ -84,6 +121,7 @@ export class NexusLocalDB {
       await this.client.$executeRawUnsafe('PRAGMA busy_timeout = 5000;');
       await this.client.$executeRawUnsafe('PRAGMA cache_size = -8000;'); // 8MB cache
       await this.client.$executeRawUnsafe('PRAGMA temp_store = MEMORY;');
+      this.walEnabled = true;
       console.log('[Nexus One DB] WAL mode enabled with 8MB cache');
     } catch (err) {
       console.error('[Nexus One DB] Failed to enable WAL mode:', err);
@@ -153,6 +191,7 @@ export class NexusLocalDB {
 
   // ─── Health Monitor ────────────────────────────────────────
   private startHealthMonitor(): void {
+    if (isBuildTime || isBrowser) return;
     this.healthCheckTimer = setInterval(() => {
       this.checkHealth().catch(() => {});
     }, HEALTH_CHECK_INTERVAL_MS);
@@ -205,6 +244,8 @@ export class NexusLocalDB {
 
   // ─── Graceful Shutdown ─────────────────────────────────────
   private setupGracefulShutdown(): void {
+    if (isBuildTime || isBrowser) return;
+
     const shutdown = async () => {
       if (this.isShuttingDown) return;
       this.isShuttingDown = true;
@@ -218,19 +259,10 @@ export class NexusLocalDB {
       }
     };
 
-    // Handle process signals
-    if (typeof process !== 'undefined') {
+    if (typeof process !== 'undefined' && process.on) {
       process.on('SIGINT', shutdown);
       process.on('SIGTERM', shutdown);
       process.on('beforeExit', shutdown);
-    }
-
-    // Handle browser unload
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', () => {
-        // Send sync beacon to trigger server-side checkpoint
-        navigator.sendBeacon('/api/backup/emergency-wal');
-      });
     }
   }
 
@@ -244,12 +276,6 @@ export class NexusLocalDB {
    * En el futuro, este método inicializará PGLite como capa
    * de cache client-side. Por ahora, la BD local es Prisma/SQLite
    * del lado del servidor Next.js.
-   * 
-   * Arquitectura target:
-   *   Browser (PGLite/WASM) ←→ Sync ←→ Server (Prisma/SQLite)
-   *   - PGLite maneja lecturas offline instantáneas
-   *   - Prisma maneja escrituras y datos compartidos
-   *   - Sync reconcilia al recuperar conexión
    */
   async initPGLite(): Promise<{ available: boolean; message: string }> {
     return {
@@ -257,4 +283,15 @@ export class NexusLocalDB {
       message: 'PGLite se integrará como cache client-side en Fase 5. Actualmente usa Prisma/SQLite server-side con WAL mode.',
     };
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SINGLETON — DESPUES de la definicion de la clase
+// Esto evita ReferenceError: Cannot access before initialization
+// cuando el código se minifica en produccion.
+// ═══════════════════════════════════════════════════════════════
+
+export const nexusDb: NexusLocalDB = globalForDb.nexusDb ?? new NexusLocalDB();
+if (process.env.NODE_ENV !== 'production') {
+  globalForDb.nexusDb = nexusDb;
 }

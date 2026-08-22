@@ -433,7 +433,7 @@ export default function LicenseTab({ license, onLicenseChange }: LicenseTabProps
               <div className="flex-1">
                 <p className="font-semibold text-yellow-800">Version de PRUEBA - {license.daysRemaining} dias restantes</p>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Prueba MyeCommerce POS con funciones basicas. Al activar una licencia BASICA o PROFESIONAL
+                  Prueba Nexus One POS con funciones basicas. Al activar una licencia BASICA o PROFESIONAL
                   desbloqueara todas las funciones y el sistema quedara vinculado permanentemente a este equipo.
                 </p>
                 <div className="mt-2 p-2 bg-yellow-100 rounded text-xs text-yellow-800">
@@ -463,7 +463,7 @@ export default function LicenseTab({ license, onLicenseChange }: LicenseTabProps
               <div className="flex-1">
                 <p className="font-semibold text-red-800">LICENCIA EXPIRADA</p>
                 <p className="text-sm text-red-700 mt-1">
-                  Su licencia ha expirado. Active una nueva clave para continuar utilizando MyeCommerce POS.
+                  Su licencia ha expirado. Active una nueva clave para continuar utilizando Nexus One POS.
                   Sus datos se conservan de forma segura.
                 </p>
                 <Button size="sm" className="mt-3" onClick={() => setShowActivateDialog(true)}>
