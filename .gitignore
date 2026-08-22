@@ -52,10 +52,11 @@ tool-results/
 upload/
 myecommerce-repo/
 download/
-*.bat
-*.vbs
-*.hta
 PROGRESS.hta
+
+# Installer temp files
+crea_acc.vbs
+local-ip.txt
 
 # Cache
 cache/
@@ -63,7 +64,4 @@ cache/
 .eslintcache
 
 # Misc
-LEAME-PROYECTO.md
-LEEME.txt
-VERSIONES.md
 generar-licencia.js

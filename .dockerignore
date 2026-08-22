@@ -1,0 +1,29 @@
+# ─────────────────────────────────────────────────────────────
+# Nexus One POS — Docker ignore
+# ─────────────────────────────────────────────────────────────
+
+.next
+node_modules
+download
+dist
+db
+*.db
+*.db-wal
+*.db-shm
+.git
+.github
+caddy
+scripts/pos-arch
+scripts/*.py
+*.bat
+*.vbs
+*.ps1
+*.log
+*.tgz
+*.zip
+.vscode
+.idea
+*.md
+!prisma/
+!public/
+!src/

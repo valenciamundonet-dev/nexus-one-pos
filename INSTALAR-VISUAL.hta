@@ -1,0 +1,376 @@
+<html>
+<head>
+<title>Nexus One POS v2.9.73 — Instalador</title>
+<HTA:APPLICATION
+  ID="NexusInstaller"
+  APPLICATIONNAME="Nexus One POS Installer"
+  BORDERSTYLE="normal"
+  BORDER="thick"
+  CAPTION="yes"
+  ICON="shell32.dll,14"
+  MAXIMIZEBUTTON="no"
+  MINIMIZEBUTTON="no"
+  SHOWINTASKBAR="yes"
+  SINGLEINSTANCE="yes"
+  SYSMENU="yes"
+  VERSION="2.9.73"
+  WINDOWSTATE="normal"
+/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+  height: 100vh;
+  overflow: hidden;
+}
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 30px 24px;
+}
+.header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+.header h1 {
+  font-size: 22px;
+  color: #38bdf8;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+.header .version {
+  font-size: 12px;
+  color: #64748b;
+}
+.progress-section {
+  background: #1e293b;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #334155;
+}
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+.progress-header .step { color: #94a3b8; }
+.progress-header .pct { color: #38bdf8; font-weight: bold; }
+.progress-track {
+  width: 100%;
+  height: 24px;
+  background: #0f172a;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #334155;
+}
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0ea5e9, #38bdf8, #7dd3fc);
+  border-radius: 12px;
+  transition: width 0.4s ease;
+}
+.log-box {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 14px;
+  height: 200px;
+  overflow-y: auto;
+  font-family: 'Cascadia Code', 'Consolas', monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+.log-line { margin: 0; }
+.log-line.ok { color: #4ade80; }
+.log-line.warn { color: #fbbf24; }
+.log-line.error { color: #f87171; }
+.log-line.info { color: #94a3b8; }
+.log-line.step { color: #38bdf8; font-weight: bold; }
+.btn-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.btn {
+  padding: 10px 32px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #0ea5e9, #2563eb);
+  color: white;
+}
+.btn-primary:hover { opacity: 0.9; }
+.btn-danger {
+  background: linear-gradient(135deg, #dc2626, #991b1b);
+  color: white;
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.footer {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 11px;
+  color: #475569;
+}
+.success-banner {
+  display: none;
+  text-align: center;
+  padding: 20px;
+  background: #065f46;
+  border: 1px solid #10b981;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+.success-banner h2 { color: #4ade80; margin-bottom: 8px; }
+.success-banner p { color: #a7f3d0; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>NEXUS ONE POS</h1>
+    <div class="version">v2.9.73 — Sistema Punto de Venta — Instalador Limpio</div>
+  </div>
+
+  <div class="success-banner" id="successBanner">
+    <h2>Instalacion Completada</h2>
+    <p>Para iniciar el sistema, ejecute <b>INICIAR-TODO.bat</b><br>
+    El sistema abrira en su navegador: http://localhost:3000<br>
+    Usuario por defecto: <b>admin / admin</b></p>
+  </div>
+
+  <div class="progress-section">
+    <div class="progress-header">
+      <span class="step" id="stepLabel">Paso 0 / 7</span>
+      <span class="pct" id="pctLabel">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <div class="log-box" id="logBox"></div>
+
+  <div class="btn-row" id="btnRow">
+    <button class="btn btn-danger" id="btnInstall" onclick="startInstall()">Instalar Limpio</button>
+    <button class="btn btn-primary" id="btnClose" onclick="window.close()" style="display:none;">Cerrar</button>
+  </div>
+
+  <div class="footer">Nexus One POS v2.9.73 — Next.js 15 + Bun + Prisma + SQLite WAL + shadcn/ui</div>
+</div>
+
+<script>
+var shell, fso, scriptDir;
+var totalSteps = 7;
+var currentStep = 0;
+
+function init() {
+  shell = new ActiveXObject("WScript.Shell");
+  fso = new ActiveXObject("Scripting.FileSystemObject");
+  scriptDir = fso.GetParentFolderName(document.location.pathname);
+  // Limpiar ruta \ de HTA
+  scriptDir = scriptDir.replace(/\\/g, "\\");
+  log("Nexus One POS v2.9.73 — Instalador Visual", "step");
+  log("Directorio: " + scriptDir, "info");
+  log("Presione 'Instalar Limpio' para comenzar", "info");
+  log("", "info");
+}
+
+function log(msg, type) {
+  var box = document.getElementById("logBox");
+  var line = document.createElement("p");
+  line.className = "log-line " + (type || "info");
+  line.innerText = msg;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function setProgress(step, total) {
+  var pct = Math.round((step / total) * 100);
+  document.getElementById("stepLabel").innerText = "Paso " + step + " / " + total;
+  document.getElementById("pctLabel").innerText = pct + "%";
+  document.getElementById("progressFill").style.width = pct + "%";
+}
+
+function runCmd(cmd) {
+  try {
+    return shell.Run(cmd, 0, true);
+  } catch(e) {
+    return -1;
+  }
+}
+
+function runCmdVisible(cmd) {
+  try {
+    return shell.Run(cmd, 0, true);
+  } catch(e) {
+    return -1;
+  }
+}
+
+function fileExists(path) {
+  return fso.FileExists(path);
+}
+
+function folderExists(path) {
+  return fso.FolderExists(path);
+}
+
+function deleteFolder(path) {
+  try { if (folderExists(path)) fso.DeleteFolder(path, true); } catch(e) {}
+}
+
+function deleteFile(path) {
+  try { if (fileExists(path)) fso.DeleteFile(path, true); } catch(e) {}
+}
+
+function startInstall() {
+  document.getElementById("btnInstall").disabled = true;
+  document.getElementById("btnInstall").innerText = "Instalando...";
+
+  // Paso 1: Cerrar procesos
+  currentStep = 1;
+  setProgress(currentStep, totalSteps);
+  log("[1/7] Cerrando procesos Node.js anteriores...", "step");
+  shell.Run("taskkill /F /IM node.exe", 0, true);
+  // Esperar un poco
+  var d = new Date(); while(new Date() - d < 2000) {}
+  log("  Procesos cerrados", "ok");
+
+  // Paso 2: Limpieza
+  currentStep = 2;
+  setProgress(currentStep, totalSteps);
+  log("[2/7] Limpiando instalacion anterior...", "step");
+  deleteFolder(scriptDir + "\\node_modules");
+  deleteFolder(scriptDir + "\\.next");
+  deleteFile(scriptDir + "\\package-lock.json");
+  deleteFile(scriptDir + "\\prisma\\dev.db");
+  deleteFile(scriptDir + "\\prisma\\dev.db-journal");
+  deleteFile(scriptDir + "\\prisma\\dev.db-wal");
+  deleteFile(scriptDir + "\\prisma\\dev.db-shm");
+  deleteFile(scriptDir + "\\.env");
+  log("  Archivos limpiados correctamente", "ok");
+
+  // Paso 3: Verificar Node.js
+  currentStep = 3;
+  setProgress(currentStep, totalSteps);
+  log("[3/7] Verificando requisitos del sistema...", "step");
+  try {
+    var nodeVer = shell.Exec("node -v").StdOut.ReadAll().trim();
+    log("  Node.js: " + nodeVer + " — OK", "ok");
+  } catch(e) {
+    log("  ERROR: Node.js no esta instalado. Descargue de nodejs.org", "error");
+    document.getElementById("btnInstall").disabled = false;
+    document.getElementById("btnInstall").innerText = "Reintentar";
+    return;
+  }
+
+  // Paso 4: Instalar dependencias
+  currentStep = 4;
+  setProgress(currentStep, totalSteps);
+  log("[4/7] Instalando dependencias (esto puede tardar)...", "step");
+  var pkgCmd = "bun install";
+  try {
+    shell.Exec("where bun").StdOut.ReadAll();
+    log("  Usando Bun como gestor de paquetes", "info");
+  } catch(e) {
+    pkgCmd = "cmd /c npm install --legacy-peer-deps";
+    log("  Usando npm como gestor de paquetes", "info");
+  }
+  var ret = runCmdVisible("cmd /c cd /d \"" + scriptDir + "\" && " + pkgCmd);
+  if (ret !== 0) {
+    log("  Reintentando con npm --force...", "warn");
+    runCmdVisible("cmd /c cd /d \"" + scriptDir + "\" && npm install --force");
+  }
+  log("  Dependencias instaladas", "ok");
+
+  // Paso 5: Prisma
+  currentStep = 5;
+  setProgress(currentStep, totalSteps);
+  log("[5/7] Generando Prisma y base de datos...", "step");
+  runCmd("cmd /c cd /d \"" + scriptDir + "\" && bunx prisma generate");
+  log("  Cliente Prisma generado", "ok");
+  runCmd("cmd /c cd /d \"" + scriptDir + "\" && bunx prisma db push");
+  log("  Base de datos SQLite creada", "ok");
+
+  // Paso 6: Config .env
+  currentStep = 6;
+  setProgress(currentStep, totalSteps);
+  log("[6/7] Configurando variables de entorno...", "step");
+  var envExample = scriptDir + "\\.env.example";
+  var envFile = scriptDir + "\\.env";
+  if (!fileExists(envFile) && fileExists(envExample)) {
+    fso.CopyFile(envExample, envFile);
+    log("  .env creado desde .env.example", "ok");
+  } else if (!fileExists(envFile)) {
+    var tf = fso.CreateTextFile(envFile, true);
+    tf.WriteLine("DATABASE_URL=\"file:./dev.db\"");
+    tf.WriteLine("APP_PORT=3000");
+    tf.WriteLine("NODE_ENV=production");
+    tf.Close();
+    log("  .env creado con valores por defecto", "ok");
+  } else {
+    log("  .env ya existe, no se modifica", "warn");
+  }
+
+  // Crear carpeta respaldos
+  var respDir = scriptDir + "\\respaldos";
+  if (!folderExists(respDir)) {
+    fso.CreateFolder(respDir);
+  }
+  log("  Carpeta respaldos creada", "ok");
+
+  // Paso 7: Compilar
+  currentStep = 7;
+  setProgress(currentStep, totalSteps);
+  log("[7/7] Compilando para produccion...", "step");
+  runCmdVisible("cmd /c cd /d \"" + scriptDir + "\" && bun run build");
+  log("  Compilacion completada", "ok");
+
+  // Completado
+  setProgress(totalSteps, totalSteps);
+  log("", "info");
+  log("=== INSTALACION COMPLETADA ===", "step");
+  log("", "info");
+  log("Para iniciar: INICIAR-TODO.bat", "ok");
+  log("Navegador: http://localhost:3000", "ok");
+  log("Usuario: admin / admin", "ok");
+
+  // Crear acceso directo
+  try {
+    var wshShell = new ActiveXObject("WScript.Shell");
+    var desktop = wshShell.SpecialFolders("Desktop");
+    var lnk = wshShell.CreateShortcut(desktop + "\\Nexus One POS.lnk");
+    lnk.TargetPath = scriptDir + "\\INICIAR-TODO.bat";
+    lnk.WorkingDirectory = scriptDir;
+    lnk.Description = "Nexus One POS v2.9.73";
+    lnk.IconLocation = "shell32.dll,14";
+    lnk.Save();
+    log("Acceso directo creado en el Escritorio", "ok");
+  } catch(e) {
+    log("No se pudo crear acceso directo", "warn");
+  }
+
+  // UI final
+  document.getElementById("successBanner").style.display = "block";
+  document.getElementById("btnInstall").style.display = "none";
+  document.getElementById("btnClose").style.display = "inline-block";
+}
+
+window.onload = init;
+</script>
+</body>
+</html>
