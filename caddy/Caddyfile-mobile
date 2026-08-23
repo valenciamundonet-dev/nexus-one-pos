@@ -1,4 +1,4 @@
-# Caddyfile-mobile - MyeCommerce POS
+# Caddyfile-mobile - Nexus One POS
 # ============================================================================
 # Acceso movil via HTTPS :8443 (con certificado auto-firmado)
 # La camara del telefono REQUIERE HTTPS para funcionar
@@ -8,33 +8,33 @@
 
 # Desactivar admin API (no necesitamos panel de admin en movil)
 {
-	admin off
+        admin off
 }
 
 # HTTPS en puerto 8443 para TODAS las interfaces (0.0.0.0)
 # Con certificado auto-firmado — permite camara desde el telefono
 https://0.0.0.0:8443 {
 
-	# Proxy a Next.js
-	reverse_proxy localhost:3000
+        # Proxy a Next.js
+        reverse_proxy localhost:3000
 
-	# Headers optimizados para acceso movil
-	header {
-		# Permitir recursos crossorigin (COEP credentialless = no bloquea)
-		Cross-Origin-Embedder-Policy "credentialless"
-		Cross-Origin-Opener-Policy "same-origin"
-		# Cache para assets estaticos
-		Cache-Control "public, max-age=3600"
-		X-Content-Type-Options "nosniff"
-		# WebSocket support (Next.js HMR en dev)
-		Upgrade "websocket"
-		Connection "upgrade"
-	}
+        # Headers optimizados para acceso movil
+        header {
+                # Permitir recursos crossorigin (COEP credentialless = no bloquea)
+                Cross-Origin-Embedder-Policy "credentialless"
+                Cross-Origin-Opener-Policy "same-origin"
+                # Cache para assets estaticos
+                Cache-Control "public, max-age=3600"
+                X-Content-Type-Options "nosniff"
+                # WebSocket support (Next.js HMR en dev)
+                Upgrade "websocket"
+                Connection "upgrade"
+        }
 
-	# Log a archivo para depuracion
-	log {
-		output file caddy-mobile.log
-		format json
-		level INFO
-	}
+        # Log a archivo para depuracion
+        log {
+                output file caddy-mobile.log
+                format json
+                level INFO
+        }
 }

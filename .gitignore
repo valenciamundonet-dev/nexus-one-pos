@@ -52,7 +52,18 @@ tool-results/
 upload/
 myecommerce-repo/
 download/
-PROGRESS.hta
+# Caddy downloaded binary
+caddy/caddy.exe
+caddy/local-ip.txt
+caddy/*.log
+caddy/mobile-data/
+
+# Installer temp
+.caddy-domain
+.caddy-env.bat
+__cmd_out.tmp
+npm-debug-output.txt
+install-log.txt
 
 # Installer temp files
 crea_acc.vbs
@@ -67,3 +78,8 @@ cache/
 
 # Misc
 generar-licencia.js
+printer-agent/rawprint.ps1
+printer-agent/spool/
+printer-agent/agent-startup.log
+BACKUP_*.zip
+BACKUP_*/

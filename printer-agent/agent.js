@@ -198,16 +198,7 @@ function printViaWindows(printerName, printerPort, buffer) {
 }
 
 var server = http.createServer(function(req, res) {
-  // CORS: restringido a localhost y red local (seguridad)
-  var allowedOrigins = [
-    'http://localhost', 'http://127.0.0.1',
-    'https://localhost', 'https://127.0.0.1',
-    'https://nexus-one-pos.ve',
-  ];
-  var origin = req.headers.origin || '';
-  if (allowedOrigins.some(function(o) { return origin.indexOf(o) === 0; })) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  }
+  res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Printer-Port');
 

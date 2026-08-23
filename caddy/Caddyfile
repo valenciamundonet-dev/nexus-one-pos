@@ -1,15 +1,15 @@
-# Caddyfile - MyeCommerce POS
+# Caddyfile - Nexus One POS
 # HTTPS con certificado CA interno de Caddy
 # El navegador mostrara el candado verde (sin advertencias)
 # porque la CA de Caddy se instala en Windows con 'caddy trust'
 
 # Redirigir HTTP a HTTPS (dominio local)
-http://myecommerce.ve {
-    redir https://myecommerce.ve{uri}
+http://nexusone.ve {
+    redir https://nexusone.ve{uri}
 }
 
 # Servir HTTPS con certificado interno (acceso desde la PC)
-myecommerce.ve {
+nexusone.ve {
     tls internal
     reverse_proxy localhost:3000
 }
