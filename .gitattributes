@@ -1,0 +1,22 @@
+# Forzar CRLF en Windows para archivos .bat
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.vbs text eol=crlf
+*.hta text eol=crlf
+
+# Line endings automaticos para el resto
+* text=auto eol=lf
+
+# Archivos binarios
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.db binary
+*.db-wal binary
+*.db-shm binary
+*.db-journal binary
+*.exe binary
+*.zip binary
+*.pdf binary
