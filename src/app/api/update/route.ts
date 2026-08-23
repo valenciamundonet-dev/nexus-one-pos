@@ -6,7 +6,7 @@ import { join } from 'path';
 import { pipeline } from 'stream/promises';
 import { Readable } from 'stream';
 
-const GITHUB_REPO = 'csglider/Nexus One-v2.9.20';
+const GITHUB_REPO = 'valenciamundonet-dev/nexus-one-pos';
 
 // Carpetas y archivos que se PRESERVAN al actualizar
 const PRESERVE_LIST = [
@@ -48,14 +48,10 @@ const UPDATE_ITEMS = [
   'INSTALAR-LIMPIO.vbs',
   'INICIAR-TODO.bat',
   'INICIAR-TODO-OCULTO.vbs',
-  'INICIAR-MYECCOMMERCE.bat',
-  'INICIAR-MYECCOMMERCE-OCULTO.vbs',
   'DETENER-TODO.bat',
   'RESPALDAR-BD.bat',
   'CREAR-ADMIN.bat',
-  'ACTUALIZAR.bat',
-  'ACTUALIZAR.vbs',
-  'RECONSTRUIR.bat',
+  'SALUD-SISTEMA.bat',
   'PROGRESS.hta',
   'caddy/Caddyfile',
   'caddy/Caddyfile-mobile',
@@ -337,7 +333,7 @@ export async function POST(req: NextRequest) {
           }
 
           try {
-            execSync('npx prisma db push --accept-data-loss', { cwd: BASE, timeout: 60000, stdio: 'pipe' });
+            execSync('npx prisma db push', { cwd: BASE, timeout: 60000, stdio: 'pipe' });
           } catch (err: any) {
             try {
               execSync('npx prisma migrate deploy', { cwd: BASE, timeout: 60000, stdio: 'pipe' });

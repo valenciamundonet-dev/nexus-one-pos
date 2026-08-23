@@ -1,13 +1,13 @@
 @echo off
 chcp 65001 >nul 2>&1
-title Nexus One POS v2.9.73 - Crear Administrador
+title Nexus One POS v2.9.80 - Crear Administrador
 color 0B
 
 cd /d "%~dp0"
 
 echo.
 echo  ╔══════════════════════════════════════════════════════════╗
-echo  ║      Nexus One POS v2.9.73 - Crear Usuario Administrador  ║
+echo  ║      Nexus One POS v2.9.80 - Crear Usuario Administrador  ║
 echo  ╚══════════════════════════════════════════════════════════╝
 echo.
 

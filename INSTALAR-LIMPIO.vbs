@@ -319,7 +319,7 @@ If Not objFSO.FileExists(strDir & "\.env") Then
         LogWrite "  .env creado desde .env.example"
     Else
         Set envFile = objFSO.CreateTextFile(strDir & "\.env", True)
-        envFile.WriteLine "DATABASE_URL=\"file:./dev.db\""
+        envFile.WriteLine "DATABASE_URL=""file:./dev.db"""
         envFile.WriteLine "APP_PORT=3000"
         envFile.WriteLine "NODE_ENV=production"
         envFile.Close
@@ -421,7 +421,11 @@ Else
     End If
 End If
 
-WriteStatus 7, 8, "Caddy configurado", IIf(caddyReady, "HTTPS dominio + movil :8443", "HTTP localhost:3000"), 87, "", ""
+If caddyReady Then
+    WriteStatus 7, 8, "Caddy configurado", "HTTPS dominio + movil :8443", 87, "", ""
+Else
+    WriteStatus 7, 8, "Caddy configurado", "HTTP localhost:3000 (sin admin)", 87, "", ""
+End If
 
 ' ============================================================
 ' PASO 8: Compilar + crear acceso directo
@@ -485,8 +489,3 @@ finale = "INSTALACION COMPLETADA" & vbCrLf & vbCrLf & _
   "Para detener: DETENER-TODO.bat"
 
 MsgBox finale, vbInformation, "Nexus One POS v2.9.80"
-
-' ---- Funcion auxiliar ----
-Function IIf(cond, trueVal, falseVal)
-    If cond Then IIf = trueVal Else IIf = falseVal
-End Function
