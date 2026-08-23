@@ -57,6 +57,8 @@ PROGRESS.hta
 # Installer temp files
 crea_acc.vbs
 local-ip.txt
+.caddy-domain
+.caddy-env.bat
 
 # Cache
 cache/
