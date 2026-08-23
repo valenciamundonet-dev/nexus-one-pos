@@ -199,10 +199,15 @@ export class NexusLocalDB {
 
   async checkHealth(): Promise<DbHealth> {
     try {
-      const result = await this.client.$queryRawUnsafe<Array<{ wal_size: number }>>(
-        `SELECT page_count * page_size as wal_size FROM pragma_wal_info;`
-      );
-      const walSize = result?.[0]?.wal_size || 0;
+      let walSize = 0;
+      try {
+        const result = await this.client.$queryRawUnsafe<Array<{ wal_size: number }>>(
+          `SELECT page_count * page_size as wal_size FROM pragma_wal_info();`
+        );
+        walSize = result?.[0]?.wal_size || 0;
+      } catch {
+        walSize = 0;
+      }
 
       const avgQueryMs = this.queryTimes.length > 0
         ? this.queryTimes.reduce((a, b) => a + b, 0) / this.queryTimes.length

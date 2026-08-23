@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul 2>&1
-title Nexus One POS v2.9.75
+title Nexus One POS v2.9.77
 color 0A
 setlocal enabledelayedexpansion
 
@@ -12,7 +12,7 @@ for /f "tokens=2,*" %%A in ('reg query "HKCU\Environment" /v Path 2^>nul ^| find
 
 echo.
 echo  ========================================================
-echo     Nexus One POS v2.9.75 - Iniciando todo el sistema
+echo     Nexus One POS v2.9.77 - Iniciando todo el sistema
 echo  ========================================================
 echo.
 
@@ -34,9 +34,9 @@ if "!CADDY_EXE!"=="" (
 )
 
 :: ============================================================
-:: [1/6] Cerrar procesos anteriores
+:: [1/7] Cerrar procesos anteriores
 :: ============================================================
-echo  [1/6] Cerrando procesos anteriores...
+echo  [1/7] Cerrando procesos anteriores...
 taskkill /F /IM node.exe >nul 2>&1
 taskkill /F /IM caddy.exe >nul 2>&1
 timeout /t 2 /nobreak >nul
@@ -44,9 +44,9 @@ echo          Listo.
 echo.
 
 :: ============================================================
-:: [2/6] Detectar IP local
+:: [2/7] Detectar IP local
 :: ============================================================
-echo  [2/6] Detectando IP local...
+echo  [2/7] Detectando IP local...
 set LOCAL_IP=desconocida
 for /f "tokens=2 delims=:" %%a in ('ipconfig ^| findstr /R /C:"IPv4"') do (
     for /f "tokens=*" %%b in ("%%a") do set "LOCAL_IP=%%~b"
@@ -56,9 +56,9 @@ echo          IP: !LOCAL_IP!
 echo.
 
 :: ============================================================
-:: [3/6] Iniciar Printer Agent
+:: [3/7] Iniciar Printer Agent
 :: ============================================================
-echo  [3/6] Iniciando agente de impresion (puerto 9100)...
+echo  [3/7] Iniciando agente de impresion (puerto 9100)...
 if exist "printer-agent\agent.js" (
     start "Nexus Printer Agent" /B cmd /c "node printer-agent\agent.js 2>nul"
     timeout /t 1 /nobreak >nul
@@ -69,13 +69,28 @@ if exist "printer-agent\agent.js" (
 echo.
 
 :: ============================================================
-:: [4/6] Verificar build de produccion
+:: [4/7] Verificar dependencias y Prisma
 :: ============================================================
-echo  [4/6] Verificando build de produccion...
+echo  [4/7] Preparando base de datos y Prisma...
 
 set "PKG=npm"
 where bun >nul 2>&1
 if !ERRORLEVEL! EQU 0 set "PKG=bun"
+
+:: Si no hay node_modules, instalar dependencias
+if not exist "node_modules" (
+    echo          Instalando dependencias...
+    if "!PKG!"=="bun" (
+        call bun install
+    ) else (
+        call npm install --legacy-peer-deps
+    )
+    if !ERRORLEVEL! NEQ 0 (
+        echo  [ERROR] No se pudieron instalar dependencias.
+        pause
+        exit /b 1
+    )
+)
 
 :: Generar cliente Prisma
 if "!PKG!"=="bun" (
@@ -83,15 +98,27 @@ if "!PKG!"=="bun" (
 ) else (
     call npx prisma generate >nul 2>&1
 )
-echo          Prisma generado (!PKG!).
 
-:: Verificar build
+:: Crear/actualizar base de datos (prisma db push)
+if "!PKG!"=="bun" (
+    call bunx prisma db push 2>nul
+) else (
+    call npx prisma db push 2>nul
+)
+echo          Base de datos lista (!PKG!).
+echo.
+
+:: ============================================================
+:: [5/7] Verificar build de produccion
+:: ============================================================
+echo  [5/7] Verificando build de produccion...
+
 set "NEEDS_BUILD=0"
 if not exist ".next\BUILD_ID" set "NEEDS_BUILD=1"
 if not exist ".next\server" set "NEEDS_BUILD=1"
 
 if "!NEEDS_BUILD!"=="1" (
-    echo          No se encontro build, compilando...
+    echo          Compilando aplicacion...
     if "!PKG!"=="bun" (
         call bun run build
     ) else (
@@ -110,30 +137,30 @@ if "!NEEDS_BUILD!"=="1" (
 echo.
 
 :: ============================================================
-:: [5/6] Iniciar Caddy HTTPS (si esta disponible)
+:: [6/7] Iniciar Caddy HTTPS (si esta disponible)
 :: ============================================================
 if not "!CADDY_EXE!"=="" (
-    echo  [5/6] Iniciando Caddy HTTPS... 
+    echo  [6/7] Iniciando Caddy HTTPS...
     if exist "Caddyfile" (
         set DOMAIN=!CADDY_DOMAIN!
         start "Nexus Caddy HTTPS" /B cmd /c ""!CADDY_EXE!" run --config "%~dp0Caddyfile" 2>nul"
         timeout /t 3 /nobreak >nul
         echo          Caddy iniciado: https://!CADDY_DOMAIN!
     ) else (
-        echo          [AVISO] No se encontro Caddyfile, Caddy no iniciado.
+        echo          [AVISO] No se encontro Caddyfile.
     )
 ) else (
-    echo  [5/6] Caddy no instalado, saltando HTTPS.
+    echo  [6/7] Caddy no instalado, saltando HTTPS.
 )
 echo.
 
 :: ============================================================
-:: [6/6] Iniciar servidor Next.js + abrir navegador
+:: [7/7] Iniciar servidor Next.js + abrir navegador
 :: ============================================================
-echo  [6/6] Iniciando servidor en puerto 3000...
+echo  [7/7] Iniciando servidor en puerto 3000...
 echo.
 echo  ========================================================
-echo  Nexus One POS v2.9.75 - SERVIDOR ACTIVO
+echo  Nexus One POS v2.9.77 - SERVIDOR ACTIVO
 echo.
 if not "!CADDY_EXE!"=="" (
 echo  HTTPS:  https://!CADDY_DOMAIN!
@@ -145,7 +172,7 @@ echo  Presione Ctrl+C para detener el servidor.
 echo  ========================================================
 echo.
 
-:: Abrir navegador - preferir HTTPS si Caddy esta activo
+:: Abrir navegador
 if not "!CADDY_EXE!"=="" (
     echo          Abriendo navegador (HTTPS)...
     start https://!CADDY_DOMAIN!
