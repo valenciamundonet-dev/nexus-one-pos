@@ -1,46 +1,44 @@
 @echo off
 chcp 65001 >nul 2>&1
-title Nexus One POS v2.9.75 - Detener
-color 0C
+title Nexus One POS v2.9.80 - Detener
 
 cd /d "%~dp0"
 
 echo.
 echo  ========================================================
-echo     Nexus One POS v2.9.75 - Deteniendo todos los servicios
+echo     Nexus One POS v2.9.80 - Deteniendo todos los servicios
 echo  ========================================================
 echo.
 
-echo  [1/3] Deteniendo Caddy HTTPS...
+echo  Deteniendo Caddy HTTPS...
 taskkill /F /IM caddy.exe >nul 2>&1
 if %ERRORLEVEL% EQU 0 (
-    echo         Caddy detenido.
+    echo      Caddy detenido.
 ) else (
-    echo         Caddy no estaba corriendo.
+    echo      Caddy no estaba corriendo.
 )
 
-echo  [2/3] Deteniendo servidor Node.js...
+echo  Deteniendo Node.js...
 taskkill /F /IM node.exe >nul 2>&1
 if %ERRORLEVEL% EQU 0 (
-    echo         Node.js detenido.
+    echo      Node.js detenido.
 ) else (
-    echo         Node.js no estaba corriendo.
+    echo      Node.js no estaba corriendo.
 )
 
-echo  [3/3] Verificando que todo este detenido...
+echo  Verificando...
 timeout /t 1 /nobreak >nul
 tasklist | findstr /I "caddy.exe node.exe" >nul 2>&1
 if %ERRORLEVEL% EQU 0 (
-    echo         [AVISO] Algunos procesos siguen activos.
+    echo      Forzando cierre...
     taskkill /F /IM node.exe >nul 2>&1
     taskkill /F /IM caddy.exe >nul 2>&1
 ) else (
-    echo         Todos los procesos detendidos correctamente.
+    echo      Todos los servicios detenidos correctamente.
 )
 
 echo.
-echo  ========================================================
-echo  Todos los servicios de Nexus One POS han sido detenidos.
-echo  ========================================================
+echo  Nexus One POS detenido.
+echo  Para reiniciar: doble clic en "Nexus One POS" del escritorio.
 echo.
-timeout /t 5
+timeout /t 3
