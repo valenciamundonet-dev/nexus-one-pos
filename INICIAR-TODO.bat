@@ -17,7 +17,7 @@ echo  ========================================================
 echo.
 
 :: Cargar configuracion de Caddy si existe
-set "CADDY_DOMAIN=nexus.local"
+set "CADDY_DOMAIN=nexusone.ve"
 set "CADDY_EXE="
 if exist ".caddy-env.bat" (
     call .caddy-env.bat

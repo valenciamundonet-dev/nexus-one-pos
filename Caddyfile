@@ -1,23 +1,14 @@
 # Nexus One POS - Caddy HTTPS Local
-# Genera certificados SSL automaticos para desarrollo local
+# Generado automaticamente por INSTALAR.bat
 
-{$DOMAIN:nexus.local} {
-	# Proxy inverso al servidor Next.js en puerto 3000
-	reverse_proxy localhost:3000
+nexusone.ve {
+    reverse_proxy localhost:3000
 
-	# Headers de seguridad
-	header {
-		X-Content-Type-Options "nosniff"
-		X-Frame-Options "SAMEORIGIN"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
 
-	# Compresion
-	encode gzip zstd
-
-	# Log de acceso (comentar en produccion)
-	log {
-		output file caddy-access.log
-		format console
-	}
+    encode gzip zstd
 }

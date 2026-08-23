@@ -261,7 +261,7 @@ echo.
 echo  [11/13] Instalando Caddy para HTTPS local...
 
 :: Dominio local por defecto
-set "CADDY_DOMAIN=nexus.local"
+set "CADDY_DOMAIN=nexusone.ve"
 
 :: Verificar si Caddy ya esta instalado
 set "CADDY_EXE="
