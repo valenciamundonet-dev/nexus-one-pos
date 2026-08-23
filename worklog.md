@@ -111,3 +111,31 @@ Stage Summary:
 - PDF generado: NexusOne_v2.9.73_Refactoring.pdf (203KB, 18 paginas)
 - Zip final: NexusOne-v2.9.73-FINAL.zip (625KB, 237 archivos)
 - TODAS las 6 fases completadas (26/26 tareas)
+
+---
+Task ID: 8
+Agent: Main
+Task: v2.9.80 - Fusion definitiva: lo mejor de cada version
+
+Work Log:
+- Analizado error del screenshot: VBS RegDelete falla con error 80070002 cuando la clave de registro no existe
+- Clonado repo y examinado historial de commits para entender v2.9.72/73 vs v2.9.75-79
+- Identificado que v2.9.73 tenia secuencia de instalacion simple y probada (deps -> prisma -> BD -> .env -> shortcut -> done)
+- Identificado que v2.9.75-79 agregaron: Caddy HTTPS, VBS installer con progreso, inicio oculto, acceso movil :8443
+- Creado INSTALAR-LIMPIO.vbs robusto con: SafeRegDelete (no falla si clave no existe), SafeDelete, reintentos npm, mensajes claros en espanol, CRLF
+- Creado INICIAR-TODO-OCULTO.vbs: 12 pasos ocultos (kill -> IP -> BD -> build -> printer -> firewall -> Caddy domain -> Caddy mobile -> static -> Next.js -> wait -> browser)
+- Actualizado INSTALAR.bat: 11 pasos con secuencia completa, shortcut apunta a INICIAR-TODO-OCULTO.vbs (no al .bat)
+- Actualizado INICIAR-TODO.bat: 7 pasos visibles para depuracion
+- Actualizado DETENER-TODO.bat: simplificado
+- Corregido CRLF en todos los .bat files
+- package.json version: 2.9.79 -> 2.9.80
+- PROGRESS.hta version actualizada
+- Build limpio exitoso (prisma generate + db push + next build)
+- Commit + push a GitHub
+
+Stage Summary:
+- Error critico corregido: RegDelete ya no falla si la clave de registro no existe
+- Fusion completada: secuencia probada de v2.9.72 + profesionales de v2.9.75-79
+- Acceso directo del escritorio apunta a INICIAR-TODO-OCULTO.vbs (inicio 100% sin consolas)
+- 7 archivos modificados: INSTALAR-LIMPIO.vbs, INICIAR-TODO-OCULTO.vbs, INSTALAR.bat, INICIAR-TODO.bat, DETENER-TODO.bat, PROGRESS.hta, package.json
+- Build verificado OK, push exitoso a GitHub
