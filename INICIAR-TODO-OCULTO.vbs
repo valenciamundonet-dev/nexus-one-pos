@@ -13,7 +13,7 @@
 '   v2.9.75: Caddy + printer agent
 '   v2.9.78: Refresco PATH + auto-reparacion
 '   v2.9.80: Robustez total
-  v2.9.81: Fix JWT_SECRET + verificacion BD antes de iniciar
+'   v2.9.81: Fix JWT_SECRET + verificacion BD antes de iniciar
 ' ============================================================
 
 Set WshShell = CreateObject("WScript.Shell")
