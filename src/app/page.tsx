@@ -1,7 +1,9 @@
+"use client";
+
 import dynamic from 'next/dynamic';
 
 /**
- * Nexus One POS — Page Router (Server Component)
+ * Nexus One POS — Page (Client Component)
  * 
  * Carga el componente cliente principal con SSR deshabilitado.
  * Esto elimina TODOS los errores de hidratacion (React Error #310)

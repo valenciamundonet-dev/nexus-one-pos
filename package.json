@@ -1,6 +1,6 @@
 {
   "name": "nexus-one-pos",
-  "version": "2.9.83",
+  "version": "2.9.84",
   "private": true,
   "scripts": {
     "dev": "next dev",

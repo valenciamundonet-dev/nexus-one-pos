@@ -49,7 +49,7 @@ interface Brand { id: string; name: string; _count?: { products: number }; }
 interface Settings {
   id: string; storeName: string; storeAddress: string; storePhone: string; storeRif: string;
   bcvRate: number; taxRate: number; currency: string; allowZeroStock: boolean; enableDiscount: boolean; maxDiscountPct: number;
-  theme: string;
+  theme: string; themeMode: string;
   ticketFontSize: number; ticketFontFamily: string; ticketHeaderMsg: string; ticketFooterMsg: string;
   ticketShowPhone: boolean; ticketShowSeller: boolean; ticketShowExchange: boolean; ticketShowSlogan: boolean;
   ticketShowCashReceived: boolean; ticketShowLogo: boolean;
@@ -59,10 +59,16 @@ interface Settings {
   ticketMarginRight: number;
   ticketUseAgent: boolean;
   ticketAgentUrl: string;
-ticketCurrencyMode: string;
+  ticketCurrencyMode: string;
   storeLogo: string;
   businessType: string;
   taxMode: string;
+  euroUsdtRate: number;
+  promoActive: boolean;
+  promoLabel: string;
+  promoOldPrice: number;
+  promoCurrentPrice: number;
+  promoExpiryDate: string;
 }
 interface LicenseInfo {
   isValid: boolean; licenseType: "trial" | "basica" | "profesional"; machineId: string;
@@ -102,6 +108,8 @@ export default function Home() {
     ticketUseAgent: true, ticketAgentUrl: 'http://localhost:9100',
     ticketCurrencyMode: 'dual',
     storeLogo: '', businessType: 'general', taxMode: 'included', themeMode: 'light',
+    euroUsdtRate: 0, promoActive: true, promoLabel: 'PRECIO EXCLUSIVO',
+    promoOldPrice: 280, promoCurrentPrice: 180, promoExpiryDate: '',
   });
   const [license, setLicense] = useState<LicenseInfo | null>(null);
   const [loading, setLoading] = useState(true);
