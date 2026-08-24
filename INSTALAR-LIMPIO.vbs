@@ -311,7 +311,7 @@ If ret <> 0 Then
     WScript.Quit
 End If
 
-' Crear .env si no existe
+' Crear .env si no existe (con DATABASE_URL correcta para Prisma)
 On Error Resume Next
 If Not objFSO.FileExists(strDir & "\.env") Then
     If objFSO.FileExists(strDir & "\.env.example") Then
@@ -320,9 +320,6 @@ If Not objFSO.FileExists(strDir & "\.env") Then
     Else
         Set envFile = objFSO.CreateTextFile(strDir & "\.env", True)
         envFile.WriteLine "DATABASE_URL=""file:./dev.db"""
-        envFile.WriteLine "APP_PORT=3000"
-        envFile.WriteLine "NODE_ENV=production"
-        envFile.Close
         LogWrite "  .env creado con valores predeterminados"
     End If
 Else
@@ -472,9 +469,10 @@ LogWrite "  Acceso directo creado -> INICIAR-TODO-OCULTO.vbs"
 LogWrite "=== INSTALACION COMPLETADA ==="
 WriteStatus 8, 8, "INSTALACION COMPLETADA", "Abra Nexus One POS del escritorio", 100, "OK", ""
 
-' Cerrar ventana de progreso tras 3 segundos
-WScript.Sleep 3000
+' Esperar 5 segundos para que la HTA procese el estado OK
+WScript.Sleep 5000
 On Error Resume Next: objFSO.DeleteFile statusFile: On Error GoTo 0
+On Error Resume Next: objFSO.DeleteFile htaPath: On Error GoTo 0
 
 ' Mensaje final
 Dim finale

@@ -20,7 +20,7 @@ setlocal enabledelayedexpansion
 set "ISSUES=0"
 
 :: Leer version desde package.json
-set "APP_VERSION=2.9.73"
+set "APP_VERSION=2.9.80"
 if exist "package.json" (
     for /f "tokens=2 delims=:, " %%a in ('findstr /R /C:"\"version\"" package.json') do (
         set "APP_VERSION=%%~a"
