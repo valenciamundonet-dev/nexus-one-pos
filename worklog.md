@@ -79,3 +79,26 @@ Stage Summary:
 - 9 archivos modificados, 0 obsoletos eliminados
 - 4 bugs criticos corregidos
 - Release: https://github.com/valenciamundonet-dev/nexus-one-pos/releases/tag/v2.9.81
+---
+Task ID: 1
+Agent: main
+Task: Fix React Error #310 + acceso directo no generado - v2.9.82
+
+Work Log:
+- Analice 2 capturas de pantalla con VLM: Error inesperado (error.tsx) con React Error #310
+- Identifique que el error es capturado por Next.js error.tsx (no ErrorBoundary) = falla en render SSR
+- Cloné repo y analice page.tsx, layout.tsx, theme-provider.tsx, error.tsx, login-screen.tsx
+- Diagnostico: React Error #310 = hidratacion SSR/Cliente. El servidor y cliente renderizan HTML diferente
+- Fix page.tsx: Agregue estado `mounted` que se pone true en useEffect. Loading screen ahora requiere `!mounted || loading || !authReady`
+- Fix layout.tsx: Agregue `suppressHydrationWarning` al body
+- Fix error.tsx: Auto-retry en 10s para errores React, diagnostico visual mejorado, boton Limpiar cache
+- Fix global-error.tsx: Mejor diagnostico visual de errores React vs servidor
+- Fix INSTALAR-LIMPIO.vbs: Acceso directo con verificacion de creacion, reintento automatico, fallback con ruta manual `%USERPROFILE%\Desktop`, logging detallado
+- Version bumped a 2.9.82 en: package.json, INSTALAR-LIMPIO.vbs, INICIAR-TODO-OCULTO.vbs, PROGRESS.hta, versions.json
+- CRLF forzado en VBS/HTA, commit, push, tag v2.9.82, release creado
+
+Stage Summary:
+- Tag v2.9.81 eliminado (remoto y local)
+- Tag v2.9.82 creado y pusheado
+- Release: https://github.com/valenciamundonet-dev/nexus-one-pos/releases/tag/v2.9.82
+- ZIP: https://github.com/valenciamundonet-dev/nexus-one-pos/archive/refs/tags/v2.9.82.zip
