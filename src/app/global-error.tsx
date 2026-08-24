@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export default function GlobalError({
   error,
@@ -23,12 +23,16 @@ export default function GlobalError({
   };
 
   let errorDetail = error?.message || "Error desconocido";
+  let isReactError = false;
   if (errorDetail.includes("react.dev/errors/")) {
+    isReactError = true;
     const match = errorDetail.match(/react\.dev\/errors\/(\d+)/);
     if (match) {
       const code = match[1];
       const reactErrors: Record<string, string> = {
-        '310': 'Se intento renderizar un objeto como texto. Posible causa: datos de API con formato inesperado o cache antiguo del navegador.',
+        '310': 'Error de hidratacion SSR/Cliente. Se intento renderizar un objeto como texto.',
+        '418': 'Error de hidratacion: el HTML del servidor no coincide con el cliente.',
+        '425': 'Diferencia de texto entre servidor y cliente durante hidratacion.',
       };
       errorDetail = reactErrors[code] || `React error #${code}`;
     }
@@ -41,18 +45,29 @@ export default function GlobalError({
       fontFamily: "'Segoe UI', system-ui, sans-serif",
     }}>
       <div style={{
-        background: "#1e293b", border: "1px solid #ef4444", borderRadius: "12px",
+        background: "#1e293b", border: isReactError ? "1px solid #f59e0b" : "1px solid #ef4444", borderRadius: "12px",
         padding: "40px", maxWidth: "520px", width: "100%", margin: "20px",
         textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
     }}>
-        <h2 style={{ color: "#f1f5f9", fontSize: "18px", marginBottom: "8px" }}>Error inesperado</h2>
-        <p style={{ color: "#94a3b8", fontSize: "13px", marginBottom: "24px" }}>Ocurrio un error al cargar la aplicacion.</p>
         <div style={{
-          color: "#fca5a5", fontSize: "11px", fontFamily: "monospace",
-          background: "#0f172a", padding: "12px", borderRadius: "6px",
-          marginBottom: "20px", wordBreak: "break-all", textAlign: "left",
-          whiteSpace: "pre-wrap",
-        }}>{errorDetail}</div>
+          width: "56px", height: "56px",
+          background: isReactError ? "linear-gradient(135deg, #f59e0b, #d97706)" : "linear-gradient(135deg, #ef4444, #dc2626)",
+          borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 20px", fontSize: "24px", color: "#fff",
+        }}>{"!"}</div>
+        <h2 style={{ color: "#f1f5f9", fontSize: "18px", marginBottom: "8px" }}>Error inesperado</h2>
+        <p style={{ color: "#94a3b8", fontSize: "13px", marginBottom: "24px", lineHeight: "1.5" }}>
+          Ocurrio un error al cargar la aplicacion.
+          {isReactError ? ' Error de compatibilidad SSR/Cliente.' : ' Esto puede deberse a una interrupcion del servidor.'}
+        </p>
+        {error?.message && (
+          <p style={{
+            color: "#fca5a5", fontSize: "11px", fontFamily: "monospace",
+            background: "#0f172a", padding: "12px", borderRadius: "6px",
+            marginBottom: "20px", wordBreak: "break-all", textAlign: "left",
+            whiteSpace: "pre-wrap",
+          }}>{errorDetail}</p>
+        )}
         <p style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "20px" }}>
           Si persiste: ejecute INICIAR-TODO.bat para ver detalles en consola.<br/>
           Para instalar limpio: ejecute INSTALAR-LIMPIO.vbs

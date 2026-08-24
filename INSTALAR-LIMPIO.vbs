@@ -1,11 +1,11 @@
-' Nexus One POS v2.9.81 - Instalador Profesional (FUSION)
+' Nexus One POS v2.9.82 - Instalador Profesional (FUSION)
 '
 ' Fusion de lo mejor de cada version:
 '   v2.9.72: Secuencia de instalacion probada y confiable
 '   v2.9.75: Caddy HTTPS + firewall + acceso movil
 '   v2.9.78: VBS con progreso visual HTA
 '   v2.9.80: Correcciones de robustez total
-'   v2.9.81: Fix JWT_SECRET sincronizado + Prisma verificacion
+'   v2.9.82: Fix React Error #310 (SSR/hidratacion) + acceso directo robusto
 '
 ' Caracteristicas:
 '   - Barra de progreso visual (PROGRESS.hta)
@@ -114,7 +114,7 @@ On Error GoTo 0
 
 ' ---- Confirmacion ----
 Dim bienvenida
-bienvenida = "Nexus One POS v2.9.81" & vbCrLf & vbCrLf & _
+bienvenida = "Nexus One POS v2.9.82" & vbCrLf & vbCrLf & _
   "Sistema Punto de Venta Profesional" & vbCrLf & _
   "Doble Moneda USD/Bs con tasa BCV" & vbCrLf & _
   "Impresion Termica ESC/POS (agente winspool)" & vbCrLf & _
@@ -488,16 +488,76 @@ Call RunHidden("xcopy /E /I /Q /Y .next\static .next\standalone\.next\static")
 Call RunHidden("xcopy /E /I /Q /Y public .next\standalone\public")
 
 ' Crear acceso directo al escritorio -> INICIAR-TODO-OCULTO.vbs (inicio sin consolas)
+WriteStatus 8, 8, "Creando acceso directo...", "", 95, "", ""
+LogWrite "PASO 8b: Creando acceso directo..."
+
+shortcutOk = False
+strDesktop = ""
+
+' Intento 1: SpecialFolders("Desktop")
 On Error Resume Next
 strDesktop = WshShell.SpecialFolders("Desktop")
-Set oLink = WshShell.CreateShortcut(strDesktop & "\Nexus One POS.lnk")
-oLink.TargetPath = strDir & "\INICIAR-TODO-OCULTO.vbs"
-oLink.WorkingDirectory = strDir
-oLink.Description = "Nexus One POS v2.9.81 - Iniciar sistema"
-oLink.IconLocation = "shell32.dll,14"
-oLink.Save
 On Error GoTo 0
-LogWrite "  Acceso directo creado -> INICIAR-TODO-OCULTO.vbs"
+
+If strDesktop = "" Then
+    ' Intento 2: Construir ruta manualmente
+    On Error Resume Next
+    strDesktop = WshShell.ExpandEnvironmentStrings("%USERPROFILE%") & "\Desktop"
+    On Error GoTo 0
+    LogWrite "  SpecialFolders fallo, usando ruta manual: " & strDesktop
+End If
+
+' Verificar que el escritorio existe
+If strDesktop <> "" And objFSO.FolderExists(strDesktop) Then
+    ' Verificar que INICIAR-TODO-OCULTO.vbs existe
+    If objFSO.FileExists(strDir & "\INICIAR-TODO-OCULTO.vbs") Then
+        On Error Resume Next
+        Set oLink = WshShell.CreateShortcut(strDesktop & "\Nexus One POS.lnk")
+        If Err.Number <> 0 Then
+            LogWrite "  ERROR CreateShortcut: " & Err.Description
+            Err.Clear
+        Else
+            oLink.TargetPath = strDir & "\INICIAR-TODO-OCULTO.vbs"
+            oLink.WorkingDirectory = strDir
+            oLink.Description = "Nexus One POS v2.9.82 - Iniciar sistema"
+            oLink.IconLocation = "shell32.dll,14"
+            oLink.Save
+            If Err.Number <> 0 Then
+                LogWrite "  ERROR Save shortcut: " & Err.Description
+                Err.Clear
+            Else
+                shortcutOk = True
+                LogWrite "  Acceso directo creado OK: " & strDesktop & "\Nexus One POS.lnk"
+            End If
+        End If
+        On Error GoTo 0
+    Else
+        LogWrite "  ERROR: INICIAR-TODO-OCULTO.vbs no encontrado en " & strDir
+    End If
+    
+    ' Verificacion final
+    If Not shortcutOk Then
+        LogWrite "  Reintentando creacion de acceso directo..."
+        On Error Resume Next
+        ' Intentar con WScript.Shell directo
+        Set oShell = CreateObject("WScript.Shell")
+        Set oLink = oShell.CreateShortcut(strDesktop & "\Nexus One POS.lnk")
+        oLink.TargetPath = strDir & "\INICIAR-TODO-OCULTO.vbs"
+        oLink.WorkingDirectory = strDir
+        oLink.Description = "Nexus One POS v2.9.82 - Iniciar sistema"
+        oLink.IconLocation = "shell32.dll,14"
+        oLink.Save
+        If Err.Number = 0 Then
+            shortcutOk = True
+            LogWrite "  Reintento exitoso: acceso directo creado"
+        Else
+            LogWrite "  Reintento fallo: " & Err.Description
+        End If
+        On Error GoTo 0
+    End If
+Else
+    LogWrite "  ERROR: No se pudo determinar la ruta del escritorio. strDesktop=" & strDesktop
+End If
 
 LogWrite "=== INSTALACION COMPLETADA ==="
 WriteStatus 8, 8, "INSTALACION COMPLETADA", "Abra Nexus One POS del escritorio", 100, "OK", ""
@@ -519,4 +579,4 @@ finale = "INSTALACION COMPLETADA" & vbCrLf & vbCrLf & _
   "USUARIO: admin   CLAVE: admin" & vbCrLf & vbCrLf & _
   "Para detener: DETENER-TODO.bat"
 
-MsgBox finale, vbInformation, "Nexus One POS v2.9.81"
+MsgBox finale, vbInformation, "Nexus One POS v2.9.82"

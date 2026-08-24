@@ -88,6 +88,7 @@ export default function Home() {
   const { activeTab, setActiveTab, cartItemCount } = useAppStore();
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [authReady, setAuthReady] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -179,6 +180,7 @@ export default function Home() {
 
   // Auth: load user from localStorage
   useEffect(() => {
+    setMounted(true);
     const stored = getStoredUser();
     const token = localStorage.getItem("nexus-one-pos_token");
     if (stored && token) {
@@ -354,9 +356,9 @@ export default function Home() {
     };
   }, [currentUser]);
 
-  // Show loading screen
-  if (loading || !authReady) {
-    return (<div className="flex items-center justify-center min-h-screen"><div className="text-center space-y-3"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" /><p className="text-muted-foreground">Cargando Nexus One...</p></div></div>);
+  // Show loading screen (ensures SSR and client render identical HTML)
+  if (!mounted || loading || !authReady) {
+    return (<div className="flex items-center justify-center min-h-screen" suppressHydrationWarning><div className="text-center space-y-3"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" /><p className="text-muted-foreground">Cargando Nexus One...</p></div></div>);
   }
   // Show login screen
   if (!currentUser) {
