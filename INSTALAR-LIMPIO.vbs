@@ -1,11 +1,11 @@
-' ==========================================================
-' Nexus One POS v2.9.80 - Instalador Profesional (FUSION)
+' Nexus One POS v2.9.81 - Instalador Profesional (FUSION)
 '
 ' Fusion de lo mejor de cada version:
 '   v2.9.72: Secuencia de instalacion probada y confiable
 '   v2.9.75: Caddy HTTPS + firewall + acceso movil
 '   v2.9.78: VBS con progreso visual HTA
 '   v2.9.80: Correcciones de robustez total
+'   v2.9.81: Fix JWT_SECRET sincronizado + Prisma verificacion
 '
 ' Caracteristicas:
 '   - Barra de progreso visual (PROGRESS.hta)
@@ -14,6 +14,7 @@
 '   - Impresion termica ESC/POS (agente winspool)
 '   - Inicio oculto via acceso directo al escritorio
 '   - Tolerancia a errores en registro/archivos
+'   - JWT_SECRET persistente en .env (tokens sobreviven reinicios)
 ' ==========================================================
 
 Set WshShell = CreateObject("WScript.Shell")
@@ -90,6 +91,18 @@ Sub SafeDeleteFolder(folderPath)
     On Error GoTo 0
 End Sub
 
+' Generar cadena aleatoria simple para JWT_SECRET
+Function GenerateSimpleSecret()
+    Dim chars, i, s, rndNum
+    chars = "abcdefghijklmnopqrstuvwxyz0123456789"
+    Randomize
+    For i = 1 To 48
+        rndNum = Int((Len(chars) * Rnd) + 1)
+        s = s & Mid(chars, rndNum, 1)
+    Next
+    GenerateSimpleSecret = s
+End Function
+
 ' ---- Iniciar ventana de progreso ----
 On Error Resume Next
 objFSO.DeleteFile statusFile
@@ -101,7 +114,7 @@ On Error GoTo 0
 
 ' ---- Confirmacion ----
 Dim bienvenida
-bienvenida = "Nexus One POS v2.9.80" & vbCrLf & vbCrLf & _
+bienvenida = "Nexus One POS v2.9.81" & vbCrLf & vbCrLf & _
   "Sistema Punto de Venta Profesional" & vbCrLf & _
   "Doble Moneda USD/Bs con tasa BCV" & vbCrLf & _
   "Impresion Termica ESC/POS (agente winspool)" & vbCrLf & _
@@ -170,6 +183,7 @@ Call RunHidden("if exist .prisma rmdir /s /q .prisma")
 
 ' Archivos individuales
 Call SafeDelete(strDir & "\package-lock.json")
+Call SafeDelete(strDir & "\.env")
 Call SafeDelete(strDir & "\prisma\dev.db")
 Call SafeDelete(strDir & "\prisma\dev.db-journal")
 Call SafeDelete(strDir & "\prisma\dev.db-wal")
@@ -287,6 +301,30 @@ WriteStatus 5, 8, "Dependencias instaladas", "", 62, "", ""
 WriteStatus 6, 8, "Configurando base de datos...", "", 62, "", ""
 LogWrite "PASO 6: Prisma..."
 
+' --- Crear .env con JWT_SECRET ANTES de Prisma ---
+On Error Resume Next
+If Not objFSO.FileExists(strDir & "\.env") Then
+    Set envFile = objFSO.CreateTextFile(strDir & "\.env", True)
+    envFile.WriteLine "DATABASE_URL=""file:./dev.db"""
+    envFile.WriteLine "JWT_SECRET=""" & GenerateSimpleSecret() & """"
+    envFile.WriteLine "NODE_ENV=production"
+    envFile.Close
+    LogWrite "  .env creado con JWT_SECRET"
+Else
+    Set f = objFSO.OpenTextFile(strDir & "\.env", 1)
+    envContent = f.ReadAll
+    f.Close
+    If InStr(envContent, "JWT_SECRET") = 0 Then
+        Set f = objFSO.OpenTextFile(strDir & "\.env", 8)
+        f.WriteLine "JWT_SECRET=""" & GenerateSimpleSecret() & """"
+        f.Close
+        LogWrite "  JWT_SECRET agregado a .env existente"
+    Else
+        LogWrite "  .env ya existe con JWT_SECRET"
+    End If
+End If
+On Error GoTo 0
+
 ' Generar cliente Prisma (con reintento)
 ret = RunHidden("npx prisma generate")
 If ret <> 0 Then
@@ -311,20 +349,15 @@ If ret <> 0 Then
     WScript.Quit
 End If
 
-' Crear .env si no existe (con DATABASE_URL correcta para Prisma)
-On Error Resume Next
-If Not objFSO.FileExists(strDir & "\.env") Then
-    If objFSO.FileExists(strDir & "\.env.example") Then
-        objFSO.CopyFile strDir & "\.env.example", strDir & "\.env", True
-        LogWrite "  .env creado desde .env.example"
-    Else
-        Set envFile = objFSO.CreateTextFile(strDir & "\.env", True)
-        envFile.WriteLine "DATABASE_URL=""file:./dev.db"""
-        LogWrite "  .env creado con valores predeterminados"
-    End If
-Else
-    LogWrite "  .env ya existe, conservado"
+' Verificar que la BD se creo correctamente
+If Not objFSO.FileExists(strDir & "\prisma\dev.db") Then
+    WriteStatus 0, 8, "ERROR", "BD no se creo", 0, "FAIL", "prisma/dev.db no existe despues de db push"
+    MsgBox "La base de datos no se creo correctamente." & vbCrLf & "Revise install-log.txt.", vbCritical, "ERROR - Base de datos"
+    WScript.Quit
 End If
+On Error Resume Next
+dbSize = objFSO.GetFile(strDir & "\prisma\dev.db").Size
+LogWrite "  BD verificada: prisma/dev.db existe (" & dbSize & " bytes)"
 On Error GoTo 0
 
 WriteStatus 6, 8, "Base de datos lista", "Prisma + SQLite OK", 75, "", ""
@@ -460,7 +493,7 @@ strDesktop = WshShell.SpecialFolders("Desktop")
 Set oLink = WshShell.CreateShortcut(strDesktop & "\Nexus One POS.lnk")
 oLink.TargetPath = strDir & "\INICIAR-TODO-OCULTO.vbs"
 oLink.WorkingDirectory = strDir
-oLink.Description = "Nexus One POS v2.9.80 - Iniciar sistema"
+oLink.Description = "Nexus One POS v2.9.81 - Iniciar sistema"
 oLink.IconLocation = "shell32.dll,14"
 oLink.Save
 On Error GoTo 0
@@ -486,4 +519,4 @@ finale = "INSTALACION COMPLETADA" & vbCrLf & vbCrLf & _
   "USUARIO: admin   CLAVE: admin" & vbCrLf & vbCrLf & _
   "Para detener: DETENER-TODO.bat"
 
-MsgBox finale, vbInformation, "Nexus One POS v2.9.80"
+MsgBox finale, vbInformation, "Nexus One POS v2.9.81"

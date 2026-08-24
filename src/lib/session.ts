@@ -1,14 +1,21 @@
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
-// JWT Secret — leer de variable de entorno (ver .env)
-// Si no esta configurado, los tokens generados aqui no coincidiran con el middleware.
-// IMPORTANTE: Agregue JWT_SECRET a su archivo .env.
-const JWT_SECRET = process.env.JWT_SECRET || '';
-const JWT_EXPIRES_IN = '24h'; // Token expira en 24 horas
-
-if (!JWT_SECRET && typeof window === 'undefined') {
-  console.warn('[SECURITY] JWT_SECRET no configurado en .env. El middleware rechazara los tokens. Agregue JWT_SECRET=... a su .env');
+// JWT Secret — DEBE ser consistente con el middleware (src/middleware.ts)
+// Si no esta en .env, se genera un secreto temporal en runtime.
+// NOTA: Sin JWT_SECRET en .env, los tokens no sobreviven un reinicio del servidor.
+let _runtimeSecret: string | null = null;
+function getJwtSecret(): string {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+  if (!_runtimeSecret) {
+    _runtimeSecret = Array.from(crypto.getRandomValues(new Uint8Array(32)))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+    console.warn('[SECURITY] JWT_SECRET no configurado en .env — usando secreto temporal. Los tokens no sobreviviran un reinicio. Agregue JWT_SECRET=... a su .env');
+  }
+  return _runtimeSecret;
 }
+const JWT_SECRET = getJwtSecret();
+const JWT_EXPIRES_IN = '24h'; // Token expira en 24 horas
 
 export interface SessionPayload {
   userId: string;
