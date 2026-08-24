@@ -36,5 +36,6 @@
   {"version":"2.9.65","nombre":"v2.9.65","notas":"Nuevo diseno visual del carrito: imagen de fondo SVG, icono de carrito en header, estado vacio mejorado con ilustracion y texto descriptivo","fecha":"2026-08-17","tipo":"estable"},
   {"version":"2.9.66","nombre":"v2.9.66","notas":"Fix critico: actualizacion online ahora ejecuta npm run build para reconstruir la app. Auto-recarga de pagina tras actualizar.","fecha":"2026-08-17","tipo":"estable"},
   {"version":"2.9.81","nombre":"v2.9.81","notas":"Fix critico: JWT_SECRET sincronizado entre middleware y session, PrismaClient cacheado en produccion, .env creado antes de Prisma, verificacion de BD al iniciar","fecha":"2026-08-24","tipo":"estable"},
-  {"version":"2.9.82","nombre":"v2.9.82","notas":"Fix React Error #310 (SSR/hidratacion), auto-recuperacion de errores, acceso directo robusto con verificacion y reintento","fecha":"2026-08-24","tipo":"estable"}
+  {"version":"2.9.82","nombre":"v2.9.82","notas":"Fix React Error #310 (SSR/hidratacion), auto-recuperacion de errores, acceso directo robusto con verificacion y reintento","fecha":"2026-08-24","tipo":"estable"},
+  {"version":"2.9.83","nombre":"v2.9.83","notas":"FIX DEFINITIVO React #310: SSR eliminado con next/dynamic ssr:false, Toaster seguro con ClientOnly wrapper, page.tsx dividido en server+client","fecha":"2026-08-24","tipo":"estable"}
 ]

@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getAppVersion } from "@/lib/app-version";
+import AppToaster from "@/components/app-toaster";
 
 const APP_VERSION = getAppVersion();
 
@@ -36,7 +36,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-background antialiased" suppressHydrationWarning>
         <ThemeProvider>
           {children}
-          <Toaster position="top-right" richColors />
+          <AppToaster />
         </ThemeProvider>
       </body>
     </html>
