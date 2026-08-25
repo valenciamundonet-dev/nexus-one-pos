@@ -1,6 +1,26 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * Sanitiza un objeto Prisma para asegurar que todos los valores sean JSON-safe.
+ * Convierte Date a ISO string, y cualquier otro objeto a string.
+ */
+function sanitizePrisma(obj: any): Record<string, unknown> {
+  const safe: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v instanceof Date) {
+      safe[k] = v.toISOString();
+    } else if (v === null || v === undefined) {
+      safe[k] = v;
+    } else if (typeof v === 'object') {
+      safe[k] = JSON.stringify(v);
+    } else {
+      safe[k] = v;
+    }
+  }
+  return safe;
+}
+
 export async function GET() {
   try {
     let settings = await db.settings.findFirst();
@@ -24,7 +44,7 @@ export async function GET() {
           ticketShowPhone: true,
           ticketShowSeller: true,
           ticketShowExchange: true,
-          ticketCurrencyMode: "dual",
+          ticketCurrencyMode: 'dual',
           ticketShowSlogan: false,
           ticketBold: true,
           ticketPaperWidth: '58mm',
@@ -45,7 +65,8 @@ export async function GET() {
         },
       });
     }
-    return NextResponse.json(settings);
+    // Sanitizar para garantizar solo primitivos en la respuesta JSON
+    return NextResponse.json(sanitizePrisma(settings));
   } catch (error) {
     return NextResponse.json({ error: 'Error al obtener configuracion' }, { status: 500 });
   }
@@ -115,7 +136,8 @@ export async function PUT(req: NextRequest) {
     } else {
       settings = await db.settings.create({ data: updateData });
     }
-    return NextResponse.json(settings);
+    // Sanitizar para garantizar solo primitivos en la respuesta JSON
+    return NextResponse.json(sanitizePrisma(settings));
   } catch (error) {
     return NextResponse.json({ error: 'Error al guardar configuracion' }, { status: 500 });
   }

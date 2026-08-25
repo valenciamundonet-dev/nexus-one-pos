@@ -42,6 +42,7 @@ import { toast } from "sonner";
 import { authFetch, storeSession, clearSession, getStoredUser as getStoredUserFromLib } from "@/lib/auth-fetch";
 import { preloadAppVersion } from "@/lib/app-version-client";
 import { useFeaturesStore, isTabAccessible } from "@/core/atomic-features-store";
+import { sanitizeSettings, safeNumber, safeString } from "@/lib/safe-render";
 
 interface Product { id: string; name: string; description: string; barcode: string; price: number; cost: number; stock: number; minStock: number; wholesalePrice: number; minWholesaleQty: number; icon: string; image: string; noStock: boolean; categoryId: string | null; category: { name: string; icon?: string; color?: string } | null; active: boolean; }
 interface Category { id: string; name: string; icon?: string; color?: string; _count?: { products: number }; }
@@ -248,7 +249,36 @@ export default function Home() {
       if (Array.isArray(categoriesData)) setCategories(categoriesData);
       if (Array.isArray(brandsData)) setBrands(brandsData);
       if (settingsData && !settingsData.error && typeof settingsData.bcvRate === 'number') {
-        setSettings(settingsData);
+        // Sanitizar settings para garantizar que todos los campos sean primitivos
+        const safe = sanitizeSettings(settingsData) as Settings;
+        safe.bcvRate = safeNumber(safe.bcvRate, 36.5);
+        safe.taxRate = safeNumber(safe.taxRate, 0);
+        safe.maxDiscountPct = safeNumber(safe.maxDiscountPct, 20);
+        safe.ticketFontSize = safeNumber(safe.ticketFontSize, 8);
+        safe.ticketMarginLeft = safeNumber(safe.ticketMarginLeft, 0);
+        safe.ticketMarginRight = safeNumber(safe.ticketMarginRight, 0);
+        safe.euroUsdtRate = safeNumber(safe.euroUsdtRate, 0);
+        safe.promoOldPrice = safeNumber(safe.promoOldPrice, 280);
+        safe.promoCurrentPrice = safeNumber(safe.promoCurrentPrice, 180);
+        safe.storeName = safeString(safe.storeName, 'Mi Tienda');
+        safe.storeAddress = safeString(safe.storeAddress, '');
+        safe.storePhone = safeString(safe.storePhone, '');
+        safe.storeRif = safeString(safe.storeRif, '');
+        safe.currency = safeString(safe.currency, 'USD');
+        safe.theme = safeString(safe.theme, 'blue');
+        safe.themeMode = safeString(safe.themeMode, 'light');
+        safe.ticketFontFamily = safeString(safe.ticketFontFamily, 'monospace');
+        safe.ticketHeaderMsg = safeString(safe.ticketHeaderMsg, '');
+        safe.ticketFooterMsg = safeString(safe.ticketFooterMsg, 'Gracias por su compra!');
+        safe.ticketPaperWidth = safeString(safe.ticketPaperWidth, '58mm');
+        safe.ticketAgentUrl = safeString(safe.ticketAgentUrl, 'http://localhost:9100');
+        safe.ticketCurrencyMode = safeString(safe.ticketCurrencyMode, 'dual');
+        safe.storeLogo = safeString(safe.storeLogo, '');
+        safe.businessType = safeString(safe.businessType, 'general');
+        safe.taxMode = safeString(safe.taxMode, 'included');
+        safe.promoLabel = safeString(safe.promoLabel, 'PRECIO EXCLUSIVO');
+        safe.promoExpiryDate = safeString(safe.promoExpiryDate, '');
+        setSettings(safe);
       }
       if (licenseData && !licenseData.error) setLicense(licenseData);
 
@@ -361,6 +391,51 @@ export default function Home() {
       events.forEach((e) => window.removeEventListener(e, resetTimer));
     };
   }, [currentUser]);
+
+  // ═══ WRAPPER: Si algo falla en el render principal, mostrar error controlado ═══
+  // Esto evita que el error.tsx de Next.js tome control y cree un loop infinito
+  const [renderError, setRenderError] = useState<string | null>(null);
+
+  // Catch rendering errors at the top level
+  const originalConsoleError = typeof console !== 'undefined' ? console.error : null;
+  useEffect(() => {
+    const handler = (e: ErrorEvent) => {
+      if (e.message?.includes('Objects are not valid') || e.message?.includes('object with keys')) {
+        setRenderError(e.message);
+        e.preventDefault();
+      }
+    };
+    const rejectionHandler = (e: PromiseRejectionEvent) => {
+      const msg = e.reason?.message || String(e.reason);
+      if (msg.includes('Objects are not valid') || msg.includes('object with keys')) {
+        setRenderError(msg);
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('error', handler);
+    window.addEventListener('unhandledrejection', rejectionHandler);
+    return () => {
+      window.removeEventListener('error', handler);
+      window.removeEventListener('unhandledrejection', rejectionHandler);
+    };
+  }, []);
+
+  if (renderError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-8 space-y-4 text-center">
+        <div className="text-4xl">&#9888;</div>
+        <h3 className="text-lg font-semibold text-destructive">Error de renderizado</h3>
+        <p className="text-sm text-muted-foreground max-w-lg">Ocurrio un error al mostrar los datos de la aplicacion. Esto suele deberse a datos inesperados en la configuracion.</p>
+        <p className="text-xs text-muted-foreground font-mono max-w-lg break-all bg-muted p-3 rounded">{renderError}</p>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => { setRenderError(null); window.location.reload(); }}>Recargar</Button>
+          <Button variant="outline" size="sm" onClick={() => { setRenderError(null); }}>
+            Ignorar y continuar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading screen
   if (loading || !authReady) {
