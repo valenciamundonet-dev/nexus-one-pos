@@ -1,47 +1,953 @@
 "use client";
 
-import dynamic from 'next/dynamic';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import PosTab from "@/components/pos-tab";
+import ProductsTab from "@/components/products-tab";
+import ConfigTab from "@/components/config-tab";
+import ClientsTab from "@/components/clients-tab";
+import DevolutionsTab from "@/components/devolutions-tab";
+import CashClosingTab from "@/components/cash-closing-tab";
+import LicenseTab from "@/components/license-tab";
+import ReportsTab from "@/components/reports-tab";
+import LoginScreen from "@/components/login-screen";
+import ErrorBoundary from "@/components/error-boundary";
+import UsersTab from "@/components/users-tab";
+import BackupTab from "@/components/backup-tab";
+import SuppliersTab from "@/components/suppliers-tab";
+import PurchasesTab from "@/components/purchases-tab";
+import CreditTab from "@/components/credit-tab";
+import ExpensesTab from "@/components/expenses-tab";
+import DashboardTab from "@/components/dashboard-tab";
+import KardexTab from "@/components/kardex-tab";
+import HeldSalesTab from "@/components/held-sales-tab";
+import QuotesTab from "@/components/quotes-tab";
+import DeliveryNotesTab from "@/components/delivery-notes-tab";
+import CatalogTab from "@/components/catalog-tab";
+import DiagnosticsTab from "@/components/diagnostics-tab";
+import DbHealthTab from "@/components/db-health-tab";
+import TaxReloadTab from "@/components/tax-reload-tab";
+import type { CurrentUser } from "@/components/users-tab";
+import ThemeSwitcher from "@/components/theme-switcher";
+import AppNav, { TopNavBar, buildGroups } from "@/components/app-nav";
+import type { NavItem, NavGroup } from "@/components/app-nav";
+import { useAppStore } from "@/lib/app-store";
+import { toast } from "sonner";
+import { authFetch, storeSession, clearSession, getStoredUser as getStoredUserFromLib } from "@/lib/auth-fetch";
+import { preloadAppVersion } from "@/lib/app-version-client";
+import { useFeaturesStore, isTabAccessible } from "@/core/atomic-features-store";
+import { sanitizeSettings, safeNumber, safeString } from "@/lib/safe-render";
 
-/**
- * Nexus One POS — Page (Client Component)
- * 
- * Carga el componente cliente principal con SSR deshabilitado.
- * Esto elimina TODOS los errores de hidratacion (React Error #310)
- * porque el servidor nunca renderiza el contenido de la app.
- * 
- * El loading fallback es HTML estatico simple — sin fechas, sin estados,
- * sin contenido dinamico que pueda diferir entre server y client.
- */
-const HomeClient = dynamic(() => import('@/app/home-client'), {
-  ssr: false,
-  loading: () => (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: '#f8fafc',
-    }}>
-      <div style={{ textAlign: 'center' }}>
-        <div style={{
-          width: 40, height: 40,
-          border: '3px solid #e2e8f0',
-          borderTopColor: '#3b82f6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite',
-          margin: '0 auto 16px',
-        }} />
-        <p style={{ color: '#64748b', fontSize: 14 }}>Cargando Nexus One POS...</p>
-        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
+interface Product { id: string; name: string; description: string; barcode: string; price: number; cost: number; stock: number; minStock: number; wholesalePrice: number; minWholesaleQty: number; icon: string; image: string; noStock: boolean; categoryId: string | null; category: { name: string; icon?: string; color?: string } | null; active: boolean; }
+interface Category { id: string; name: string; icon?: string; color?: string; _count?: { products: number }; }
+interface Brand { id: string; name: string; _count?: { products: number }; }
+interface Settings {
+  id: string; storeName: string; storeAddress: string; storePhone: string; storeRif: string;
+  bcvRate: number; taxRate: number; currency: string; allowZeroStock: boolean; enableDiscount: boolean; maxDiscountPct: number;
+  theme: string; themeMode: string;
+  ticketFontSize: number; ticketFontFamily: string; ticketHeaderMsg: string; ticketFooterMsg: string;
+  ticketShowPhone: boolean; ticketShowSeller: boolean; ticketShowExchange: boolean; ticketShowSlogan: boolean;
+  ticketShowCashReceived: boolean; ticketShowLogo: boolean;
+  ticketBold: boolean;
+  ticketPaperWidth: string;
+  ticketMarginLeft: number;
+  ticketMarginRight: number;
+  ticketUseAgent: boolean;
+  ticketAgentUrl: string;
+  ticketCurrencyMode: string;
+  storeLogo: string;
+  businessType: string;
+  taxMode: string;
+  euroUsdtRate: number;
+  promoActive: boolean;
+  promoLabel: string;
+  promoOldPrice: number;
+  promoCurrentPrice: number;
+  promoExpiryDate: string;
+}
+interface LicenseInfo {
+  isValid: boolean; licenseType: "trial" | "basica" | "profesional"; machineId: string;
+  licenseKey: string; activatedAt: string; expiresAt: string; daysRemaining: number; isExpired: boolean;
+  maxProducts: number; maxDailySales: number; maxUsers: number;
+  ownerName: string; ownerEmail: string; ownerPhone: string; ownerRif: string;
+  maxActivations: number; activationCount: number;
+  previousMachines: string[]; isSameMachine: boolean; machineMismatch: boolean; mismatchReason: string; blockedReason: string;
+  features: {
+    pos: boolean; products: boolean; categories: boolean; cashClosing: boolean; devolutions: boolean;
+    basicReports: boolean; advancedReports: boolean; salesCharts: boolean; autoBackup: boolean;
+    exportImport: boolean; noWatermark: boolean; unlimitedProducts: boolean; unlimitedSales: boolean;
+    multipleUsers: boolean; inventoryAlerts: boolean; printInvoice: boolean; productDiscount: boolean;
+    saleNotes: boolean; priceHistory: boolean; frequentCustomers: boolean; allowZeroStockConfig: boolean;
+  };
+}
+
+function getStoredUser(): CurrentUser | null {
+  return getStoredUserFromLib<CurrentUser>();
+}
+
+export default function Home() {
+  const { activeTab, setActiveTab, cartItemCount } = useAppStore();
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [settings, setSettings] = useState<Settings>({
+    id: "", storeName: "Mi Tienda", storeAddress: "", storePhone: "", storeRif: "",
+    bcvRate: 36.5, taxRate: 0, currency: "USD", allowZeroStock: false, enableDiscount: false, maxDiscountPct: 20, theme: "blue",
+    ticketFontSize: 8, ticketFontFamily: 'monospace', ticketHeaderMsg: "", ticketFooterMsg: "Gracias por su compra!",
+    ticketShowPhone: true, ticketShowSeller: true, ticketShowExchange: true, ticketShowSlogan: false,
+    ticketShowCashReceived: true, ticketShowLogo: true,
+    ticketBold: true, ticketPaperWidth: '58mm',
+    ticketMarginLeft: 0, ticketMarginRight: 0,
+    ticketUseAgent: true, ticketAgentUrl: 'http://localhost:9100',
+    ticketCurrencyMode: 'dual',
+    storeLogo: '', businessType: 'general', taxMode: 'included', themeMode: 'light',
+    euroUsdtRate: 0, promoActive: true, promoLabel: 'PRECIO EXCLUSIVO',
+    promoOldPrice: 280, promoCurrentPrice: 180, promoExpiryDate: '',
+  });
+  const [license, setLicense] = useState<LicenseInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showActivateModal, setShowActivateModal] = useState(false);
+  const [showExpiredModal, setShowExpiredModal] = useState(false);
+  const [showBlockedModal, setShowBlockedModal] = useState(false);
+  const [activateKey, setActivateKey] = useState("");
+  const [activating, setActivating] = useState(false);
+
+  // Stock alerts
+  const [stockAlertCount, setStockAlertCount] = useState(0);
+  const [stockZeroCount, setStockZeroCount] = useState(0);
+  const [stockBannerDismissed, setStockBannerDismissed] = useState(false);
+
+  // Credito vencido alerts
+  const [overdueCreditCount, setOverdueCreditCount] = useState(0);
+
+  // Cart data to pass between POS <-> HeldSales <-> Quotes
+  const [pendingCartData, setPendingCartData] = useState<any>(null);
+  const [pendingCartClient, setPendingCartClient] = useState<any>(null);
+
+  // Clear pending cart data after it's been consumed by POS
+  useEffect(() => {
+    if (pendingCartData && activeTab === 'pos') {
+      const timer = setTimeout(() => setPendingCartData(null), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [pendingCartData, activeTab]);
+
+  // BCV inline editor
+  const [editingBcv, setEditingBcv] = useState(false);
+  const [inlineBcv, setInlineBcv] = useState("");
+
+  // Dynamic app version (loaded from package.json via API)
+  const [appVersion, setAppVersion] = useState('cargando...');
+
+  // Warning al salir de POS con carrito lleno
+  const [showCartWarning, setShowCartWarning] = useState(false);
+  const [pendingTabChange, setPendingTabChange] = useState<string | null>(null);
+
+  const safeSetTab = (tab: string) => {
+    if (activeTab === 'pos' && cartItemCount > 0 && tab !== 'pos') {
+      setPendingTabChange(tab);
+      setShowCartWarning(true);
+    } else {
+      setActiveTab(tab);
+    }
+  };
+
+  // Apply theme + mode on mount and settings change (immediate, no reload)
+  useEffect(() => {
+    if (settings.theme) {
+      document.documentElement.setAttribute('data-theme', settings.theme);
+    }
+  }, [settings.theme]);
+
+  // Load dynamic version from package.json via API
+  useEffect(() => {
+    preloadAppVersion().then(v => setAppVersion(v));
+  }, []);
+
+  useEffect(() => {
+    const mode = settings.themeMode || 'light';
+    if (mode === 'dark') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.removeAttribute('data-mode');
+    } else if (mode === 'professional') {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-mode', 'professional');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.removeAttribute('data-mode');
+    }
+  }, [settings.themeMode]);
+
+  // Auth: load user from localStorage
+  useEffect(() => {
+    const stored = getStoredUser();
+    const token = localStorage.getItem("nexus-one-pos_token");
+    if (stored && token) {
+      setCurrentUser(stored);
+    } else {
+      // No hay token valido — limpiar datos viejos y mostrar login
+      if (stored) clearSession();
+      setLoading(false);
+    }
+    setAuthReady(true);
+  }, []);
+
+  const handleLogin = (user: CurrentUser & { token?: string }) => {
+    // Guardar token JWT y datos del usuario
+    if (user.token) {
+      storeSession(user.token, user);
+    }
+    setCurrentUser(user);
+  };
+
+  const handleLogout = () => {
+    clearSession();
+    setCurrentUser(null);
+    // Llamar API de logout para limpiar cookie
+    fetch("/api/auth", { method: "DELETE" }).catch(() => {});
+    window.location.reload();
+  };
+
+  const handleUserUpdate = (updated: CurrentUser) => {
+    setCurrentUser(updated);
+    const token = localStorage.getItem("nexus-one-pos_token");
+    if (token) {
+      storeSession(token, updated);
+    }
+  };
+
+  const handleSessionExpired = useCallback(() => {
+    clearSession();
+    setCurrentUser(null);
+    setLoading(false);
+    toast.error("Sesion expirada. Inicie sesion nuevamente.");
+    // No reload — React muestra login screen automaticamente
+  }, []);
+
+  const loadData = useCallback(async () => {
+    try {
+      const [productsRes, categoriesRes, brandsRes, settingsRes, licenseRes] = await Promise.all([
+        authFetch("/api/products", {}, handleSessionExpired),
+        authFetch("/api/categories", {}, handleSessionExpired),
+        authFetch("/api/brands", {}, handleSessionExpired),
+        authFetch("/api/settings", {}, handleSessionExpired),
+        authFetch("/api/license", {}, handleSessionExpired),
+      ]);
+      const [productsData, categoriesData, brandsData, settingsData, licenseData] = await Promise.all([
+        productsRes.json(), categoriesRes.json(), brandsRes.json(), settingsRes.json(), licenseRes.json(),
+      ]);
+      // Solo actualizar si la respuesta es valida (no objeto de error)
+      if (Array.isArray(productsData)) setProducts(productsData);
+      if (Array.isArray(categoriesData)) setCategories(categoriesData);
+      if (Array.isArray(brandsData)) setBrands(brandsData);
+      if (settingsData && !settingsData.error && typeof settingsData.bcvRate === 'number') {
+        // Sanitizar settings para garantizar que todos los campos sean primitivos
+        const safe = sanitizeSettings(settingsData) as Settings;
+        safe.bcvRate = safeNumber(safe.bcvRate, 36.5);
+        safe.taxRate = safeNumber(safe.taxRate, 0);
+        safe.maxDiscountPct = safeNumber(safe.maxDiscountPct, 20);
+        safe.ticketFontSize = safeNumber(safe.ticketFontSize, 8);
+        safe.ticketMarginLeft = safeNumber(safe.ticketMarginLeft, 0);
+        safe.ticketMarginRight = safeNumber(safe.ticketMarginRight, 0);
+        safe.euroUsdtRate = safeNumber(safe.euroUsdtRate, 0);
+        safe.promoOldPrice = safeNumber(safe.promoOldPrice, 280);
+        safe.promoCurrentPrice = safeNumber(safe.promoCurrentPrice, 180);
+        safe.storeName = safeString(safe.storeName, 'Mi Tienda');
+        safe.storeAddress = safeString(safe.storeAddress, '');
+        safe.storePhone = safeString(safe.storePhone, '');
+        safe.storeRif = safeString(safe.storeRif, '');
+        safe.currency = safeString(safe.currency, 'USD');
+        safe.theme = safeString(safe.theme, 'blue');
+        safe.themeMode = safeString(safe.themeMode, 'light');
+        safe.ticketFontFamily = safeString(safe.ticketFontFamily, 'monospace');
+        safe.ticketHeaderMsg = safeString(safe.ticketHeaderMsg, '');
+        safe.ticketFooterMsg = safeString(safe.ticketFooterMsg, 'Gracias por su compra!');
+        safe.ticketPaperWidth = safeString(safe.ticketPaperWidth, '58mm');
+        safe.ticketAgentUrl = safeString(safe.ticketAgentUrl, 'http://localhost:9100');
+        safe.ticketCurrencyMode = safeString(safe.ticketCurrencyMode, 'dual');
+        safe.storeLogo = safeString(safe.storeLogo, '');
+        safe.businessType = safeString(safe.businessType, 'general');
+        safe.taxMode = safeString(safe.taxMode, 'included');
+        safe.promoLabel = safeString(safe.promoLabel, 'PRECIO EXCLUSIVO');
+        safe.promoExpiryDate = safeString(safe.promoExpiryDate, '');
+        setSettings(safe);
+      }
+      if (licenseData && !licenseData.error) setLicense(licenseData);
+
+      // Inicializar Cliente Final si no existe
+      authFetch("/api/clients", { method: "PATCH" }, handleSessionExpired).catch(() => {});
+
+// Cargar alertas de stock
+      authFetch("/api/products/stock-alerts", {}, handleSessionExpired)
+        .then(r => r.json())
+        .then(data => {
+          if (data && !data.error && data.totalAlerts > 0) {
+            setStockAlertCount(data.totalAlerts);
+            setStockZeroCount(data.zeroStockCount || 0);
+            // Toast de notificacion al cargar
+            if (data.zeroStockCount > 0) {
+              toast.error(`${data.zeroStockCount} producto(s) SIN STOCK`, {
+                description: data.zeroStock.slice(0, 3).map((p: any) => p.name).join(', ') + (data.zeroStockCount > 3 ? '...' : ''),
+                duration: 6000,
+              });
+            }
+            if (data.lowStockCount > 0) {
+              toast.warning(`${data.lowStockCount} producto(s) con stock bajo`, {
+                description: "Vaya a Productos para ver el detalle",
+                duration: 5000,
+              });
+            }
+          }
+        })
+        .catch(() => {});
+
+// Cargar alertas de credito vencido
+      authFetch("/api/credit/overdue", {}, handleSessionExpired)
+        .then(r => r.json())
+        .then(data => {
+          if (data && !data.error && data.count > 0) {
+            setOverdueCreditCount(data.count);
+            toast.error(`${data.count} credito(s) VENCIDO(S)`, {
+              description: `Total pendiente: $${data.totalOverdueUsd.toFixed(2)} — Vaya a Cuentas por Cobrar`,
+              duration: 8000,
+            });
+          }
+        })
+
+      const ar = licenseData ? (licenseData.maxActivations - (licenseData.activationCount || 0)) : 0;
+      if (licenseData && !licenseData.error && licenseData.machineMismatch && !licenseData.isExpired && licenseData.licenseType !== 'trial' && ar > 0) {
+        // Maquina diferente pero hay activaciones restantes → modal amigable
+        setTimeout(() => setShowBlockedModal(true), 500);
+      } else if (licenseData && !licenseData.error && licenseData.machineMismatch && !licenseData.isExpired && licenseData.licenseType !== 'trial' && ar <= 0) {
+        // Sin activaciones restantes → bloqueo real
+        setTimeout(() => setShowBlockedModal(true), 500);
+      } else if (licenseData && !licenseData.error && (licenseData.isExpired || !licenseData.isValid)) {
+        setTimeout(() => setShowExpiredModal(true), 500);
+      }
+    } catch (error) { console.error("Error loading data:", error); }
+    finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    if (currentUser) loadData();
+  }, [loadData, currentUser]);
+
+  const saveInlineBcv = async () => {
+    const rate = parseFloat(inlineBcv);
+    if (isNaN(rate) || rate <= 0) { toast.error("Ingrese una tasa valida mayor a 0"); setEditingBcv(false); return; }
+    try {
+      const res = await authFetch("/api/settings", {
+        method: "PUT",
+        body: JSON.stringify({ ...settings, bcvRate: rate }),
+      }, handleSessionExpired);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setSettings(data);
+      toast.success(`Tasa actualizada: 1$ = ${rate.toFixed(2)} Bs`);
+    } catch (error: any) {
+      toast.error(error.message || "Error al guardar tasa");
+    }
+    setEditingBcv(false);
+  };
+
+  const activateFromModal = async () => {
+    if (!activateKey.trim()) { toast.error("Ingrese la clave de licencia"); return; }
+    setActivating(true);
+    try {
+      const res = await authFetch("/api/license", { method: "POST", body: JSON.stringify({ licenseKey: activateKey.trim() }) }, handleSessionExpired);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast.success(data.message);
+      setShowActivateModal(false); setShowExpiredModal(false); setShowBlockedModal(false); setActivateKey("");
+      loadData();
+    } catch (error: any) { toast.error(error.message || "Error al activar licencia"); }
+    finally { setActivating(false); }
+  };
+
+  // Auto-cerrar sesión por inactividad (1 hora)
+  useEffect(() => {
+    if (!currentUser) return;
+    const INACTIVITY_MS = 60 * 60 * 1000; // 1 hora
+    let timeout: ReturnType<typeof setTimeout>;
+    const resetTimer = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        handleLogout();
+      }, INACTIVITY_MS);
+    };
+    const events = ["mousedown", "keydown", "scroll", "touchstart"] as const;
+    events.forEach((e) => window.addEventListener(e, resetTimer));
+    resetTimer();
+    return () => {
+      clearTimeout(timeout);
+      events.forEach((e) => window.removeEventListener(e, resetTimer));
+    };
+  }, [currentUser]);
+
+  // ═══ WRAPPER: Si algo falla en el render principal, mostrar error controlado ═══
+  // Esto evita que el error.tsx de Next.js tome control y cree un loop infinito
+  const [renderError, setRenderError] = useState<string | null>(null);
+
+  // Catch rendering errors at the top level
+  const originalConsoleError = typeof console !== 'undefined' ? console.error : null;
+  useEffect(() => {
+    const handler = (e: ErrorEvent) => {
+      if (e.message?.includes('Objects are not valid') || e.message?.includes('object with keys')) {
+        setRenderError(e.message);
+        e.preventDefault();
+      }
+    };
+    const rejectionHandler = (e: PromiseRejectionEvent) => {
+      const msg = e.reason?.message || String(e.reason);
+      if (msg.includes('Objects are not valid') || msg.includes('object with keys')) {
+        setRenderError(msg);
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('error', handler);
+    window.addEventListener('unhandledrejection', rejectionHandler);
+    return () => {
+      window.removeEventListener('error', handler);
+      window.removeEventListener('unhandledrejection', rejectionHandler);
+    };
+  }, []);
+
+  if (renderError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen p-8 space-y-4 text-center">
+        <div className="text-4xl">&#9888;</div>
+        <h3 className="text-lg font-semibold text-destructive">Error de renderizado</h3>
+        <p className="text-sm text-muted-foreground max-w-lg">Ocurrio un error al mostrar los datos de la aplicacion. Esto suele deberse a datos inesperados en la configuracion.</p>
+        <p className="text-xs text-muted-foreground font-mono max-w-lg break-all bg-muted p-3 rounded">{renderError}</p>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => { setRenderError(null); window.location.reload(); }}>Recargar</Button>
+          <Button variant="outline" size="sm" onClick={() => { setRenderError(null); }}>
+            Ignorar y continuar
+          </Button>
+        </div>
       </div>
-    </div>
-  ),
-});
+    );
+  }
 
-export default function Page() {
+  // Show loading screen
+  if (loading || !authReady) {
+    return (<div className="flex items-center justify-center min-h-screen"><div className="text-center space-y-3"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" /><p className="text-muted-foreground">Cargando Nexus One...</p></div></div>);
+  }
+  // Show login screen
+  if (!currentUser) {
+    return <LoginScreen onLogin={handleLogin} storeName={settings.storeName} />;
+  }
+
+  const isTrial = license?.licenseType === "trial";
+  const isExpired = license?.isExpired || false;
+  const activationsRemaining = license ? (license.maxActivations - (license.activationCount || 0)) : 0;
+  const isMachineBlocked = license?.machineMismatch && !isTrial && activationsRemaining <= 0 && !!license?.blockedReason;
+  const isDifferentMachine = license?.machineMismatch && !isTrial && activationsRemaining > 0;
+  const showWatermark = isTrial || !license?.features?.noWatermark;
+  const canDevolutions = license?.features?.devolutions || false;
+  const canCashClosing = license?.features?.cashClosing || false;
+
+  // ─── Fase 3a: Feature Flags Store (atomic, zero unnecessary re-renders) ──
+  const loadFromLicense = useFeaturesStore((s) => s.loadFromLicense);
+  const featureFlags = useFeaturesStore((s) => s.flags);
+  const canFrequentCustomers = featureFlags['pos.basic'] || false;
+
+  // Sync license data into atomic features store
+  useEffect(() => {
+    if (license) loadFromLicense(license);
+  }, [license, loadFromLicense]);
+
+  // Admin-only and role-gated tabs
+  const ADMIN_ONLY_TABS = new Set(['users', 'config', 'license', 'backup', 'diagnostics', 'db-health', 'tax-reload']);
+  const ROLE_PERMISSION_MAP: Record<string, string> = { suppliers: 'suppliers', purchases: 'purchases', credit: 'credit' };
+
+  const allTabs = [
+    { value: "dashboard", label: "Dashboard", icon: "📊" },
+    { value: "pos", label: "Punto de Venta", icon: "💳" },
+    { value: "clients", label: "Clientes", icon: "👥" },
+    { value: "products", label: "Productos", icon: "📦" },
+    { value: "reports", label: "Informes", icon: "📈" },
+    { value: "devolutions", label: "Devoluciones", icon: "🔄" },
+    { value: "cash-closing", label: "Cierre de Caja", icon: "💰" },
+    { value: "config", label: "Configuracion", icon: "⚙️" },
+    { value: "license", label: "Licencia", icon: "🔑" },
+    { value: "users", label: "Usuarios", icon: "👤" },
+    { value: "backup", label: "Respaldo", icon: "💾" },
+    { value: "suppliers", label: "Proveedores", icon: "🏪" },
+    { value: "purchases", label: "Compras", icon: "🛒" },
+    { value: "credit", label: "Cuentas por Cobrar", icon: "💳" },
+    { value: "kardex", label: "Inventario/Kardex", icon: "📦" },
+    { value: "held-sales", label: "Ventas en Espera", icon: "⏸️" },
+    { value: "quotes", label: "Presupuestos", icon: "📋" },
+    { value: "delivery-notes", label: "Notas de Entrega", icon: "🚚" },
+    { value: "expenses", label: "Gastos", icon: "💸" },
+    { value: "catalog", label: "Catalogo", icon: "📖" },
+    { value: "diagnostics", label: "Diagnosticos", icon: "🔧" },
+    { value: "db-health", label: "Salud BD", icon: "💾" },
+    { value: "tax-reload", label: "Fiscal", icon: "🧾" },
+  ];
+
+  // ─── Fase 3a: Atomic feature-based tab filtering ──
+  // Replaces manual allowed/restricted/plan properties with isTabAccessible()
+  const availableTabs = allTabs.filter((tab) => {
+    const isAdmin = currentUser.role === "admin";
+    if (ADMIN_ONLY_TABS.has(tab.value) && !isAdmin) return false;
+    if (isAdmin) return isTabAccessible(tab.value, featureFlags);
+    const hasFeature = isTabAccessible(tab.value, featureFlags);
+    const permKey = ROLE_PERMISSION_MAP[tab.value];
+    if (permKey) return hasFeature && !!currentUser.permissions?.[permKey as keyof typeof currentUser.permissions];
+    return hasFeature;
+  });
+
+  const navGroups = useMemo(() => buildGroups(availableTabs.map(t => ({ value: t.value, label: t.label, icon: t.icon, restricted: false, plan: '' })), stockAlertCount), [availableTabs, stockAlertCount]);
+
   return (
-    <div suppressHydrationWarning>
-      <HomeClient />
+    <div className="min-h-screen flex flex-col relative">
+      {/* BANNERS */}
+      {isTrial && !isExpired && (
+        <div className="bg-yellow-500 text-white text-center py-1.5 px-4 text-xs font-medium flex items-center justify-center gap-2">
+          <span>MODO PRUEBA - {license?.daysRemaining} dias restantes</span>
+          <button onClick={() => setShowActivateModal(true)} className="bg-white text-yellow-700 px-3 py-0.5 rounded text-xs font-bold hover:bg-yellow-100 ml-2">ACTIVAR LICENCIA</button>
+        </div>
+      )}
+      {isExpired && (
+        <div className="bg-red-600 text-white text-center py-2 px-4 text-xs font-bold flex items-center justify-center gap-2">
+          <span>LICENCIA EXPIRADA</span>
+          <button onClick={() => setShowActivateModal(true)} className="bg-white text-red-700 px-3 py-0.5 rounded text-xs font-bold hover:bg-red-100 ml-2">ACTIVAR</button>
+        </div>
+      )}
+      {isDifferentMachine && !isExpired && (
+        <div className="bg-yellow-500 text-white text-center py-1.5 px-4 text-xs font-bold flex items-center justify-center gap-2">
+          <span>&#9888;&#65039; LICENCIA EN OTRO EQUIPO - Activaciones restantes: {activationsRemaining}</span>
+          <button onClick={() => setShowBlockedModal(true)} className="bg-white text-yellow-700 px-3 py-0.5 rounded text-xs font-bold hover:bg-yellow-100 ml-2">ACTIVAR AQUI</button>
+        </div>
+      )}
+      {isMachineBlocked && !isExpired && (
+        <div className="bg-red-600 text-white text-center py-1.5 px-4 text-xs font-bold flex items-center justify-center gap-2">
+          <span>&#128274; LICENCIA BLOQUEADA - Maximo de activaciones alcanzado</span>
+          <button onClick={() => setShowBlockedModal(true)} className="bg-white text-red-700 px-3 py-0.5 rounded text-xs font-bold hover:bg-red-100 ml-2">VER DETALLES</button>
+        </div>
+      )}
+      {!isTrial && !isExpired && license?.isValid && !isMachineBlocked && !isDifferentMachine && (
+        <div className="bg-green-600 text-white text-center py-0.5 px-4 text-[10px]">
+          <span className="font-medium">{license.licenseType.toUpperCase()} | Vence: {new Date(license.expiresAt).toLocaleDateString("es-VE")} | {license.daysRemaining} dias</span>
+          {license.ownerName && <span> | {license.ownerName}</span>}
+        </div>
+      )}
+
+      {/* STOCK ALERTS BANNER */}
+      {stockAlertCount > 0 && !stockBannerDismissed && (
+        <div className="bg-orange-500 text-white text-center py-1.5 px-4 text-xs font-medium flex items-center justify-center gap-2">
+          <span>&#9888; {stockAlertCount} producto(s) con alerta de stock</span>
+          {stockZeroCount > 0 && <span className="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded font-bold">{stockZeroCount} SIN STOCK</span>}
+          <button
+            onClick={() => { setActiveTab("products"); setStockBannerDismissed(true); }}
+            className="bg-white text-orange-700 px-3 py-0.5 rounded text-xs font-bold hover:bg-orange-100 ml-2"
+          >
+            VER PRODUCTOS
+          </button>
+          <button
+            onClick={() => setStockBannerDismissed(true)}
+            className="text-white/70 hover:text-white ml-1 text-base leading-none"
+            title="Ocultar"
+          >
+            &#10005;
+          </button>
+        </div>
+      )}
+
+      {/* HEADER */}
+      <header className="border-b bg-card sticky top-0 z-40">
+        {/* ── Row 1: Store info + date + user (arriba) ── */}
+        <div className="container mx-auto px-4 py-2 flex items-center justify-between border-b border-border/50">
+          <div className="flex items-center gap-3">
+            <AppNav activeTab={activeTab} onTabChange={(v: string) => {
+              const tab = availableTabs.find(t => t.value === v);
+              if (!tab) return;
+              safeSetTab(v);
+            }} tabs={availableTabs.map(t => ({ value: t.value, label: t.label, icon: t.icon, restricted: false, plan: '' }))} stockAlertCount={stockAlertCount} currentUser={currentUser.fullName || currentUser.username} onLogout={handleLogout} version={appVersion} />
+            <div>
+              <h1 className="text-xl font-bold text-primary">
+                {settings.storeName}
+                {showWatermark && <span className="text-xs font-normal text-yellow-600 ml-2">(TRIAL)</span>}
+              </h1>
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span>v{appVersion} | 1$ =</span>
+                {editingBcv ? (
+                  <input type="number" min="0" step="0.01" value={inlineBcv}
+                    onChange={(e) => setInlineBcv(e.target.value)}
+                    onBlur={saveInlineBcv}
+                    onKeyDown={(e: any) => { if (e.key === "Enter") saveInlineBcv(); if (e.key === "Escape") setEditingBcv(false); }}
+                    autoFocus
+                    className="w-20 bg-transparent border-b border-primary text-primary font-bold text-xs px-1 py-0 focus:outline-none" />
+                ) : (
+                  <button onClick={() => { setInlineBcv((settings.bcvRate ?? 36.5).toFixed(2)); setEditingBcv(true); }}
+                    className="font-bold text-primary hover:underline cursor-pointer">
+                    {(settings.bcvRate ?? 36.5).toFixed(2)}
+                  </button>
+                )}
+                <span>Bs</span>
+                {!editingBcv && <span className="text-[9px] text-muted-foreground/60">(click para cambiar)</span>}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-right text-xs text-muted-foreground">
+              <p>{new Date().toLocaleDateString("es-VE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+              <p>{new Date().toLocaleTimeString("es-VE")}</p>
+            </div>
+            <ThemeSwitcher />
+            <Separator orientation="vertical" className="h-8" />
+            <div className="flex items-center gap-2">
+              {currentUser.avatar ? (
+                <img crossOrigin="anonymous" src={currentUser.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-primary/30" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center text-primary text-xs font-bold">
+                  {(currentUser.fullName || currentUser.username).split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
+                </div>
+              )}
+              <Badge variant={currentUser.role === "admin" ? "default" : "secondary"}>
+                {currentUser.role === "admin" ? "Admin" : currentUser.role === "vendedor" ? "Vendedor" : "Cajero"}
+              </Badge>
+              <span className="text-sm font-medium max-w-[120px] truncate hidden sm:inline-block">
+                {currentUser.fullName || currentUser.username}
+              </span>
+              <button
+                onClick={handleLogout}
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors px-2 py-1 rounded hover:bg-destructive/10"
+                title="Cerrar sesion"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                <span className="hidden sm:inline">Salir</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        {/* ── Row 2: Module menu (debajo) ── */}
+        <div className="container mx-auto px-4 py-1.5">
+          <TopNavBar
+              groups={navGroups}
+              activeTab={activeTab}
+              onTabChange={(v: string) => {
+                const tab = availableTabs.find(t => t.value === v);
+                if (!tab) return;
+                safeSetTab(v);
+              }}
+            />
+        </div>
+      </header>
+
+      {/* MAIN */}
+      <main className="flex-1 container mx-auto px-4 py-4">
+        <TabsContent value="dashboard" activeTab={activeTab}>
+          <ErrorBoundary name="Dashboard">
+            <DashboardTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="pos" activeTab={activeTab}>
+          <ErrorBoundary name="Punto de Venta">
+            <PosTab products={products} bcvRate={settings.bcvRate ?? 36.5} euroUsdtRate={settings.euroUsdtRate ?? 0} taxRate={settings.taxRate ?? 0}
+              storeName={settings.storeName} storeAddress={settings.storeAddress} storeRif={settings.storeRif}
+              storePhone={settings.storePhone} currency={settings.currency} allowZeroStock={settings.allowZeroStock}
+              enableDiscount={settings.enableDiscount} maxDiscountPct={settings.maxDiscountPct ?? 20}
+              canSaleNotes={license?.features?.saleNotes || false} canFrequentCustomers={canFrequentCustomers}
+              sellerName={currentUser.fullName || currentUser.username}
+              sellerRole={currentUser.role}
+              ticketFontSize={settings.ticketFontSize || 8}
+              ticketFontFamily={settings.ticketFontFamily || 'monospace'}
+              ticketHeaderMsg={settings.ticketHeaderMsg || ""}
+              ticketFooterMsg={settings.ticketFooterMsg || "Gracias por su compra!"}
+              ticketShowPhone={settings.ticketShowPhone === true}
+              ticketShowSeller={settings.ticketShowSeller === true}
+              ticketShowExchange={settings.ticketShowExchange === true}
+              ticketShowSlogan={settings.ticketShowSlogan === true}
+              ticketShowCashReceived={settings.ticketShowCashReceived === true}
+              ticketShowLogo={settings.ticketShowLogo === true}
+              ticketBold={settings.ticketBold === true}
+              ticketPaperWidth={settings.ticketPaperWidth || '58mm'}
+              ticketMarginLeft={settings.ticketMarginLeft ?? 0}
+              ticketMarginRight={settings.ticketMarginRight ?? 0}
+              ticketUseAgent={settings.ticketUseAgent === true}
+              ticketAgentUrl={settings.ticketAgentUrl || 'http://localhost:9100'}
+              ticketCurrencyMode={settings.ticketCurrencyMode || 'dual'}
+              storeLogo={settings.storeLogo || ''}
+              businessType={settings.businessType || 'general'}
+              taxMode={settings.taxMode || 'included'}
+              onSaleComplete={loadData}
+              onHoldSale={async (heldData: any) => {
+                try {
+                  const res = await authFetch('/api/held-sales', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      ...heldData,
+                      userId: currentUser.id,
+                      userName: currentUser.fullName || currentUser.username,
+                    }),
+                  }, handleSessionExpired);
+                  if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    throw new Error(err.error || 'Error al poner en espera');
+                  }
+                  // Success toast is shown by POS itself — no double toast
+                } catch (e: any) {
+                  toast.error(e.message || 'Error al poner en espera');
+                }
+              }}
+              initialCart={pendingCartData?.items?.length ? pendingCartData.items.map((item: any) => {
+                const prod = products.find((p) => p.id === item.productId);
+                return prod ? {
+                  ...prod,
+                  quantity: item.quantity,
+                  total: item.quantity * (item.unitPrice || item.total / item.quantity),
+                  isWholesale: false,
+                } : null;
+              }).filter(Boolean) : null}
+              initialClient={pendingCartData?.client}
+              initialNotes={pendingCartData?.notes || ''}
+              initialDiscount={pendingCartData?.discount || 0}
+              initialPaymentMethod={pendingCartData?.paymentMethod || 'efectivo'}
+            />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="clients" activeTab={activeTab}>
+          <ErrorBoundary name="Clientes">
+            {canFrequentCustomers ? (
+              <ClientsTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency}
+                storeRif={settings.storeRif} storeName={settings.storeName} storeAddress={settings.storeAddress} />
+            ) : (
+              <UpgradePrompt feature="Modulo de Clientes" plan="PROFESIONAL"
+                desc="Gestione clientes, facture con datos fiscales, registre personas naturales y empresas con cedula/RIF." />
+            )}
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="products" activeTab={activeTab}>
+          <ErrorBoundary name="Productos">
+            <ProductsTab products={products} categories={categories} brands={brands} bcvRate={settings.bcvRate ?? 36.5} euroUsdtRate={settings.euroUsdtRate ?? 0}
+              currency={settings.currency} onRefresh={loadData} maxProducts={license?.maxProducts || 30} licenseType={license?.licenseType || "trial"} taxRate={settings.taxRate ?? 0} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="devolutions" activeTab={activeTab}>
+          <ErrorBoundary name="Devoluciones">
+            {canDevolutions ? <DevolutionsTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} /> : <UpgradePrompt feature="Devoluciones" plan="BASICA+" />}
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="cash-closing" activeTab={activeTab}>
+          <ErrorBoundary name="Cierre de Caja">
+            {canCashClosing ? <CashClosingTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} /> : <UpgradePrompt feature="Cierre de Caja" plan="BASICA+" />}
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="reports" activeTab={activeTab}>
+          <ErrorBoundary name="Informes">
+            <ReportsTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="config" activeTab={activeTab}>
+          <ErrorBoundary name="Configuracion">
+            <ConfigTab settings={settings} onSettingsChange={(s) => { setSettings(s); loadData(); }}
+              licenseFeatures={{ autoBackup: license?.features?.autoBackup || false, exportImport: license?.features?.exportImport || false, allowZeroStockConfig: license?.features?.allowZeroStockConfig || false, productDiscount: license?.features?.productDiscount || false }} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="license" activeTab={activeTab}>
+          <ErrorBoundary name="Licencia">
+            <LicenseTab license={license} onLicenseChange={loadData} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="users" activeTab={activeTab}>
+          <ErrorBoundary name="Usuarios">
+            <UsersTab currentUser={currentUser} onUserUpdate={handleUserUpdate} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="backup" activeTab={activeTab}>
+          <ErrorBoundary name="Respaldos">
+            <BackupTab />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="suppliers" activeTab={activeTab}>
+          <ErrorBoundary name="Proveedores">
+            <SuppliersTab />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="purchases" activeTab={activeTab}>
+          <ErrorBoundary name="Compras">
+            <PurchasesTab bcvRate={settings.bcvRate ?? 36.5} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="credit" activeTab={activeTab}>
+          <ErrorBoundary name="CxC">
+            <CreditTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency}
+              sellerName={currentUser.fullName || currentUser.username} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="kardex" activeTab={activeTab}>
+          <ErrorBoundary name="Kardex">
+            <KardexTab products={products.map(p => ({ id: p.id, name: p.name, cost: p.cost, stock: p.stock }))}
+              bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} currentUser={currentUser} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="held-sales" activeTab={activeTab}>
+          <ErrorBoundary name="Ventas en Espera">
+            <HeldSalesTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} currentUser={currentUser}
+              onRecoverSale={(heldSale: any) => {
+                // Load held sale items into POS cart
+                setPendingCartData(heldSale);
+                setActiveTab('pos');
+              }} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="quotes" activeTab={activeTab}>
+          <ErrorBoundary name="Presupuestos">
+            <QuotesTab products={products.map(p => ({ id: p.id, name: p.name, price: p.price, taxType: p.taxType || 'general' }))}
+              bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} currentUser={currentUser}
+              onConvertToSale={(quote: any) => {
+                // Load quote items into POS cart
+                setPendingCartData(quote);
+                setActiveTab('pos');
+              }} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="delivery-notes" activeTab={activeTab}>
+          <ErrorBoundary name="Notas de Entrega">
+            <DeliveryNotesTab products={products.map(p => ({ id: p.id, name: p.name, stock: p.stock, cost: p.cost }))}
+              bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} currentUser={currentUser} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="expenses" activeTab={activeTab}>
+          <ErrorBoundary name="Gastos">
+            <ExpensesTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency}
+              sellerName={currentUser.fullName || currentUser.username}
+              sellerRole={currentUser.role}
+              userId={currentUser.id} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="catalog" activeTab={activeTab}>
+          <ErrorBoundary name="Catalogo">
+            <CatalogTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency}
+              storeName={settings.storeName} storeAddress={settings.storeAddress}
+              storePhone={settings.storePhone} storeRif={settings.storeRif}
+              storeLogo={settings.storeLogo || ''} theme={settings.theme || 'blue'} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="diagnostics" activeTab={activeTab}>
+          <ErrorBoundary name="Diagnosticos">
+            <DiagnosticsTab />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="db-health" activeTab={activeTab}>
+          <ErrorBoundary name="Salud BD">
+            <DbHealthTab />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="tax-reload" activeTab={activeTab}>
+          <ErrorBoundary name="Fiscal">
+            <TaxReloadTab />
+          </ErrorBoundary>
+        </TabsContent>
+      </main>
+
+      {showWatermark && <div className="fixed bottom-12 right-4 text-yellow-500/30 text-6xl font-bold pointer-events-none select-none rotate-[-15deg] z-50">TRIAL</div>}
+
+      <footer className="border-t py-2 text-center text-xs text-muted-foreground">
+        <p>Nexus One POS v{appVersion} - Sistema Punto de Venta Venezuela | Doble Moneda $/Bs{showWatermark && " | Version de Prueba"}</p>
+      </footer>
+
+      {/* MODALES */}
+
+      <Dialog open={showExpiredModal} onOpenChange={setShowExpiredModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle className="text-center text-destructive text-xl">Licencia Expirada</DialogTitle></DialogHeader>
+          <div className="text-center space-y-4">
+            <p className="text-sm">Su licencia ha expirado. Active una nueva clave para continuar.</p>
+            <div><Label>Clave de Licencia</Label><Input value={activateKey} onChange={(e: any) => setActivateKey(e.target.value.toUpperCase())} placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" className="font-mono text-center tracking-widest" /></div>
+            <div className="flex gap-2"><Button variant="outline" className="flex-1" onClick={() => setShowExpiredModal(false)}>Continuar (limitado)</Button><Button className="flex-1" onClick={activateFromModal} disabled={activating || !activateKey.trim()}>{activating ? "Activando..." : "Activar"}</Button></div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showActivateModal} onOpenChange={setShowActivateModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Activar Licencia</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">Ingrese su clave de licencia.</p>
+            <div><Label>Clave de Licencia</Label><Input value={activateKey} onChange={(e: any) => setActivateKey(e.target.value.toUpperCase())} placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" className="font-mono text-center text-lg tracking-widest" onKeyDown={(e: any) => e.key === "Enter" && activateFromModal()} /></div>
+            <div className="flex gap-2"><Button variant="outline" className="flex-1" onClick={() => setShowActivateModal(false)}>Cancelar</Button><Button className="flex-1" onClick={activateFromModal} disabled={activating || !activateKey.trim()}>{activating ? "Activando..." : "Activar"}</Button></div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* ADVERTENCIA: Salir de POS con carrito lleno */}
+      <Dialog open={showCartWarning} onOpenChange={setShowCartWarning}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="text-center text-lg">⚠️ Factura en curso</DialogTitle></DialogHeader>
+          <div className="text-center space-y-3">
+            <p className="text-sm">Tienes <strong className="text-primary">{cartItemCount} producto(s)</strong> en el carrito de Punto de Venta.</p>
+            <p className="text-xs text-muted-foreground">Si sales del modulo, los productos del carrito se mantendran pero no se perderan.</p>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setShowCartWarning(false)}>Volver al POS</Button>
+              <Button className="flex-1" onClick={() => { setShowCartWarning(false); if (pendingTabChange) { setActiveTab(pendingTabChange); setPendingTabChange(null); } }}>Salir</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showBlockedModal} onOpenChange={setShowBlockedModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle className="text-center text-lg">{isMachineBlocked ? <span className="text-red-700">&#128274; Licencia Bloqueada</span> : <span className="text-yellow-700">&#9888;&#65039; Equipo No Reconocido</span>}</DialogTitle></DialogHeader>
+          <div className="text-center space-y-4">
+            {isMachineBlocked ? (
+              <>
+                <p className="text-sm text-red-700">Esta licencia ha alcanzado el maximo de activaciones permitidas ({license?.maxActivations}).</p>
+                <p className="text-sm text-muted-foreground">Contacte al administrador del sistema para solicitar un restablecimiento.</p>
+                {license && <div className="p-3 bg-muted rounded text-xs space-y-1"><p className="text-muted-foreground">Machine ID de este equipo:</p><p className="font-mono font-bold">{license.machineId}</p></div>}
+                <Button variant="outline" className="w-full" onClick={() => setShowBlockedModal(false)}>Cerrar</Button>
+              </>
+            ) : (
+              <>
+                <p className="text-sm">Esta licencia fue activada en otra computadora. Si cambio de equipo o formateo, puede reactivarla.</p>
+                {license && <div className="p-3 bg-muted rounded text-xs space-y-1"><p className="text-muted-foreground">Machine ID de este equipo:</p><p className="font-mono font-bold">{license.machineId}</p><p className="text-muted-foreground mt-1">Activaciones restantes: <strong>{activationsRemaining}</strong> de {license.maxActivations}</p></div>}
+                <div><Label>Clave de Licencia</Label><Input value={activateKey} onChange={(e: any) => setActivateKey(e.target.value.toUpperCase())} placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" className="font-mono text-center tracking-widest" onKeyDown={(e: any) => e.key === "Enter" && activateFromModal()} /></div>
+                <div className="flex gap-2"><Button variant="outline" className="flex-1" onClick={() => setShowBlockedModal(false)}>Cancelar</Button><Button className="flex-1" onClick={activateFromModal} disabled={activating || !activateKey.trim()}>{activating ? "Activando..." : "Activar"}</Button></div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function UpgradePrompt({ feature, plan, desc }: { feature: string; plan: string; desc?: string }) {
+  const [showActivate, setShowActivate] = useState(false);
+  const [key, setKey] = useState("");
+  const [loading, setLoading] = useState(false);
+  const activate = async () => {
+    if (!key.trim()) return; setLoading(true);
+    try { const res = await authFetch("/api/license", { method: "POST", body: JSON.stringify({ licenseKey: key.trim() }) }); const data = await res.json(); if (!res.ok) throw new Error(data.error); toast.success(data.message); setShowActivate(false); setTimeout(() => window.location.reload(), 1000); } catch (e: any) { toast.error(e.message); } finally { setLoading(false); }
+  };
+  return (
+    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+      <Card className="max-w-md w-full border-yellow-300">
+        <CardContent className="p-6 text-center space-y-4">
+          <div className="text-4xl">&#128274;</div>
+          <h3 className="text-lg font-semibold">Funcion Bloqueada</h3>
+          <p className="text-sm text-muted-foreground"><strong>{feature}</strong> no disponible en su plan. Actualice a <strong>{plan}</strong>.</p>
+          {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
+          <div className="space-y-2">
+            <Button className="w-full" onClick={() => setShowActivate(true)}>Activar Licencia</Button>
+          </div>
+        </CardContent>
+      </Card>
+      <Dialog open={showActivate} onOpenChange={setShowActivate}>
+        <DialogContent className="max-w-sm"><DialogHeader><DialogTitle>Activar Licencia</DialogTitle></DialogHeader>
+          <div className="space-y-3"><Input value={key} onChange={(e: any) => setKey(e.target.value.toUpperCase())} placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" className="font-mono text-center tracking-widest" /><Button className="w-full" onClick={activate} disabled={loading || !key.trim()}>{loading ? "Activando..." : "Activar"}</Button></div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

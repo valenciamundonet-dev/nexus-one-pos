@@ -25,16 +25,6 @@ export function useThemeContext() {
   return useContext(ThemeContext);
 }
 
-/**
- * ThemeProvider v2 — FIX React #310
- * 
- * ALWAYS wraps children with ThemeContext.Provider, even before mount.
- * This ensures the React fiber tree is identical between server and client,
- * preventing hydration mismatches in React 19.
- * 
- * Before: server/client rendered <>{children}</> then switched to <Provider> after mount.
- * After: always renders <Provider>{children}</Provider> — only the VALUE changes after mount.
- */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<ThemeMode>("light");
   const [colorTheme, setColorTheme] = useState<ColorTheme>("blue");
@@ -70,8 +60,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const resolvedTheme = `${mode}-${colorTheme}`;
 
-  // ALWAYS provide context — never switch between <>{children}</> and <Provider>
-  // This is critical for React 19 hydration compatibility
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
   return (
     <ThemeContext.Provider value={{ mode, colorTheme, setMode, setColorTheme, resolvedTheme }}>
       {children}
