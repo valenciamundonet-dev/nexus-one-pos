@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // TODO (Tech Debt): Hay errores de tipos preexistentes que ocultar.
-  // Cuando se corrijan las interfaces Settings/Product en page.tsx y config-tab.tsx,
-  // cambiar a false para compilacion estricta.
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -12,9 +9,6 @@ const nextConfig = {
     },
   },
   webpack: (config) => {
-    // jspdf referencia canvas y fflate como deps opcionales internas.
-    // canvas requiere compilacion nativa (no disponible en Windows facil).
-    // fflate no se usa en nuestro flujo. Se ignora para evitar errores.
     config.resolve.alias = {
       ...config.resolve.alias,
       'canvas': false,
@@ -22,7 +16,6 @@ const nextConfig = {
     };
     return config;
   },
-  // Rewrite /uploads/products/file.jpg al API endpoint que sirve desde data/
   async rewrites() {
     return [
       {
