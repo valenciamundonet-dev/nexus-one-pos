@@ -285,5 +285,12 @@
     "notas": "Fix TOTAL: scripts con CRLF puro (-text en gitattributes), linea 9 VBS corregida, .bat/.vbs/.hta funcionan en Windows",
     "fecha": "2026-08-24",
     "tipo": "estable"
+  },
+  {
+    "version": "2.9.86",
+    "nombre": "v2.9.86",
+    "notas": "Fix error renderizado: error.tsx muestra mensaje REAL + stack (sin auto-reload), API Settings sanitizada, datos API validados antes de renderizar, GENERAR LICENCIA restaurado en tab de licencias (admin), output standalone",
+    "fecha": "2026-08-25",
+    "tipo": "estable"
   }
 ]
