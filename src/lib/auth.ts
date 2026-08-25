@@ -45,7 +45,7 @@ export function verifyPassword(password: string, storedHash: string): boolean {
   // Formato legacy: hash SHA-256 plano (64 hex chars)
   // Verifica con el metodo viejo para permitir migracion gradual
   if (storedHash.length === 64 && /^[a-f0-9]{64}$/i.test(storedHash)) {
-    const SALT = "nexus-one-pos-pos-v2.5";
+    const SALT = "nexusone-pos-v2.5";
     const oldHash = crypto.createHash("sha256").update(password + SALT).digest("hex");
     return oldHash === storedHash;
   }

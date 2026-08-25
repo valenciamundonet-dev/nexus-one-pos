@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { existsSync, statSync, createReadStream } from 'fs';
 import { join } from 'path';
 
-const GITHUB_REPO = 'csglider/Nexus One-v2.9.20';
+const GITHUB_REPO = 'valenciamundonet-dev/valenciamundonet';
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,12 +20,11 @@ export async function GET(req: NextRequest) {
     const tagName = `v${version}`;
     const BASE = process.cwd();
 
-    // === Opcion 1: Buscar ZIP local en carpeta releases/ ===
+    // === Opcion 1: Buscar ZIP local en carpeta zip/ o releases/ ===
     const localPatterns = [
-      join(BASE, 'releases', `Nexus One-${tagName}.zip`),
-      join(BASE, 'releases', `Nexus One-v2.9.20-${version}.zip`),
+      join(BASE, 'zip', `NexusOne-v${version}.zip`),
+      join(BASE, 'releases', `NexusOne-${tagName}.zip`),
       join(BASE, 'releases', `${tagName}.zip`),
-      join(BASE, 'public', `Nexus One-v2.9.20-${version}.zip`),
     ];
 
     for (const filePath of localPatterns) {
@@ -36,7 +35,7 @@ export async function GET(req: NextRequest) {
           headers: {
             'Content-Type': 'application/zip',
             'Content-Length': String(fileStat.size),
-            'Content-Disposition': `attachment; filename="Nexus One-${tagName}.zip"`,
+            'Content-Disposition': `attachment; filename="NexusOne-${tagName}.zip"`,
           },
         });
       }
@@ -46,7 +45,7 @@ export async function GET(req: NextRequest) {
     const token = process.env.GITHUB_TOKEN;
     if (!token) {
       return NextResponse.json({
-        error: 'No hay token de GitHub configurado. Coloque el archivo ZIP manualmente en la carpeta releases/.',
+        error: 'No hay token de GitHub configurado. Coloque el archivo ZIP manualmente en la carpeta zip/.',
       }, { status: 503 });
     }
 
@@ -87,7 +86,7 @@ export async function GET(req: NextRequest) {
       return new Response(dlRes.body, {
         headers: {
           'Content-Type': 'application/zip',
-          'Content-Disposition': `attachment; filename="Nexus One-${tagName}.zip"`,
+          'Content-Disposition': `attachment; filename="NexusOne-${tagName}.zip"`,
         },
       });
     }

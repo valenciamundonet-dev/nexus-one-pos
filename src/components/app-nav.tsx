@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import {
   BarChart3, CreditCard, Package, Users, ShoppingCart, TrendingUp,
   Settings, KeyRound, UserCircle, Database, Store, RefreshCcw,
@@ -10,36 +11,36 @@ import {
 
 // ── Lucide icon mapping (replaces emoji strings) ──
 const ICON_MAP: Record<string, React.ElementType> = {
-  '\U0001f4ca': BarChart3,
-  '\U0001f4b3': CreditCard,
-  '\U0001f4e6': Package,
-  '\U0001f465': Users,
-  '\U0001f6d2': ShoppingCart,
-  '\U0001f4c8': TrendingUp,
-  '\u2699\ufe0f': Settings,
-  '\U0001f511': KeyRound,
-  '\U0001f464': UserCircle,
-  '\U0001f4be': Database,
-  '\U0001f3ea': Store,
-  '\U0001f504': RefreshCcw,
-  '\U0001f4b0': Wallet,
-  '\u23f8\ufe0f': Pause,
-  '\U0001f4cb': ClipboardList,
-  '\U0001f69a': Truck,
-  '\U0001f4b8': Receipt,
-  '\U0001f4d6': BookOpen,
+  '📊': BarChart3,
+  '💳': CreditCard,
+  '📦': Package,
+  '👥': Users,
+  '🛒': ShoppingCart,
+  '📈': TrendingUp,
+  '⚙️': Settings,
+  '🔑': KeyRound,
+  '👤': UserCircle,
+  '💾': Database,
+  '🏪': Store,
+  '🔄': RefreshCcw,
+  '💰': Wallet,
+  '⏸️': Pause,
+  '📋': ClipboardList,
+  '🚚': Truck,
+  '💸': Receipt,
+  '📖': BookOpen,
   'Cuentas por Cobrar': CreditCard,
   'Inventario/Kardex': BoxesIcon,
 }
 
 const GROUP_ICON_MAP: Record<string, React.ElementType> = {
-  '\U0001f4ca': BarChart3,
-  '\U0001f4b3': CreditCard,
-  '\U0001f4e6': Package,
-  '\U0001f465': Users,
-  '\U0001f6d2': ShoppingCart,
-  '\U0001f4c8': TrendingUp,
-  '\u2699\ufe0f': Settings,
+  '📊': BarChart3,
+  '💳': CreditCard,
+  '📦': Package,
+  '👥': Users,
+  '🛒': ShoppingCart,
+  '📈': TrendingUp,
+  '⚙️': Settings,
 }
 
 function NavIcon({ emoji, className = "w-4 h-4" }: { emoji: string; className?: string }) {
@@ -54,7 +55,7 @@ function GroupIcon({ emoji, className = "w-4 h-4" }: { emoji: string; className?
   return <span className={className}>{emoji}</span>
 }
 
-export interface NavItem {
+interface NavItem {
   value: string
   label: string
   icon: string
@@ -63,7 +64,7 @@ export interface NavItem {
   plan?: string
 }
 
-export interface NavGroup {
+interface NavGroup {
   id: string
   label: string
   icon: string
@@ -82,15 +83,15 @@ interface AppNavProps {
   version?: string
 }
 
-export function buildGroups(tabs: NavItem[], stockAlertCount: number): NavGroup[] {
+function buildGroups(tabs: NavItem[], stockAlertCount: number): NavGroup[] {
   const groupMap: Record<string, NavGroup> = {
-    inicio:      { id: 'inicio',      label: 'Inicio',       icon: '\U0001f4ca', color: '#6366f1', items: [] },
-    ventas:      { id: 'ventas',      label: 'Punto de Venta', icon: '\U0001f4b3', color: '#0ea5e9', items: [] },
-    inventario:  { id: 'inventario',  label: 'Inventario',     icon: '\U0001f4e6', color: '#f59e0b', items: [] },
-    personas:    { id: 'personas',    label: 'Personas',       icon: '\U0001f465', color: '#10b981', items: [] },
-    operaciones: { id: 'operaciones', label: 'Operaciones',   icon: '\U0001f6d2', color: '#ec4899', items: [] },
-    informes:    { id: 'informes',    label: 'Informes',       icon: '\U0001f4c8', color: '#8b5cf6', items: [] },
-    sistema:     { id: 'sistema',     label: 'Sistema',        icon: '\u2699\ufe0f', color: '#64748b', items: [] },
+    inicio:      { id: 'inicio',      label: 'Inicio',       icon: '📊', color: '#6366f1', items: [] },
+    ventas:      { id: 'ventas',      label: 'Punto de Venta', icon: '💳', color: '#0ea5e9', items: [] },
+    inventario:  { id: 'inventario',  label: 'Inventario',     icon: '📦', color: '#f59e0b', items: [] },
+    personas:    { id: 'personas',    label: 'Personas',       icon: '👥', color: '#10b981', items: [] },
+    operaciones: { id: 'operaciones', label: 'Operaciones',   icon: '🛒', color: '#ec4899', items: [] },
+    informes:    { id: 'informes',    label: 'Informes',       icon: '📈', color: '#8b5cf6', items: [] },
+    sistema:     { id: 'sistema',     label: 'Sistema',        icon: '⚙️', color: '#64748b', items: [] },
   }
 
   for (const tab of tabs) {
@@ -301,7 +302,6 @@ export default function AppNav({
     </div>
   )
 
-  // AppNav now ONLY renders hamburger + sidebar drawer (no TopNavBar)
   return (
     <>
       {/* ── Trigger button ── */}
@@ -348,22 +348,37 @@ export default function AppNav({
 
         {sidebarContent}
       </div>
+
+      {/* ═══════════════════════════════════════════════════ */}
+      {/* ── TOP NAV BAR (desktop only) ── */}
+      {/* ═══════════════════════════════════════════════════ */}
+      <TopNavBar
+        groups={groups}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        stockAlertCount={stockAlertCount}
+      />
     </>
   )
 }
 
-// ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // TOP NAV BAR — grouped dropdown menus for desktop
-// Rendered SEPARATELY from AppNav (no createPortal — fixes React #310)
-// ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 
-export function TopNavBar({ groups, activeTab, onTabChange }: {
+function TopNavBar({ groups, activeTab, onTabChange, stockAlertCount }: {
   groups: NavGroup[]
   activeTab: string
   onTabChange: (tab: string) => void
+  stockAlertCount: number
 }) {
   const [openMenu, setOpenMenu] = useState<string | null>(null)
   const menuTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [slotEl, setSlotEl] = useState<HTMLElement | null>(null)
+
+  useEffect(() => {
+    setSlotEl(document.getElementById('top-nav-slot'))
+  }, [])
 
   const handleMouseEnter = (groupId: string) => {
     if (menuTimeoutRef.current) clearTimeout(menuTimeoutRef.current)
@@ -380,7 +395,7 @@ export function TopNavBar({ groups, activeTab, onTabChange }: {
     return () => document.removeEventListener('click', handler)
   }, [])
 
-  return (
+  const navContent = (
     <nav className="hidden lg:flex items-center gap-0.5">
       {groups.map((group) => {
         const isActiveInGroup = group.items.some(i => i.value === activeTab)
@@ -469,4 +484,9 @@ export function TopNavBar({ groups, activeTab, onTabChange }: {
       })}
     </nav>
   )
+
+  if (slotEl) {
+    return createPortal(navContent, slotEl)
+  }
+  return navContent
 }

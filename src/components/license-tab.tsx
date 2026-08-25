@@ -103,46 +103,6 @@ export default function LicenseTab({ license, onLicenseChange }: LicenseTabProps
   const [copied, setCopied] = useState(false);
   const [showFullComparison, setShowFullComparison] = useState(false);
 
-  // ===== Estado para Generador de Licencias (Admin) =====
-  const [genType, setGenType] = useState<'basica' | 'profesional'>('basica');
-  const [genDays, setGenDays] = useState('365');
-  const [genOwner, setGenOwner] = useState('');
-  const [genMachineId, setGenMachineId] = useState('');
-  const [generating, setGenerating] = useState(false);
-  const [generatedKey, setGeneratedKey] = useState('');
-  const [genCopied, setGenCopied] = useState(false);
-  const [genResultInfo, setGenResultInfo] = useState<any>(null);
-
-  const handleGenerate = async () => {
-    if (!genOwner.trim()) {
-      toast.error('Ingrese el nombre del propietario');
-      return;
-    }
-    setGenerating(true);
-    setGeneratedKey('');
-    try {
-      const res = await authFetch('/api/license/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          licenseType: genType,
-          ownerName: genOwner.trim(),
-          machineId: genMachineId.trim() || undefined,
-          days: genDays || '365',
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Error al generar');
-      setGeneratedKey(data.licenseKey);
-      setGenResultInfo(data);
-      toast.success(`Licencia ${genType.toUpperCase()} generada para ${genOwner.trim()}`);
-    } catch (e: any) {
-      toast.error(e.message || 'Error al generar licencia');
-    } finally {
-      setGenerating(false);
-    }
-  };
-
   const activateLicense = async () => {
     if (!licenseKey.trim()) {
       toast.error("Ingrese la clave de licencia");
@@ -616,65 +576,6 @@ export default function LicenseTab({ license, onLicenseChange }: LicenseTabProps
               `}</style>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* ====== SECCION ADMIN: GENERAR LICENCIA ====== */}
-      <Card className="border-dashed border-2 border-primary/30 bg-primary/5">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <span className="text-base">&#128273;</span> Generar Nueva Licencia (Admin)
-          </CardTitle>
-          <p className="text-[10px] text-muted-foreground">Cree claves de licencia para sus clientes. Solo visible para administradores.</p>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label className="text-xs">Tipo de Licencia</Label>
-              <select
-                value={genType}
-                onChange={(e) => setGenType(e.target.value as 'basica' | 'profesional')}
-                className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-              >
-                <option value="basica">Basica ($/Bs)</option>
-                <option value="profesional">Profesional (Todo incluido)</option>
-              </select>
-            </div>
-            <div>
-              <Label className="text-xs">Duracion (dias)</Label>
-              <Input type="number" value={genDays} onChange={(e) => setGenDays(e.target.value)} min="1" max="3650" placeholder="365" />
-            </div>
-          </div>
-          <div>
-            <Label className="text-xs">Nombre / Razon Social *</Label>
-            <Input value={genOwner} onChange={(e) => setGenOwner(e.target.value)} placeholder="Nombre del negocio o propietario" />
-          </div>
-          <div>
-            <Label className="text-xs">Machine ID (dejar vacio para cualquier equipo)</Label>
-            <Input value={genMachineId} onChange={(e) => setGenMachineId(e.target.value)} placeholder="MCH-XXXXXXXX-XXXXXXXX (opcional)" className="font-mono text-xs" />
-          </div>
-          <Button onClick={handleGenerate} disabled={generating || !genOwner.trim()} className="w-full">
-            {generating ? 'Generando...' : 'Generar Clave de Licencia'}
-          </Button>
-          {generatedKey && (
-            <div className="p-3 bg-green-50 border border-green-300 rounded-lg space-y-2">
-              <p className="text-xs font-semibold text-green-800">Clave generada exitosamente:</p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 text-xs font-mono font-bold text-green-900 bg-white p-2 rounded border select-all break-all">{generatedKey}</code>
-                <Button size="sm" variant="outline" onClick={() => {
-                  navigator.clipboard.writeText(generatedKey);
-                  setGenCopied(true);
-                  setTimeout(() => setGenCopied(false), 2000);
-                }}>
-                  {genCopied ? 'Copiado!' : 'Copiar'}
-                </Button>
-              </div>
-              <p className="text-[10px] text-green-700">Tipo: {genType.toUpperCase()} | {genDays} dias | Owner: {genOwner}</p>
-              {genResultInfo && (
-                <p className="text-[10px] text-green-600">{genResultInfo.totalFeatures} funciones habilitadas. Max productos: {genResultInfo.limits?.maxProducts === 99999 ? 'Ilimitados' : genResultInfo.limits?.maxProducts}. Max activaciones: {genResultInfo.limits?.maxActivations}.</p>
-              )}
-            </div>
-          )}
         </CardContent>
       </Card>
 

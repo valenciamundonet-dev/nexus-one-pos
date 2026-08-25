@@ -2,11 +2,7 @@
 // Genera y valida claves de licencia con algoritmo propietario
 // Estructura: TRIAL (15 dias) | BASICA (365 dias) | PROFESIONAL (365 dias)
 
-const LICENSE_SECRET = process.env.LICENSE_SECRET || '';
-
-if (!LICENSE_SECRET && typeof window === 'undefined') {
-  console.warn('[SECURITY] LICENSE_SECRET no configurado en .env. La validacion de licencias no funcionara correctamente. Agregue LICENSE_SECRET=... a su .env');
-}
+const LICENSE_SECRET = process.env.LICENSE_SECRET || "MYEC0MM3RC3-P0S-V3N3ZU3L4-2024-S3CR3T";
 const LICENSE_SEED = 0x5A1F3E7B;
 
 export interface LicenseInfo {

@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Badge } from "@/components/ui/badge";
 import type { Product } from "../types";
 
@@ -58,7 +57,7 @@ function ProductImage({ src, alt, icon }: { src: string; alt: string; icon?: str
   );
 }
 
-export const ProductGrid = React.memo(function ProductGrid({ products, currency, bcvRate, allowZeroStock, onAddToCart }: ProductGridProps) {
+export function ProductGrid({ products, currency, bcvRate, allowZeroStock, onAddToCart }: ProductGridProps) {
   if (products.length === 0) {
     return <div className="col-span-full text-center text-muted-foreground py-8 text-sm">No se encontraron productos</div>;
   }
@@ -107,4 +106,4 @@ export const ProductGrid = React.memo(function ProductGrid({ products, currency,
       })}
     </div>
   );
-});
+}

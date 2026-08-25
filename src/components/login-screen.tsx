@@ -92,9 +92,9 @@ export default function LoginScreen({ onLogin, storeName = "Nexus One" }: LoginS
 
       // Store token JWT and user data
       if (data.token) {
-        localStorage.setItem("nexus-one-pos_token", data.token);
+        localStorage.setItem("nexusone_token", data.token);
       }
-      localStorage.setItem("nexus-one-pos_user", JSON.stringify(data));
+      localStorage.setItem("nexusone_user", JSON.stringify(data));
       onLogin(data);
       toast.success(`Bienvenido, ${data.fullName || data.username}`);
     } catch {
@@ -142,9 +142,9 @@ export default function LoginScreen({ onLogin, storeName = "Nexus One" }: LoginS
       // Contraseña cambiada — guardar nuevo token si viene
       if (pendingUser) {
         if (data.token) {
-          localStorage.setItem("nexus-one-pos_token", data.token);
+          localStorage.setItem("nexusone_token", data.token);
         }
-        localStorage.setItem("nexus-one-pos_user", JSON.stringify(pendingUser));
+        localStorage.setItem("nexusone_user", JSON.stringify(pendingUser));
         onLogin(pendingUser);
         toast.success("Contrasena actualizada correctamente");
       }
@@ -249,19 +249,20 @@ export default function LoginScreen({ onLogin, storeName = "Nexus One" }: LoginS
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/8 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse" style={{animationDelay: "1s"}} />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/3 rounded-full blur-3xl" />
       </div>
 
       <div className="relative w-full max-w-sm">
         {/* Logo / Branding */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
-            <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-            </svg>
+          {/* Nexus One Logo */}
+          <div className="inline-flex items-center justify-center w-24 h-24 mb-4 rounded-2xl overflow-hidden nexus-logo-glow">
+            <img src="/icon-192.png" alt="Nexus One" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold text-white">{storeName}</h1>
+          <h1 className="text-3xl font-extrabold text-white tracking-tight nexus-title-gradient">{storeName}</h1>
+          <p className="text-primary/80 text-xs font-semibold tracking-[0.3em] uppercase mt-2">Conecta &middot; Gestiona &middot; Crece</p>
           <p className="text-slate-400 text-sm mt-1">Sistema Punto de Venta</p>
         </div>
 
@@ -324,6 +325,8 @@ export default function LoginScreen({ onLogin, storeName = "Nexus One" }: LoginS
 
         <p className="text-center text-slate-500 text-xs mt-6">
           Nexus One POS v{appVer} &bull; Doble Moneda $/Bs
+          <br />
+          <span className="text-primary/60">Conecta &middot; Gestiona &middot; Crece</span>
         </p>
       </div>
     </div>

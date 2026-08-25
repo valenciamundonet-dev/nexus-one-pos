@@ -8,28 +8,26 @@ interface UseBarcodeWedgeOptions {
   onProductScanned: (product: Product) => void;
   enabled?: boolean;
   anyDialogOpen?: boolean;
-  /** Fase 3c: Callback after a successful barcode scan (e.g. refocus search) */
-  onScanComplete?: () => void;
 }
 
-export function useBarcodeWedge({ products, onProductScanned, enabled = true, anyDialogOpen = false, onScanComplete }: UseBarcodeWedgeOptions) {
+export function useBarcodeWedge({ products, onProductScanned, enabled = true, anyDialogOpen = false }: UseBarcodeWedgeOptions) {
   const bufferRef = useRef("");
   const lastKeyTimeRef = useRef(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleScan = useCallback((code: string) => {
     const cleanCode = code.trim();
-    if (cleanCode.length < 3) return;
+    if (cleanCode.length < 3) return; // Too short to be a barcode
 
+    // Search by barcode (primary and secondary)
     const found = products.find(
       (p) => p.barcode === cleanCode || p.secondaryBarcode === cleanCode
     );
 
     if (found) {
       onProductScanned(found);
-      onScanComplete?.();
     }
-  }, [products, onProductScanned, onScanComplete]);
+  }, [products, onProductScanned]);
 
   useEffect(() => {
     if (!enabled || anyDialogOpen) return;

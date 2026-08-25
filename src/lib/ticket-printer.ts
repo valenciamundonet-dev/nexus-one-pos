@@ -17,9 +17,7 @@
  */
 
 import { generateEscposBuffer, uint8ToBase64 } from './escpos-buffer';
-import { convertLogoToEscpos } from './escpos-logo';
 import { authFetch } from './auth-fetch';
-import { calculateTaxes, type TaxItem, type TaxCalculation } from './tax-adapter';
 
 // ─── Etiquetas de metodos de pago ───────────────────────────────────
 export const TICKET_PAYMENT_LABELS: Record<string, string> = {
@@ -163,34 +161,6 @@ function itemTaxType(item: any): string {
   return item.taxType || item.product?.taxType || 'general';
 }
 
-// ─── Fase 3b: Tax Adapter integration ─────────────────────────────
-/**
- * Calcula impuestos usando el TaxAdapter unificado.
- * Convierte items del carrito al formato TaxItem y devuelve TaxCalculation.
- */
-export function calculateTicketTax(
-  cartItems: any[],
-  taxMode?: string,
-  taxRate?: number,
-  discount?: number,
-  currency?: string,
-): TaxCalculation {
-  const taxItems: TaxItem[] = cartItems.map(item => ({
-    name: item.name || item.productName || '',
-    quantity: item.quantity || 1,
-    unitPrice: item.unitPrice || item.price || 0,
-    taxType: itemTaxType(item),
-    isWholesale: item.isWholesale || false,
-  }));
-
-  return calculateTaxes(taxItems, {
-    taxRate: taxRate || 0,
-    taxMode: taxMode || 'none',
-    discount: discount || 0,
-    currency: currency || 'USD',
-  });
-}
-
 // ─── Columnas dinamicas ───────────────────────────────────────────
 interface ColWidths {
   cantW: number;
@@ -294,23 +264,10 @@ export async function printViaEscposAgent(params: {
   const { receipt, settings, currency = 'USD', defaultSellerName = '', agentUrl } = params;
 
   try {
-    // Convertir logo a bitmap ESC/POS si esta habilitado y hay logo
-    let logoBitmap: Uint8Array | null = null;
-    if (settings.ticketShowLogo && settings.storeLogo) {
-      try {
-        logoBitmap = await convertLogoToEscpos(settings.storeLogo, settings.ticketPaperWidth);
-        if (logoBitmap) {
-          console.log('[ticket-printer] Logo convertido a ESC/POS bitmap:', logoBitmap.length, 'bytes');
-        }
-      } catch (e) {
-        console.warn('[ticket-printer] No se pudo convertir logo para ESC/POS:', e);
-      }
-    }
-
-    // Generar buffer ESC/POS (con logo bitmap si se convirtio)
+    // Generar buffer ESC/POS
     const buffer = generateEscposBuffer({
       receipt,
-      settings: { ...settings, logoBitmap },
+      settings,
       currency,
       defaultSellerName,
     });

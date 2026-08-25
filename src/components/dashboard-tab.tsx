@@ -45,13 +45,12 @@ interface DashboardData {
 const METHOD_LABELS: Record<string, string> = {
   efectivo: "Efectivo",
   'efectivo-usd': "Efectivo $",
+  tarjeta: "Tarjeta",
   cashea: "Cashea",
   transferencia: "Transferencia",
   'pago-movil': "Pago Movil",
   'punto-de-venta': "Punto de Venta",
-  zelle: "Zelle",
-  usdt: "USDT",
-  credito: "Credito",
+  cheque: "Cheque",
   mixto: "Mixto",
 };
 

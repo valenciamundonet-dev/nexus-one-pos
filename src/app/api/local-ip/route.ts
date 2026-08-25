@@ -58,7 +58,7 @@ export async function GET() {
   const url = `http://${bestIp}:${port}`;
   // HTTPS via Caddy port 8443 - THIS is what phones need for camera
   const secureUrl = `https://${bestIp}:${caddyPort}`;
-  const domain = "nexus-one-pos.ve";
+  const domain = "nexusone.ve";
   const domainUrl = `https://${domain}`;
 
   return NextResponse.json({

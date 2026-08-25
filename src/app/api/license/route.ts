@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateLicenseKey, getLicenseFeatures, getLicenseLimits, getPlanInfo, type LicenseInfo } from '@/lib/license';
 import { getMachineId } from '@/lib/machine-id';
+import { generateFeatureToken, planFromLicenseType, type PlanType } from '@/core/feature-flags';
 
 // Obtener estado actual de la licencia
 export async function GET(req: NextRequest) {
@@ -150,7 +151,15 @@ export async function GET(req: NextRequest) {
       blockedReason: license.blockedReason,
     };
 
-    return NextResponse.json(info);
+    // PILAR 3: Generar Feature Token con flags firmados criptograficamente
+    const planType = planFromLicenseType(info.licenseType);
+    const featureToken = generateFeatureToken(planType);
+
+    return NextResponse.json({
+      ...info,
+      featureToken,  // Token con flags firmados — el cliente lo verifica localmente
+      planName: planType,
+    });
   } catch (error) {
     console.error('License GET error:', error);
     return NextResponse.json(

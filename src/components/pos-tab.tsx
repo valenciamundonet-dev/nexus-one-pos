@@ -174,7 +174,6 @@ export default function PosTab(props: PosTabProps) {
     products,
     onProductScanned: addToCart,
     anyDialogOpen,
-    onScanComplete: () => searchInputRef.current?.focus(),
   });
 
   useKeyboardShortcuts({

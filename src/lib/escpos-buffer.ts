@@ -67,8 +67,6 @@ export interface EscposSettings {
   businessType?: string;
   taxMode?: string;
   taxRate?: number;
-  /** Bitmap ESC/POS del logo pre-convertido (GS v 0 command bytes) */
-  logoBitmap?: Uint8Array | null;
 }
 
 // ─── Etiquetas de metodos de pago ────────────────────────────────
@@ -262,8 +260,6 @@ export function generateEscposBuffer(params: {
   settings: EscposSettings;
   currency?: string;
   defaultSellerName?: string;
-  /** @deprecated Pasar logoBitmap en settings en su lugar */
-  logoBitmap?: Uint8Array | null;
 }): Uint8Array {
   const { receipt, settings, currency = 'USD', defaultSellerName = '' } = params;
 
@@ -277,11 +273,7 @@ export function generateEscposBuffer(params: {
     ticketPaperWidth, ticketHeaderMsg, ticketFooterMsg,
     ticketCurrencyMode = 'dual',
     storeLogo, businessType, taxMode, taxRate,
-    logoBitmap: settingsLogoBitmap,
   } = settings;
-
-  // Logo bitmap: prioridad al pasado en settings, luego al parametro (compatibilidad)
-  const effectiveLogoBitmap = settingsLogoBitmap || params.logoBitmap || null;
 
   const maxChars = PAPER_CHARS[ticketPaperWidth] || PAPER_CHARS['58mm'];
   // CRITICO: caracteres disponibles cuando se usa DOBLE ANCHO
@@ -323,16 +315,16 @@ export function generateEscposBuffer(params: {
   parts.push(cmdInit());
   parts.push(cmdFeed(1));
 
-  // ═══ LOGO DEL NEGOCIO (bitmap ESC/POS real) ═══
-  // Si hay un logo subido y convertido a bitmap, se imprime via GS v 0.
-  // El bitmap se convierte previamente con convertLogoToEscpos() en ticket-printer.ts
-  if (settings.ticketShowLogo === true && effectiveLogoBitmap && effectiveLogoBitmap.length > 8) {
+  // ═══ LOGO / ICONO DEL NEGOCIO ═══
+  // Las impresoras termicas ESC/POS no soportan emojis nativamente.
+  // Si hay un logo subido, se indica con [LOGO] como placeholder.
+  // El agente de impresion puede ser extendido para soportar bitmaps.
+  if (settings.ticketShowLogo === true && storeLogo) {
     parts.push(cmdAlign(1));
-    parts.push(cmdFeed(1));
-    parts.push(effectiveLogoBitmap); // Bytes del comando GS v 0 (ya incluye header)
-    parts.push(cmdFeed(1));
+    parts.push(textLine('[LOGO]'));
     parts.push(cmdAlign(0));
   }
+  // Si no hay logo, no se imprime indicador de tipo de negocio (solo nombre tienda)
 
   // ═══ NOMBRE TIENDA — Doble alto + doble ancho ═══
   // Con doble ancho, solo caben halfChars caracteres por linea

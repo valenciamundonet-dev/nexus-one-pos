@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
-const GITHUB_REPO = 'csglider/Nexus One-v2.9.20';
+const GITHUB_REPO = 'valenciamundonet-dev/valenciamundonet';
 
 // Comparador de versiones: retorna >0 si a>b, <0 si a<b, 0 si iguales
 function compareVersions(a: string, b: string): number {

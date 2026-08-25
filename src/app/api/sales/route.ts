@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { safeTransaction } from '@/core/resilient-db';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: NextRequest) {
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
     }
 
     // TRANSACTIONAL: create sale + update stock + update credit balance + invoice number
-    const sale = await db.$transaction(async (tx) => {
+    const sale = await safeTransaction(db, async (tx: any) => {
       // Generate sequential invoice number (8-digit zero-padded)
       const lastSale = await tx.sale.findFirst({
         orderBy: { createdAt: 'desc' },

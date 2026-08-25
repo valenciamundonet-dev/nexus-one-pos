@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,19 +31,15 @@ import HeldSalesTab from "@/components/held-sales-tab";
 import QuotesTab from "@/components/quotes-tab";
 import DeliveryNotesTab from "@/components/delivery-notes-tab";
 import CatalogTab from "@/components/catalog-tab";
-import DiagnosticsTab from "@/components/diagnostics-tab";
-import DbHealthTab from "@/components/db-health-tab";
-import TaxReloadTab from "@/components/tax-reload-tab";
 import type { CurrentUser } from "@/components/users-tab";
 import ThemeSwitcher from "@/components/theme-switcher";
-import AppNav, { TopNavBar, buildGroups } from "@/components/app-nav";
-import type { NavItem, NavGroup } from "@/components/app-nav";
+import AppNav from "@/components/app-nav";
 import { useAppStore } from "@/lib/app-store";
 import { toast } from "sonner";
 import { authFetch, storeSession, clearSession, getStoredUser as getStoredUserFromLib } from "@/lib/auth-fetch";
 import { preloadAppVersion } from "@/lib/app-version-client";
-import { useFeaturesStore, isTabAccessible } from "@/core/atomic-features-store";
-import { sanitizeSettings, safeNumber, safeString } from "@/lib/safe-render";
+import { usePrivacyMode } from "@/hooks/use-privacy-mode";
+import { useGlobalShortcuts, DEFAULT_POS_SHORTCUTS } from "@/hooks/use-global-shortcuts";
 
 interface Product { id: string; name: string; description: string; barcode: string; price: number; cost: number; stock: number; minStock: number; wholesalePrice: number; minWholesaleQty: number; icon: string; image: string; noStock: boolean; categoryId: string | null; category: { name: string; icon?: string; color?: string } | null; active: boolean; }
 interface Category { id: string; name: string; icon?: string; color?: string; _count?: { products: number }; }
@@ -51,7 +47,7 @@ interface Brand { id: string; name: string; _count?: { products: number }; }
 interface Settings {
   id: string; storeName: string; storeAddress: string; storePhone: string; storeRif: string;
   bcvRate: number; taxRate: number; currency: string; allowZeroStock: boolean; enableDiscount: boolean; maxDiscountPct: number;
-  theme: string; themeMode: string;
+  theme: string;
   ticketFontSize: number; ticketFontFamily: string; ticketHeaderMsg: string; ticketFooterMsg: string;
   ticketShowPhone: boolean; ticketShowSeller: boolean; ticketShowExchange: boolean; ticketShowSlogan: boolean;
   ticketShowCashReceived: boolean; ticketShowLogo: boolean;
@@ -61,16 +57,10 @@ interface Settings {
   ticketMarginRight: number;
   ticketUseAgent: boolean;
   ticketAgentUrl: string;
-  ticketCurrencyMode: string;
+ticketCurrencyMode: string;
   storeLogo: string;
   businessType: string;
   taxMode: string;
-  euroUsdtRate: number;
-  promoActive: boolean;
-  promoLabel: string;
-  promoOldPrice: number;
-  promoCurrentPrice: number;
-  promoExpiryDate: string;
 }
 interface LicenseInfo {
   isValid: boolean; licenseType: "trial" | "basica" | "profesional"; machineId: string;
@@ -110,8 +100,6 @@ export default function Home() {
     ticketUseAgent: true, ticketAgentUrl: 'http://localhost:9100',
     ticketCurrencyMode: 'dual',
     storeLogo: '', businessType: 'general', taxMode: 'included', themeMode: 'light',
-    euroUsdtRate: 0, promoActive: true, promoLabel: 'PRECIO EXCLUSIVO',
-    promoOldPrice: 280, promoCurrentPrice: 180, promoExpiryDate: '',
   });
   const [license, setLicense] = useState<LicenseInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -144,6 +132,9 @@ export default function Home() {
   // BCV inline editor
   const [editingBcv, setEditingBcv] = useState(false);
   const [inlineBcv, setInlineBcv] = useState("");
+
+  // PILAR 2: Privacy Mode — ocultar montos con Ctrl+Shift+P
+  const { isActive: privacyActive, toggle: togglePrivacy, isBlurred } = usePrivacyMode();
 
   // Dynamic app version (loaded from package.json via API)
   const [appVersion, setAppVersion] = useState('cargando...');
@@ -201,6 +192,52 @@ export default function Home() {
     setAuthReady(true);
   }, []);
 
+  // PILAR 2: Atajos de teclado globales
+  useGlobalShortcuts([
+    {
+      ...DEFAULT_POS_SHORTCUTS.find(s => s.key === 'F2')!,
+      action: () => { setActiveTab('pos'); setTimeout(() => {
+        const searchInput = document.querySelector('input[data-pos-search]') as HTMLInputElement;
+        searchInput?.focus();
+      }, 100); },
+    },
+    {
+      ...DEFAULT_POS_SHORTCUTS.find(s => s.key === 'F4')!,
+      action: () => { /* Procesar venta — delegar al POS tab */ },
+    },
+    {
+      ...DEFAULT_POS_SHORTCUTS.find(s => s.key === 'F5')!,
+      action: () => { /* Limpiar carrito — delegar al POS tab */ },
+    },
+    {
+      ...DEFAULT_POS_SHORTCUTS.find(s => s.key === 'b' && s.ctrl)!,
+      action: () => setActiveTab('products'),
+    },
+    {
+      ...DEFAULT_POS_SHORTCUTS.find(s => s.key === 'r' && s.ctrl)!,
+      action: () => setActiveTab('reports'),
+    },
+    {
+      ...DEFAULT_POS_SHORTCUTS.find(s => s.key === 'd' && s.ctrl)!,
+      action: () => setActiveTab('dashboard'),
+    },
+    {
+      ...DEFAULT_POS_SHORTCUTS.find(s => s.key === 'P')!,
+      action: togglePrivacy,
+    },
+    {
+      ...DEFAULT_POS_SHORTCUTS.find(s => s.key === 'Escape')!,
+      action: () => {
+        // Cerrar dialogo activo si hay uno
+        const dialog = document.querySelector('[role="dialog"]');
+        if (dialog) {
+          const closeBtn = dialog.querySelector('button[aria-label="Close"]') as HTMLElement;
+          closeBtn?.click();
+        }
+      },
+    },
+  ], !!currentUser);
+
   const handleLogin = (user: CurrentUser & { token?: string }) => {
     // Guardar token JWT y datos del usuario
     if (user.token) {
@@ -250,36 +287,7 @@ export default function Home() {
       if (Array.isArray(categoriesData)) setCategories(categoriesData);
       if (Array.isArray(brandsData)) setBrands(brandsData);
       if (settingsData && !settingsData.error && typeof settingsData.bcvRate === 'number') {
-        // Sanitizar settings para garantizar que todos los campos sean primitivos
-        const safe = sanitizeSettings(settingsData) as Settings;
-        safe.bcvRate = safeNumber(safe.bcvRate, 36.5);
-        safe.taxRate = safeNumber(safe.taxRate, 0);
-        safe.maxDiscountPct = safeNumber(safe.maxDiscountPct, 20);
-        safe.ticketFontSize = safeNumber(safe.ticketFontSize, 8);
-        safe.ticketMarginLeft = safeNumber(safe.ticketMarginLeft, 0);
-        safe.ticketMarginRight = safeNumber(safe.ticketMarginRight, 0);
-        safe.euroUsdtRate = safeNumber(safe.euroUsdtRate, 0);
-        safe.promoOldPrice = safeNumber(safe.promoOldPrice, 280);
-        safe.promoCurrentPrice = safeNumber(safe.promoCurrentPrice, 180);
-        safe.storeName = safeString(safe.storeName, 'Mi Tienda');
-        safe.storeAddress = safeString(safe.storeAddress, '');
-        safe.storePhone = safeString(safe.storePhone, '');
-        safe.storeRif = safeString(safe.storeRif, '');
-        safe.currency = safeString(safe.currency, 'USD');
-        safe.theme = safeString(safe.theme, 'blue');
-        safe.themeMode = safeString(safe.themeMode, 'light');
-        safe.ticketFontFamily = safeString(safe.ticketFontFamily, 'monospace');
-        safe.ticketHeaderMsg = safeString(safe.ticketHeaderMsg, '');
-        safe.ticketFooterMsg = safeString(safe.ticketFooterMsg, 'Gracias por su compra!');
-        safe.ticketPaperWidth = safeString(safe.ticketPaperWidth, '58mm');
-        safe.ticketAgentUrl = safeString(safe.ticketAgentUrl, 'http://localhost:9100');
-        safe.ticketCurrencyMode = safeString(safe.ticketCurrencyMode, 'dual');
-        safe.storeLogo = safeString(safe.storeLogo, '');
-        safe.businessType = safeString(safe.businessType, 'general');
-        safe.taxMode = safeString(safe.taxMode, 'included');
-        safe.promoLabel = safeString(safe.promoLabel, 'PRECIO EXCLUSIVO');
-        safe.promoExpiryDate = safeString(safe.promoExpiryDate, '');
-        setSettings(safe);
+        setSettings(settingsData);
       }
       if (licenseData && !licenseData.error) setLicense(licenseData);
 
@@ -393,51 +401,6 @@ export default function Home() {
     };
   }, [currentUser]);
 
-  // ═══ WRAPPER: Si algo falla en el render principal, mostrar error controlado ═══
-  // Esto evita que el error.tsx de Next.js tome control y cree un loop infinito
-  const [renderError, setRenderError] = useState<string | null>(null);
-
-  // Catch rendering errors at the top level
-  const originalConsoleError = typeof console !== 'undefined' ? console.error : null;
-  useEffect(() => {
-    const handler = (e: ErrorEvent) => {
-      if (e.message?.includes('Objects are not valid') || e.message?.includes('object with keys')) {
-        setRenderError(e.message);
-        e.preventDefault();
-      }
-    };
-    const rejectionHandler = (e: PromiseRejectionEvent) => {
-      const msg = e.reason?.message || String(e.reason);
-      if (msg.includes('Objects are not valid') || msg.includes('object with keys')) {
-        setRenderError(msg);
-        e.preventDefault();
-      }
-    };
-    window.addEventListener('error', handler);
-    window.addEventListener('unhandledrejection', rejectionHandler);
-    return () => {
-      window.removeEventListener('error', handler);
-      window.removeEventListener('unhandledrejection', rejectionHandler);
-    };
-  }, []);
-
-  if (renderError) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-8 space-y-4 text-center">
-        <div className="text-4xl">&#9888;</div>
-        <h3 className="text-lg font-semibold text-destructive">Error de renderizado</h3>
-        <p className="text-sm text-muted-foreground max-w-lg">Ocurrio un error al mostrar los datos de la aplicacion. Esto suele deberse a datos inesperados en la configuracion.</p>
-        <p className="text-xs text-muted-foreground font-mono max-w-lg break-all bg-muted p-3 rounded">{renderError}</p>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => { setRenderError(null); window.location.reload(); }}>Recargar</Button>
-          <Button variant="outline" size="sm" onClick={() => { setRenderError(null); }}>
-            Ignorar y continuar
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   // Show loading screen
   if (loading || !authReady) {
     return (<div className="flex items-center justify-center min-h-screen"><div className="text-center space-y-3"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" /><p className="text-muted-foreground">Cargando Nexus One...</p></div></div>);
@@ -455,60 +418,61 @@ export default function Home() {
   const showWatermark = isTrial || !license?.features?.noWatermark;
   const canDevolutions = license?.features?.devolutions || false;
   const canCashClosing = license?.features?.cashClosing || false;
-
-  // ─── Fase 3a: Feature Flags Store (atomic, zero unnecessary re-renders) ──
-  const loadFromLicense = useFeaturesStore((s) => s.loadFromLicense);
-  const featureFlags = useFeaturesStore((s) => s.flags);
-  const canFrequentCustomers = featureFlags['pos.basic'] || false;
-
-  // Sync license data into atomic features store
-  useEffect(() => {
-    if (license) loadFromLicense(license);
-  }, [license, loadFromLicense]);
-
-  // Admin-only and role-gated tabs
-  const ADMIN_ONLY_TABS = new Set(['users', 'config', 'license', 'backup', 'diagnostics', 'db-health', 'tax-reload']);
-  const ROLE_PERMISSION_MAP: Record<string, string> = { suppliers: 'suppliers', purchases: 'purchases', credit: 'credit' };
+  const canFrequentCustomers = license?.features?.frequentCustomers || false;
 
   const allTabs = [
-    { value: "dashboard", label: "Dashboard", icon: "📊" },
-    { value: "pos", label: "Punto de Venta", icon: "💳" },
-    { value: "clients", label: "Clientes", icon: "👥" },
-    { value: "products", label: "Productos", icon: "📦" },
-    { value: "reports", label: "Informes", icon: "📈" },
-    { value: "devolutions", label: "Devoluciones", icon: "🔄" },
-    { value: "cash-closing", label: "Cierre de Caja", icon: "💰" },
-    { value: "config", label: "Configuracion", icon: "⚙️" },
-    { value: "license", label: "Licencia", icon: "🔑" },
-    { value: "users", label: "Usuarios", icon: "👤" },
-    { value: "backup", label: "Respaldo", icon: "💾" },
-    { value: "suppliers", label: "Proveedores", icon: "🏪" },
-    { value: "purchases", label: "Compras", icon: "🛒" },
-    { value: "credit", label: "Cuentas por Cobrar", icon: "💳" },
-    { value: "kardex", label: "Inventario/Kardex", icon: "📦" },
-    { value: "held-sales", label: "Ventas en Espera", icon: "⏸️" },
-    { value: "quotes", label: "Presupuestos", icon: "📋" },
-    { value: "delivery-notes", label: "Notas de Entrega", icon: "🚚" },
-    { value: "expenses", label: "Gastos", icon: "💸" },
-    { value: "catalog", label: "Catalogo", icon: "📖" },
-    { value: "diagnostics", label: "Diagnosticos", icon: "🔧" },
-    { value: "db-health", label: "Salud BD", icon: "💾" },
-    { value: "tax-reload", label: "Fiscal", icon: "🧾" },
+    { value: "dashboard", label: "Dashboard", icon: "📊", allowed: true, restricted: false, plan: "" },
+    { value: "pos", label: "Punto de Venta", icon: "💳", allowed: true, restricted: false, plan: "" },
+    { value: "clients", label: "Clientes", icon: "👥", allowed: canFrequentCustomers, restricted: !canFrequentCustomers, plan: "PRO" },
+    { value: "products", label: "Productos", icon: "📦", allowed: true, restricted: false, plan: "" },
+    { value: "reports", label: "Informes", icon: "📈", allowed: true, restricted: false, plan: "" },
+    { value: "devolutions", label: "Devoluciones", icon: "🔄", allowed: canDevolutions, restricted: !canDevolutions, plan: "BASICA+" },
+    { value: "cash-closing", label: "Cierre de Caja", icon: "💰", allowed: canCashClosing, restricted: !canCashClosing, plan: "BASICA+" },
+    { value: "config", label: "Configuracion", icon: "⚙️", allowed: true, restricted: false, plan: "" },
+    { value: "license", label: "Licencia", icon: "🔑", allowed: true, restricted: false, plan: "" },
+    { value: "users", label: "Usuarios", icon: "👤", allowed: currentUser?.role === "admin", restricted: false, plan: "" },
+    { value: "backup", label: "Respaldo", icon: "💾", allowed: currentUser?.role === "admin", restricted: false, plan: "" },
+    { value: "suppliers", label: "Proveedores", icon: "🏪", allowed: true, restricted: false, plan: "" },
+    { value: "purchases", label: "Compras", icon: "🛒", allowed: true, restricted: false, plan: "" },
+    { value: "credit", label: "Cuentas por Cobrar", icon: "💳", allowed: true, restricted: false, plan: "" },
+    { value: "kardex", label: "Inventario/Kardex", icon: "📦", allowed: true, restricted: false, plan: "" },
+    { value: "held-sales", label: "Ventas en Espera", icon: "⏸️", allowed: true, restricted: false, plan: "" },
+    { value: "quotes", label: "Presupuestos", icon: "📋", allowed: true, restricted: false, plan: "" },
+    { value: "delivery-notes", label: "Notas de Entrega", icon: "🚚", allowed: true, restricted: false, plan: "" },
+    { value: "expenses", label: "Gastos", icon: "💸", allowed: true, restricted: false, plan: "" },
+    { value: "catalog", label: "Catalogo", icon: "📖", allowed: true, restricted: false, plan: "" },
   ];
 
-  // ─── Fase 3a: Atomic feature-based tab filtering ──
-  // Replaces manual allowed/restricted/plan properties with isTabAccessible()
+  // Filter tabs based on user role and permissions
   const availableTabs = allTabs.filter((tab) => {
-    const isAdmin = currentUser.role === "admin";
-    if (ADMIN_ONLY_TABS.has(tab.value) && !isAdmin) return false;
-    if (isAdmin) return isTabAccessible(tab.value, featureFlags);
-    const hasFeature = isTabAccessible(tab.value, featureFlags);
-    const permKey = ROLE_PERMISSION_MAP[tab.value];
-    if (permKey) return hasFeature && !!currentUser.permissions?.[permKey as keyof typeof currentUser.permissions];
-    return hasFeature;
+    if (currentUser.role === "admin") return tab.allowed;
+    // Admin-only tabs (cannot be overridden by permissions)
+    if (tab.value === "users") return false;
+    if (tab.value === "config") return false;
+    if (tab.value === "license") return false;
+    if (tab.value === "backup") return false;
+    // POS and core modules always available to any logged-in user
+    if (["pos", "products", "dashboard", "reports"].includes(tab.value)) return tab.allowed;
+    // Special permission tabs (suppliers, purchases, credit)
+    if (tab.value === "suppliers") {
+      return tab.allowed && !!currentUser.permissions?.suppliers;
+    }
+    if (tab.value === "purchases") {
+      return tab.allowed && !!currentUser.permissions?.purchases;
+    }
+    if (tab.value === "credit") {
+      return tab.allowed && !!currentUser.permissions?.credit;
+    }
+    // For restricted/plan-locked tabs
+    if (tab.restricted) return tab.allowed;
+    // For tabs with specific permission keys (cash-closing, devolutions, clients, etc.)
+    if (tab.value === "cash-closing") {
+      return tab.allowed && !!currentUser.permissions?.cash_closing;
+    }
+    // All other tabs with allowed:true and no specific restriction — available to everyone
+    // (kardex, held-sales, quotes, delivery-notes, expenses, etc.)
+    return tab.allowed;
   });
-
-  const navGroups = useMemo(() => buildGroups(availableTabs.map(t => ({ value: t.value, label: t.label, icon: t.icon, restricted: false, plan: '' })), stockAlertCount), [availableTabs, stockAlertCount]);
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -573,8 +537,9 @@ export default function Home() {
             <AppNav activeTab={activeTab} onTabChange={(v: string) => {
               const tab = availableTabs.find(t => t.value === v);
               if (!tab) return;
+              if (!tab.allowed) { toast.error(`"${tab.label}" requiere plan ${tab.plan}. Actualice su licencia.`); return; }
               safeSetTab(v);
-            }} tabs={availableTabs.map(t => ({ value: t.value, label: t.label, icon: t.icon, restricted: false, plan: '' }))} stockAlertCount={stockAlertCount} currentUser={currentUser.fullName || currentUser.username} onLogout={handleLogout} version={appVersion} />
+            }} tabs={availableTabs.map(t => ({ value: t.value, label: t.label, icon: t.icon, restricted: t.restricted, plan: t.plan }))} stockAlertCount={stockAlertCount} currentUser={currentUser.fullName || currentUser.username} onLogout={handleLogout} version={appVersion} />
             <div>
               <h1 className="text-xl font-bold text-primary">
                 {settings.storeName}
@@ -634,15 +599,7 @@ export default function Home() {
         </div>
         {/* ── Row 2: Module menu (debajo) ── */}
         <div className="container mx-auto px-4 py-1.5">
-          <TopNavBar
-              groups={navGroups}
-              activeTab={activeTab}
-              onTabChange={(v: string) => {
-                const tab = availableTabs.find(t => t.value === v);
-                if (!tab) return;
-                safeSetTab(v);
-              }}
-            />
+          <div id="top-nav-slot" />
         </div>
       </header>
 
@@ -837,27 +794,25 @@ export default function Home() {
               storeLogo={settings.storeLogo || ''} theme={settings.theme || 'blue'} />
           </ErrorBoundary>
         </TabsContent>
-        <TabsContent value="diagnostics" activeTab={activeTab}>
-          <ErrorBoundary name="Diagnosticos">
-            <DiagnosticsTab />
-          </ErrorBoundary>
-        </TabsContent>
-        <TabsContent value="db-health" activeTab={activeTab}>
-          <ErrorBoundary name="Salud BD">
-            <DbHealthTab />
-          </ErrorBoundary>
-        </TabsContent>
-        <TabsContent value="tax-reload" activeTab={activeTab}>
-          <ErrorBoundary name="Fiscal">
-            <TaxReloadTab />
-          </ErrorBoundary>
-        </TabsContent>
       </main>
 
       {showWatermark && <div className="fixed bottom-12 right-4 text-yellow-500/30 text-6xl font-bold pointer-events-none select-none rotate-[-15deg] z-50">TRIAL</div>}
 
-      <footer className="border-t py-2 text-center text-xs text-muted-foreground">
-        <p>Nexus One POS v{appVersion} - Sistema Punto de Venta Venezuela | Doble Moneda $/Bs{showWatermark && " | Version de Prueba"}</p>
+      <footer className="border-t py-2 px-4 flex items-center justify-between text-xs text-muted-foreground">
+        <p>Nexus One POS v{appVersion} &middot; Conecta &middot; Gestiona &middot; Crece &middot; Doble Moneda $/Bs{showWatermark && " &middot; Prueba"}</p>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={togglePrivacy}
+            className={`nexus-privacy-indicator ${privacyActive ? "active" : "inactive"}`}
+            title="Ctrl+Shift+P para activar/desactivar"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={privacyActive ? "M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" : "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"} />
+            </svg>
+            {privacyActive ? "Privacidad" : "Visible"}
+          </button>
+          <span className="text-[10px] opacity-50">Ctrl+Shift+P</span>
+        </div>
       </footer>
 
       {/* MODALES */}

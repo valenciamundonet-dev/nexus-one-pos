@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -87,7 +86,7 @@ interface CartPanelProps {
   onHoldSale?: () => void;
 }
 
-export const CartPanel = React.memo(function CartPanel({
+export function CartPanel({
   cart, products, currency, allowZeroStock,
   onClearCart, onUpdateQty, onRemove, onToggleWholesale,
   isGranMayorMode, onToggleGranMayor,
@@ -221,4 +220,4 @@ export const CartPanel = React.memo(function CartPanel({
       </CardContent>
     </Card>
   );
-});
+}
