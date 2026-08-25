@@ -9,7 +9,8 @@ import dynamic from 'next/dynamic';
  * Esto elimina TODOS los errores de hidratacion (React Error #310)
  * porque el servidor nunca renderiza el contenido de la app.
  * 
- * El cliente se encarga de todo: loading, login, y la app principal.
+ * El loading fallback es HTML estatico simple — sin fechas, sin estados,
+ * sin contenido dinamico que pueda diferir entre server y client.
  */
 const HomeClient = dynamic(() => import('@/app/home-client'), {
   ssr: false,
@@ -38,5 +39,9 @@ const HomeClient = dynamic(() => import('@/app/home-client'), {
 });
 
 export default function Page() {
-  return <HomeClient />;
+  return (
+    <div suppressHydrationWarning>
+      <HomeClient />
+    </div>
+  );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,8 @@ import DbHealthTab from "@/components/db-health-tab";
 import TaxReloadTab from "@/components/tax-reload-tab";
 import type { CurrentUser } from "@/components/users-tab";
 import ThemeSwitcher from "@/components/theme-switcher";
-import AppNav from "@/components/app-nav";
+import AppNav, { TopNavBar, buildGroups } from "@/components/app-nav";
+import type { NavItem, NavGroup } from "@/components/app-nav";
 import { useAppStore } from "@/lib/app-store";
 import { toast } from "sonner";
 import { authFetch, storeSession, clearSession, getStoredUser as getStoredUserFromLib } from "@/lib/auth-fetch";
@@ -507,6 +508,8 @@ export default function Home() {
     return hasFeature;
   });
 
+  const navGroups = useMemo(() => buildGroups(availableTabs.map(t => ({ value: t.value, label: t.label, icon: t.icon, restricted: false, plan: '' })), stockAlertCount), [availableTabs, stockAlertCount]);
+
   return (
     <div className="min-h-screen flex flex-col relative">
       {/* BANNERS */}
@@ -631,7 +634,15 @@ export default function Home() {
         </div>
         {/* ── Row 2: Module menu (debajo) ── */}
         <div className="container mx-auto px-4 py-1.5">
-          <div id="top-nav-slot" />
+          <TopNavBar
+              groups={navGroups}
+              activeTab={activeTab}
+              onTabChange={(v: string) => {
+                const tab = availableTabs.find(t => t.value === v);
+                if (!tab) return;
+                safeSetTab(v);
+              }}
+            />
         </div>
       </header>
 
