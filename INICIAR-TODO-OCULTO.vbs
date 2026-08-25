@@ -1,5 +1,5 @@
 ' ============================================================
-' Nexus One POS v2.9.84 - Inicio TOTALMENTE OCULTO
+' Nexus One POS v2.9.85 - Inicio TOTALMENTE OCULTO
 '
 ' Esto es lo que ejecuta el acceso directo del escritorio.
 ' TODOS los servicios inician SIN ventanas de consola:
@@ -13,7 +13,7 @@
 '   v2.9.75: Caddy + printer agent
 '   v2.9.78: Refresco PATH + auto-reparacion
 '   v2.9.80: Robustez total
-'   v2.9.84: Fix React Error #310 (SSR/hidratacion) + acceso directo robusto
+'   v2.9.85: Fix React Error #310 (SSR/hidratacion) + acceso directo robusto
 ' ============================================================
 
 Set WshShell = CreateObject("WScript.Shell")

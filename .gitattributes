@@ -1,11 +1,13 @@
-# Forzar CRLF en Windows para archivos .bat
-*.bat text eol=crlf
-*.cmd text eol=crlf
-*.vbs text eol=crlf
-*.hta text eol=crlf
-
-# Line endings automaticos para el resto
+# Line endings automaticos para todo (regla general)
 * text=auto eol=lf
+
+# Windows script files: almacenar bytes exactos (CRLF requerido)
+# Estas reglas SOBREESCRIBEN la regla general '*' de arriba
+# El atributo '-text' desactiva toda normalizacion de lineas
+*.bat -text
+*.cmd -text
+*.vbs -text
+*.hta -text
 
 # Archivos binarios
 *.png binary

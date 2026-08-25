@@ -1,4 +1,4 @@
-' Nexus One POS v2.9.84 - Instalador Profesional (FUSION)
+' Nexus One POS v2.9.85 - Instalador Profesional (FUSION)
 '
 ' Fusion de lo mejor de cada version:
 '   v2.9.72: Secuencia de instalacion probada y confiable
@@ -6,7 +6,7 @@
 '   v2.9.78: VBS con progreso visual HTA
 '   v2.9.80: Correcciones de robustez total
 '   v2.9.83: Fix React Error #310 (SSR/hidratacion) + acceso directo robusto
-  v2.9.84: Fix terminaciones CRCRLF en VBS + normalizacion git
+'  v2.9.85: Fix terminaciones CRCRLF en VBS + normalizacion git
 '
 ' Caracteristicas:
 '   - Barra de progreso visual (PROGRESS.hta)
@@ -115,7 +115,7 @@ On Error GoTo 0
 
 ' ---- Confirmacion ----
 Dim bienvenida
-bienvenida = "Nexus One POS v2.9.84" & vbCrLf & vbCrLf & _
+bienvenida = "Nexus One POS v2.9.85" & vbCrLf & vbCrLf & _
   "Sistema Punto de Venta Profesional" & vbCrLf & _
   "Doble Moneda USD/Bs con tasa BCV" & vbCrLf & _
   "Impresion Termica ESC/POS (agente winspool)" & vbCrLf & _
@@ -520,7 +520,7 @@ If strDesktop <> "" And objFSO.FolderExists(strDesktop) Then
         Else
             oLink.TargetPath = strDir & "\INICIAR-TODO-OCULTO.vbs"
             oLink.WorkingDirectory = strDir
-            oLink.Description = "Nexus One POS v2.9.84 - Iniciar sistema"
+            oLink.Description = "Nexus One POS v2.9.85 - Iniciar sistema"
             oLink.IconLocation = "shell32.dll,14"
             oLink.Save
             If Err.Number <> 0 Then
@@ -545,7 +545,7 @@ If strDesktop <> "" And objFSO.FolderExists(strDesktop) Then
         Set oLink = oShell.CreateShortcut(strDesktop & "\Nexus One POS.lnk")
         oLink.TargetPath = strDir & "\INICIAR-TODO-OCULTO.vbs"
         oLink.WorkingDirectory = strDir
-        oLink.Description = "Nexus One POS v2.9.84 - Iniciar sistema"
+        oLink.Description = "Nexus One POS v2.9.85 - Iniciar sistema"
         oLink.IconLocation = "shell32.dll,14"
         oLink.Save
         If Err.Number = 0 Then
@@ -580,4 +580,4 @@ finale = "INSTALACION COMPLETADA" & vbCrLf & vbCrLf & _
   "USUARIO: admin   CLAVE: admin" & vbCrLf & vbCrLf & _
   "Para detener: DETENER-TODO.bat"
 
-MsgBox finale, vbInformation, "Nexus One POS v2.9.84"
+MsgBox finale, vbInformation, "Nexus One POS v2.9.85"
