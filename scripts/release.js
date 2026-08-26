@@ -1,5 +1,5 @@
 /**
- * Nexus One POS — Release Script v1.0
+ * NexusOne POS — Release Script v1.0
  * 
  * Usage:
  *   node scripts/release.js          # patch bump (2.9.73 -> 2.9.74)
@@ -35,7 +35,7 @@ function bump(version, type) {
 const oldVersion = pkg.version;
 const newVersion = bump(oldVersion, bumpType);
 
-console.log(`\x1b[36m  Nexus One POS — Release Builder\x1b[0m`);
+console.log(`\x1b[36m  NexusOne POS — Release Builder\x1b[0m`);
 console.log(`  ${oldVersion}  ->  ${newVersion}  (${bumpType})\n`);
 
 // 1. Update package.json

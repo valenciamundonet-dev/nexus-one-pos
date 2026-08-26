@@ -1,13 +1,13 @@
 @echo off
 chcp 65001 >nul 2>&1
-title Nexus One POS v2.9.80 - Salud del Sistema
+title NexusOne POS v2.9.80 - Salud del Sistema
 color 0B
 
 cd /d "%~dp0"
 
 echo.
 echo  ╔══════════════════════════════════════════════════════════════╗
-echo  ║          Nexus One POS v2.9.80 - Diagnostico del Sistema    ║
+echo  ║          NexusOne POS v2.9.80 - Diagnostico del Sistema    ║
 echo  ╚══════════════════════════════════════════════════════════════╝
 echo.
 
@@ -173,7 +173,7 @@ call :showRow "Espacio Disco" "Libre: %DISK_FREE% bytes" "[  OK  ]"
 :: ============================================================
 :: 8. Version
 :: ============================================================
-call :showRow "Version App" "Nexus One POS %APP_VERSION%" "[  OK  ]"
+call :showRow "Version App" "NexusOne POS %APP_VERSION%" "[  OK  ]"
 
 :: ============================================================
 :: 9. Printer Agent

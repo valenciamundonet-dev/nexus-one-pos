@@ -40,7 +40,7 @@ function headerRow() {
 }
 
 const tasks = [
-  ['1', 'Renombrar MyeCommerce a Nexus One + lema', 'DONE', 'ALTA', 'package.json, layout.tsx, page.tsx, version.ts, manifest.json, .bat, .vbs, LEEME.md'],
+  ['1', 'Renombrar MyeCommerce a NexusOne + lema', 'DONE', 'ALTA', 'package.json, layout.tsx, page.tsx, version.ts, manifest.json, .bat, .vbs, LEEME.md'],
   ['1', 'Nuevo logo atomo de neon (login + PWA + favicon)', 'DONE', 'ALTA', 'icon-192.png, icon-512.png, favicon.ico, login-screen.tsx, manifest.json'],
   ['2', 'Pilar 1: Molecular Optimization (CatalogSearchEngine, rafDebounce, BatchProcessor)', 'DONE', 'ALTA', 'performance-engine.ts, CatalogSearchEngine class'],
   ['2', 'Pilar 2: Radical UX/UI (Privacy Mode, Global Shortcuts, Cinematic Dark)', 'DONE', 'ALTA', 'use-privacy-mode.ts, use-global-shortcuts.ts, globals.css, page.tsx'],
@@ -89,12 +89,12 @@ const doc = new Document({
         page: { size: { width: 11906, height: 16838, orientation: 0 }, margin: { top: 1440, bottom: 1440, left: 1701, right: 1417 } },
         pageNumbers: { start: 1 }
       },
-      headers: { default: new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: 'Nexus One POS \u2014 Ruta de Implementacion', font: 'Calibri', size: 16, color: P.secondary, italics: true })] })] }) },
+      headers: { default: new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: 'NexusOne POS \u2014 Ruta de Implementacion', font: 'Calibri', size: 16, color: P.secondary, italics: true })] })] }) },
       footers: { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Pagina ', font: 'Calibri', size: 16, color: P.secondary }), new TextRun({ children: [PageNumber.CURRENT], font: 'Calibri', size: 16, color: P.secondary })] })] }) },
       children: [
         // Resumen
         hdr('Resumen Ejecutivo'),
-        para('Este documento define la ruta de trabajo completa para Nexus One POS, un sistema punto de venta local diseñado para correr en hardware minimo (2GB RAM, Celeron) con Windows 10+. La arquitectura se basa en 5 pilares que garantizan rendimiento, experiencia de usuario, licenciamiento offline, cumplimiento fiscal y tolerancia a fallos.'),
+        para('Este documento define la ruta de trabajo completa para NexusOne POS, un sistema punto de venta local diseñado para correr en hardware minimo (2GB RAM, Celeron) con Windows 10+. La arquitectura se basa en 5 pilares que garantizan rendimiento, experiencia de usuario, licenciamiento offline, cumplimiento fiscal y tolerancia a fallos.'),
         para('La Fase 1 (rename y branding) y la Fase 2 (integracion de los 5 pilares al core del sistema) estan completadas. El trabajo actual se centra en la Fase 3 (conexion de los motores a la UI), la Fase 4 (optimizaciones avanzadas con Worker Threads y Framer Motion) y la Fase 5 (herramientas de diagnostico y monitoreo en la interfaz).'),
         para('Cada tarea incluye los archivos afectados, la prioridad y el estado actual. El objetivo es llegar a v3.0.0 con todos los pilares funcionando de punta a punta.'),
 
@@ -133,7 +133,7 @@ const doc = new Document({
 
         // Versiones
         hdr('Historial de Versiones'),
-        para('v2.9.68-v2.9.69: Rename completo MyeCommerce a Nexus One + primer push a GitHub.', { bold: false }),
+        para('v2.9.68-v2.9.69: Rename completo MyeCommerce a NexusOne + primer push a GitHub.', { bold: false }),
         para('v2.9.70: Preparacion para Fase 2 (archivos core creados pero no integrados).', { bold: false }),
         para('v2.9.71 (Fase 2): Integracion de los 5 pilares al sistema. Instrumentation.ts conecta motores al startup. Sales API usa safeTransaction. License API genera featureToken. Creado us-sales-tax.ts como segundo ejemplo de TaxAdapter.', { bold: false }),
         para('v2.9.72: Fix build (coma doble en license/route.ts). Nuevo logo aplicado. Login cinematografico con glow/shimmer. Privacy Mode indicator visual en footer.', { bold: false }),

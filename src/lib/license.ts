@@ -1,4 +1,4 @@
-// Sistema de Licencias Nexus One POS
+// Sistema de Licencias NexusOne POS
 // Genera y valida claves de licencia con algoritmo propietario
 // Estructura: TRIAL (15 dias) | BASICA (365 dias) | PROFESIONAL (365 dias)
 

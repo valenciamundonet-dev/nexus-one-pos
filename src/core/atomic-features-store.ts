@@ -1,5 +1,5 @@
 /**
- * Nexus One POS — Atomic Feature Flags Store v1.0
+ * NexusOne POS — Atomic Feature Flags Store v1.0
  * 
  * Estado atómico para Feature Flags de licenciamiento.
  * Los componentes se suscriben solo a la flag que necesitan.

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
-const GITHUB_REPO = 'csglider/Nexus One-v2.9.20';
+const GITHUB_REPO = 'csglider/NexusOne-v2.9.20';
 
 // Comparador de versiones: retorna >0 si a>b, <0 si a<b, 0 si iguales
 function compareVersions(a: string, b: string): number {
@@ -103,7 +103,7 @@ export async function GET() {
 async function fetchFromGitHub(localVersion: string, token: string): Promise<VersionCheckResult> {
   const headers: Record<string, string> = {
     'Accept': 'application/vnd.github.v3+json',
-    'User-Agent': 'Nexus One-Update-System',
+    'User-Agent': 'NexusOne-Update-System',
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 

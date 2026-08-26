@@ -91,7 +91,7 @@ export default function BackupTab() {
 
       // Validate backup structure
       if (!data.products && !data.sales) {
-        throw new Error("El archivo no parece un respaldo valido de Nexus One");
+        throw new Error("El archivo no parece un respaldo valido de NexusOne");
       }
 
       const res = await authFetch("/api/backup", {

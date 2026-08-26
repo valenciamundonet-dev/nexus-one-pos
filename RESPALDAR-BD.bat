@@ -1,13 +1,13 @@
 @echo off
 chcp 65001 >nul 2>&1
-title Nexus One POS v2.9.80 - Respaldo de Base de Datos
+title NexusOne POS v2.9.80 - Respaldo de Base de Datos
 color 0E
 
 cd /d "%~dp0"
 
 echo.
 echo  ╔══════════════════════════════════════════════════════════╗
-echo  ║      Nexus One POS v2.9.80 - Respaldo de Base de Datos   ║
+echo  ║      NexusOne POS v2.9.80 - Respaldo de Base de Datos   ║
 echo  ╚══════════════════════════════════════════════════════════╝
 echo.
 

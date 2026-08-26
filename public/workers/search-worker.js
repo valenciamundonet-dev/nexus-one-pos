@@ -1,5 +1,5 @@
 /**
- * Nexus One POS — Search Worker v1.0
+ * NexusOne POS — Search Worker v1.0
  * 
  * Web Worker que corre en un hilo separado para no bloquear el UI.
  * Maneja:

@@ -1,5 +1,5 @@
 /**
- * Nexus One POS — Peripheral Isolator v1.0
+ * NexusOne POS — Peripheral Isolator v1.0
  * 
  * Aisla periféricos (impresoras, escáneres) del hilo principal.
  * Si una impresora falla o no responde, el POS sigue funcionando.
@@ -112,7 +112,7 @@ export class PeripheralIsolator {
       breaker.state = CircuitState.OPEN;
       breaker.nextRetryAt = Date.now() + config.resetTimeMs;
       console.warn(
-        `[Nexus One] Peripheral "${name}" circuit OPEN. ` +
+        `[NexusOne] Peripheral "${name}" circuit OPEN. ` +
         `Failures: ${breaker.failureCount}. Retry after ${config.resetTimeMs / 1000}s.`
       );
     }
@@ -143,7 +143,7 @@ export class PeripheralIsolator {
   private processQueue(name: string): void {
     const pending = this.offlineQueue.filter(e => e.peripheral === name);
     if (pending.length > 0) {
-      console.log(`[Nexus One] Peripheral "${name}" recovered. ${pending.length} queued operations pending.`);
+      console.log(`[NexusOne] Peripheral "${name}" recovered. ${pending.length} queued operations pending.`);
       // Don't auto-retry queued operations (they were print jobs, etc.)
       // Just notify the user
       this.offlineQueue = this.offlineQueue.filter(e => e.peripheral !== name);

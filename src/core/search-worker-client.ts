@@ -1,5 +1,5 @@
 /**
- * Nexus One POS — Search Worker Client v1.0
+ * NexusOne POS — Search Worker Client v1.0
  * 
  * Cliente TypeScript para comunicarse con el Web Worker de búsqueda.
  * Mantiene el hilo principal 100% libre para interacciones UI.
@@ -70,11 +70,11 @@ export function createSearchWorker(): SearchWorkerAPI {
         }
       };
       worker.onerror = () => {
-        console.warn('[Nexus One] Search Worker failed to load. Falling back to main thread.');
+        console.warn('[NexusOne] Search Worker failed to load. Falling back to main thread.');
         worker = null;
       };
     } catch {
-      console.warn('[Nexus One] Web Workers not available. Using main thread fallback.');
+      console.warn('[NexusOne] Web Workers not available. Using main thread fallback.');
       worker = null;
     }
   }

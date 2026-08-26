@@ -3,12 +3,9 @@ import jwt from 'jsonwebtoken';
 // JWT Secret — leer de variable de entorno (ver .env)
 // Si no esta configurado, los tokens generados aqui no coincidiran con el middleware.
 // IMPORTANTE: Agregue JWT_SECRET a su archivo .env.
-const JWT_SECRET = process.env.JWT_SECRET || '';
-const JWT_EXPIRES_IN = '24h'; // Token expira en 24 horas
-
-if (!JWT_SECRET && typeof window === 'undefined') {
-  console.warn('[SECURITY] JWT_SECRET no configurado en .env. El middleware rechazara los tokens. Agregue JWT_SECRET=... a su .env');
-}
+// Fallback consistente con middleware.ts — CAMBIAR EN PRODUCCION
+const JWT_SECRET = process.env.JWT_SECRET || 'nexusone-pos-jwt-secret-v2.9.91-change-in-production';
+const JWT_EXPIRES_IN = '24h';
 
 export interface SessionPayload {
   userId: string;

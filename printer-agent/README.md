@@ -1,8 +1,8 @@
-# Agente Local de Impresion ESC/POS — Nexus One POS v2.9.15
+# Agente Local de Impresion ESC/POS — NexusOne POS v2.9.15
 
 ## Que es?
 
-Este agente es un pequeño servidor que se ejecuta en la PC donde esta conectada la impresora termica. Recibe los datos de impresion desde el navegador de Nexus One POS y los envia directamente a la impresora via USB o puerto COM.
+Este agente es un pequeño servidor que se ejecuta en la PC donde esta conectada la impresora termica. Recibe los datos de impresion desde el navegador de NexusOne POS y los envia directamente a la impresora via USB o puerto COM.
 
 ## Por que se necesita?
 
@@ -44,7 +44,7 @@ Los navegadores web no pueden acceder directamente a los puertos USB de la compu
    Servidor listo en http://0.0.0.0:9100
    ```
 
-## Configuracion en Nexus One POS
+## Configuracion en NexusOne POS
 
 1. En **Configuracion > Ticket de Impresion**:
    - Active **"Usar agente de impresion local"**
@@ -93,7 +93,7 @@ Para que el agente inicie automaticamente con Windows:
 Cree un archivo `/etc/systemd/system/myecommerce-printer.service`:
 ```ini
 [Unit]
-Description=Nexus One Printer Agent
+Description=NexusOne Printer Agent
 After=network.target
 
 [Service]

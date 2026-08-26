@@ -258,7 +258,7 @@ export async function POST(req: NextRequest) {
           for (const entry of extractEntries) {
             const fullPath = join(tempExtract, entry);
             const s = await stat(fullPath);
-            if (s.isDirectory() && entry.includes('Nexus One')) {
+            if (s.isDirectory() && entry.includes('NexusOne')) {
               extractedDir = fullPath;
               break;
             }

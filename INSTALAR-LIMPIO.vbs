@@ -1,11 +1,11 @@
 ' ==========================================================
-' Nexus One POS v2.9.80 - Instalador Profesional (FUSION)
+' NexusOne POS v2.9.91 - Instalador Profesional (FUSION)
 '
 ' Fusion de lo mejor de cada version:
 '   v2.9.72: Secuencia de instalacion probada y confiable
 '   v2.9.75: Caddy HTTPS + firewall + acceso movil
 '   v2.9.78: VBS con progreso visual HTA
-'   v2.9.80: Correcciones de robustez total
+'   v2.9.91: Correcciones de robustez total
 '
 ' Caracteristicas:
 '   - Barra de progreso visual (PROGRESS.hta)
@@ -101,7 +101,7 @@ On Error GoTo 0
 
 ' ---- Confirmacion ----
 Dim bienvenida
-bienvenida = "Nexus One POS v2.9.80" & vbCrLf & vbCrLf & _
+bienvenida = "NexusOne POS v2.9.91" & vbCrLf & vbCrLf & _
   "Sistema Punto de Venta Profesional" & vbCrLf & _
   "Doble Moneda USD/Bs con tasa BCV" & vbCrLf & _
   "Impresion Termica ESC/POS (agente winspool)" & vbCrLf & _
@@ -114,14 +114,14 @@ bienvenida = "Nexus One POS v2.9.80" & vbCrLf & vbCrLf & _
   "NOTA: Instalacion LIMPIA (se borran datos anteriores)." & vbCrLf & vbCrLf & _
   "Desea continuar?"
 
-resultado = MsgBox(bienvenida, vbYesNo + vbQuestion, "Nexus One POS - Instalacion")
+resultado = MsgBox(bienvenida, vbYesNo + vbQuestion, "NexusOne POS - Instalacion")
 If resultado <> vbYes Then
     On Error Resume Next: objFSO.DeleteFile statusFile: On Error GoTo 0
     WScript.Quit
 End If
 
 On Error Resume Next: objFSO.DeleteFile logFile: On Error GoTo 0
-LogWrite "=== INSTALACION LIMPIA v2.9.80 ==="
+LogWrite "=== INSTALACION LIMPIA v2.9.91 ==="
 LogWrite "Carpeta: " & strDir
 
 ' ============================================================
@@ -187,7 +187,7 @@ On Error Resume Next
 strDesktop = WshShell.SpecialFolders("Desktop")
 SafeDelete(strDesktop & "\MyeCommerce POS.lnk")
 SafeDelete(strDesktop & "\MyeCommerce.lnk")
-SafeDelete(strDesktop & "\Nexus One POS.lnk")
+SafeDelete(strDesktop & "\NexusOne POS.lnk")
 On Error GoTo 0
 
 ' Claves de registro de inicio automatico (tolerante - no falla si no existen)
@@ -319,9 +319,10 @@ If Not objFSO.FileExists(strDir & "\.env") Then
         LogWrite "  .env creado desde .env.example"
     Else
         Set envFile = objFSO.CreateTextFile(strDir & "\.env", True)
-        envFile.WriteLine "DATABASE_URL=""file:./dev.db"""
+        envFile.WriteLine "DATABASE_URL=""file:./prisma/dev.db"""
         envFile.WriteLine "APP_PORT=3000"
         envFile.WriteLine "NODE_ENV=production"
+        envFile.WriteLine "JWT_SECRET=nexusone-pos-jwt-secret-v2.9.91-change-in-production"
         envFile.Close
         LogWrite "  .env creado con valores predeterminados"
     End If
@@ -380,7 +381,7 @@ If isAdmin Then
         ' Caddyfile principal (dominio nexusone.ve)
         If Not objFSO.FileExists(strDir & "\caddy\Caddyfile") Then
             Set cf = objFSO.CreateTextFile(strDir & "\caddy\Caddyfile", True)
-            cf.WriteLine "# Nexus One POS - Caddy HTTPS Local"
+            cf.WriteLine "# NexusOne POS - Caddy HTTPS Local"
             cf.WriteLine "http://nexusone.ve {" : cf.WriteLine "    redir https://nexusone.ve{uri}" : cf.WriteLine "}"
             cf.WriteLine "nexusone.ve {" : cf.WriteLine "    tls internal" : cf.WriteLine "    reverse_proxy localhost:3000" : cf.WriteLine "}"
             cf.Close
@@ -407,8 +408,8 @@ If isAdmin Then
         WshShell.CurrentDirectory = strDir
 
         ' Firewall para puerto 8443
-        WshShell.Run "cmd /c netsh advfirewall firewall delete rule name=""Nexus POS Mobile 8443"" >nul 2>&1", 0, True
-        WshShell.Run "cmd /c netsh advfirewall firewall add rule name=""Nexus POS Mobile 8443"" dir=in action=allow protocol=TCP localport=8443 profile=private,public", 0, True
+        WshShell.Run "cmd /c netsh advfirewall firewall delete rule name=""NexusOne POS Mobile 8443"" >nul 2>&1", 0, True
+        WshShell.Run "cmd /c netsh advfirewall firewall add rule name=""NexusOne POS Mobile 8443"" dir=in action=allow protocol=TCP localport=8443 profile=private,public", 0, True
         LogWrite "  Firewall configurado"
     End If
 Else
@@ -460,17 +461,17 @@ Call RunHidden("xcopy /E /I /Q /Y public .next\standalone\public")
 ' Crear acceso directo al escritorio -> INICIAR-TODO-OCULTO.vbs (inicio sin consolas)
 On Error Resume Next
 strDesktop = WshShell.SpecialFolders("Desktop")
-Set oLink = WshShell.CreateShortcut(strDesktop & "\Nexus One POS.lnk")
+Set oLink = WshShell.CreateShortcut(strDesktop & "\NexusOne POS.lnk")
 oLink.TargetPath = strDir & "\INICIAR-TODO-OCULTO.vbs"
 oLink.WorkingDirectory = strDir
-oLink.Description = "Nexus One POS v2.9.80 - Iniciar sistema"
+oLink.Description = "NexusOne POS v2.9.91 - Iniciar sistema"
 oLink.IconLocation = "shell32.dll,14"
 oLink.Save
 On Error GoTo 0
 LogWrite "  Acceso directo creado -> INICIAR-TODO-OCULTO.vbs"
 
 LogWrite "=== INSTALACION COMPLETADA ==="
-WriteStatus 8, 8, "INSTALACION COMPLETADA", "Abra Nexus One POS del escritorio", 100, "OK", ""
+WriteStatus 8, 8, "INSTALACION COMPLETADA", "Abra NexusOne POS del escritorio", 100, "OK", ""
 
 ' Cerrar ventana de progreso tras 3 segundos
 WScript.Sleep 3000
@@ -479,7 +480,7 @@ On Error Resume Next: objFSO.DeleteFile statusFile: On Error GoTo 0
 ' Mensaje final
 Dim finale
 finale = "INSTALACION COMPLETADA" & vbCrLf & vbCrLf & _
-  "Doble clic en: Nexus One POS (escritorio)" & vbCrLf & _
+  "Doble clic en: NexusOne POS (escritorio)" & vbCrLf & _
   "El sistema iniciara SIN ventanas de consola." & vbCrLf & vbCrLf & _
   "URLs de acceso:" & vbCrLf & _
   "  https://nexusone.ve        (PC - HTTPS)" & vbCrLf & _
@@ -488,4 +489,4 @@ finale = "INSTALACION COMPLETADA" & vbCrLf & vbCrLf & _
   "USUARIO: admin   CLAVE: admin" & vbCrLf & vbCrLf & _
   "Para detener: DETENER-TODO.bat"
 
-MsgBox finale, vbInformation, "Nexus One POS v2.9.80"
+MsgBox finale, vbInformation, "NexusOne POS v2.9.91"

@@ -1,5 +1,5 @@
 /**
- * Nexus One POS — Tax Adapter (Client-Compatible) v1.0
+ * NexusOne POS — Tax Adapter (Client-Compatible) v1.0
  * 
  * Interfaz unificada para calculos fiscales. El POS es agnostico al pais:
  * solo llama a calculateTaxes() y recibe un TaxCalculation completo.

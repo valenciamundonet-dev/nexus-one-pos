@@ -7,7 +7,7 @@ import { getAppVersion } from "@/lib/app-version";
 const APP_VERSION = getAppVersion();
 
 export const metadata: Metadata = {
-  title: `Nexus One POS v${APP_VERSION}`,
+  title: `NexusOne POS v${APP_VERSION}`,
   description: "Sistema Punto de Venta - Venezuela | Doble Moneda $/Bs",
   manifest: "/manifest.json",
 };

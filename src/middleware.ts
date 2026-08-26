@@ -15,18 +15,12 @@ const ADMIN_ROUTES = [
   '/api/license',
 ];
 
-// JWT Secret — leer de variable de entorno (ver .env)
-// Si no esta configurado, se genera un secreto temporal en runtime.
-// IMPORTANTE: Agregue JWT_SECRET a su archivo .env para mayor seguridad.
-let _runtimeSecret: string | null = null;
+// Fallback consistente con session.ts — CAMBIAR EN PRODUCCION
+const FALLBACK_SECRET = 'nexusone-pos-jwt-secret-v2.9.91-change-in-production';
 function getJwtSecret(): string {
   if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
-  if (!_runtimeSecret) {
-    _runtimeSecret = Array.from(crypto.getRandomValues(new Uint8Array(32)))
-      .map(b => b.toString(16).padStart(2, '0')).join('');
-    console.warn('[SECURITY] JWT_SECRET no configurado en .env — usando secreto temporal. Los tokens no sobreviviran un reinicio. Agregue JWT_SECRET=... a su .env');
-  }
-  return _runtimeSecret;
+  console.warn('[SECURITY] JWT_SECRET no configurado en .env — usando fallback. Agregue JWT_SECRET=... a su .env');
+  return FALLBACK_SECRET;
 }
 const JWT_SECRET = getJwtSecret();
 

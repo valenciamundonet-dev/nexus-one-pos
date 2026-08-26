@@ -1,5 +1,5 @@
 /**
- * Nexus One POS — DB Health Check API v1.0
+ * NexusOne POS — DB Health Check API v1.0
  * 
  * Expone metricas de salud de la base de datos SQLite:
  *   - Estado WAL (tamano del journal)

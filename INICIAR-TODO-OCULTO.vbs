@@ -1,5 +1,5 @@
 ' ============================================================
-' Nexus One POS v2.9.80 - Inicio TOTALMENTE OCULTO
+' NexusOne POS v2.9.80 - Inicio TOTALMENTE OCULTO
 '
 ' Esto es lo que ejecuta el acceso directo del escritorio.
 ' TODOS los servicios inician SIN ventanas de consola:

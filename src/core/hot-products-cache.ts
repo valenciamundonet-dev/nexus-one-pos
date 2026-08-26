@@ -1,5 +1,5 @@
 /**
- * Nexus One POS — Hot Products Cache v1.0
+ * NexusOne POS — Hot Products Cache v1.0
  * 
  * Caché en memoria RAM para búsqueda ultra-rápida.
  * Mantiene los productos más vendidos indexados en un Map
