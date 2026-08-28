@@ -354,15 +354,19 @@ export default function Home() {
     };
   }, [currentUser]);
 
-  // Show loading screen
-  if (loading || !authReady) {
-    return (<div className="flex items-center justify-center min-h-screen"><div className="text-center space-y-4"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary/20 border-t-primary mx-auto" /><p className="text-muted-foreground text-sm">Cargando NexusOne...</p></div></div>);
-  }
-  // Show login screen
-  if (!currentUser) {
-    return <LoginScreen onLogin={handleLogin} storeName={settings.storeName} />;
-  }
+  // ─── Fase 3a: Feature Flags Store (atomic, zero unnecessary re-renders) ──
+  // CRITICAL: All hooks MUST be before any conditional return (Rules of Hooks)
+  const loadFromLicense = useFeaturesStore((s) => s.loadFromLicense);
+  const featureFlags = useFeaturesStore((s) => s.flags);
 
+  // Sync license data into atomic features store
+  useEffect(() => {
+    if (license) loadFromLicense(license);
+  }, [license, loadFromLicense]);
+
+  const canFrequentCustomers = featureFlags['pos.basic'] || false;
+
+  // ── Computed values (safe even when license is null) ──
   const isTrial = license?.licenseType === "trial";
   const isExpired = license?.isExpired || false;
   const activationsRemaining = license ? (license.maxActivations - (license.activationCount || 0)) : 0;
@@ -372,15 +376,14 @@ export default function Home() {
   const canDevolutions = license?.features?.devolutions || false;
   const canCashClosing = license?.features?.cashClosing || false;
 
-  // ─── Fase 3a: Feature Flags Store (atomic, zero unnecessary re-renders) ──
-  const loadFromLicense = useFeaturesStore((s) => s.loadFromLicense);
-  const featureFlags = useFeaturesStore((s) => s.flags);
-  const canFrequentCustomers = featureFlags['pos.basic'] || false;
-
-  // Sync license data into atomic features store
-  useEffect(() => {
-    if (license) loadFromLicense(license);
-  }, [license, loadFromLicense]);
+  // Show loading screen
+  if (loading || !authReady) {
+    return (<div className="flex items-center justify-center min-h-screen"><div className="text-center space-y-4"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary/20 border-t-primary mx-auto" /><p className="text-muted-foreground text-sm">Cargando NexusOne...</p></div></div>);
+  }
+  // Show login screen
+  if (!currentUser) {
+    return <LoginScreen onLogin={handleLogin} storeName={settings.storeName} />;
+  }
 
   // Admin-only and role-gated tabs
   const ADMIN_ONLY_TABS = new Set(['users', 'config', 'license', 'backup', 'diagnostics', 'db-health', 'tax-reload']);
