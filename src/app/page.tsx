@@ -424,7 +424,10 @@ export default function Home() {
     return hasFeature;
   });
 
+  // ── Top-level safety: catch any object-rendered-as-child errors ──
+  try {
   return (
+    <ErrorBoundary name="Nexus One POS">
     <div className="min-h-screen flex flex-col relative">
       {/* BANNERS */}
       {isTrial && !isExpired && (
@@ -453,8 +456,8 @@ export default function Home() {
       )}
       {!isTrial && !isExpired && license?.isValid && !isMachineBlocked && !isDifferentMachine && (
         <div className="system-banner system-banner-success">
-          <span className="font-medium">{license.licenseType.toUpperCase()} | Vence: {new Date(license.expiresAt).toLocaleDateString("es-VE")} | {license.daysRemaining} dias</span>
-          {license.ownerName && <span className="ml-1">| {license.ownerName}</span>}
+          <span className="font-medium">{String(license.licenseType || '').toUpperCase()} | Vence: {new Date(license.expiresAt || Date.now()).toLocaleDateString("es-VE")} | {Number(license.daysRemaining || 0)} dias</span>
+          {typeof license.ownerName === 'string' && <span className="ml-1">| {license.ownerName}</span>}
         </div>
       )}
 
@@ -826,7 +829,23 @@ export default function Home() {
         </DialogContent>
       </Dialog>
     </div>
+    </ErrorBoundary>
   );
+  } catch (renderError: any) {
+    // v3.0.0: Fallback UI if any object slips through rendering
+    console.error('[Home render catch]', renderError);
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4 p-8">
+          <div className="text-5xl">⚠️</div>
+          <h2 className="text-xl font-bold text-destructive">Error al cargar la interfaz</h2>
+          <p className="text-sm text-muted-foreground max-w-md">Ocurrio un error inesperado al renderizar.</p>
+          <pre className="text-xs bg-muted p-3 rounded-lg max-w-lg mx-auto overflow-auto">{renderError?.message || String(renderError)}</pre>
+          <Button onClick={() => window.location.reload()}>Recargar Pagina</Button>
+        </div>
+      </div>
+    );
+  }
 }
 
 function UpgradePrompt({ feature, plan, desc }: { feature: string; plan: string; desc?: string }) {
