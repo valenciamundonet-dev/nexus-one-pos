@@ -24,6 +24,7 @@ import BackupTab from "@/components/backup-tab";
 import SuppliersTab from "@/components/suppliers-tab";
 import PurchasesTab from "@/components/purchases-tab";
 import CreditTab from "@/components/credit-tab";
+import AccountsPayableTab from "@/components/accounts-payable-tab";
 import ExpensesTab from "@/components/expenses-tab";
 import DashboardTab from "@/components/dashboard-tab";
 import KardexTab from "@/components/kardex-tab";
@@ -404,6 +405,7 @@ export default function Home() {
     { value: "suppliers", label: "Proveedores", icon: "🏪" },
     { value: "purchases", label: "Compras", icon: "🛒" },
     { value: "credit", label: "Cuentas por Cobrar", icon: "💳" },
+    { value: "accounts-payable", label: "Cuentas por Pagar", icon: "📤" },
     { value: "kardex", label: "Inventario/Kardex", icon: "📦" },
     { value: "held-sales", label: "Ventas en Espera", icon: "⏸️" },
     { value: "quotes", label: "Presupuestos", icon: "📋" },
@@ -734,7 +736,12 @@ export default function Home() {
               bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} currentUser={currentUser} />
           </ErrorBoundary>
         </TabsContent>
-        <TabsContent value="expenses" activeTab={activeTab}>
+        <TabsContent value="accounts-payable" activeTab={activeTab}>
+            <div className="h-full overflow-y-auto p-3 md:p-4">
+              <AccountsPayableTab bcvRate={settings.bcvRate ?? 36.5} sellerName={currentUser?.fullName || ''} />
+            </div>
+          </TabsContent>
+          <TabsContent value="expenses" activeTab={activeTab}>
           <ErrorBoundary name="Gastos">
             <ExpensesTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency}
               sellerName={currentUser.fullName || currentUser.username}

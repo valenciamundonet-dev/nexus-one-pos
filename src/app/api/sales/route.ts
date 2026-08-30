@@ -67,16 +67,17 @@ export async function POST(req: NextRequest) {
 
     // TRANSACTIONAL: create sale + update stock + update credit balance + invoice number
     const sale = await db.$transaction(async (tx) => {
-      // Generate sequential invoice number (8-digit zero-padded)
+      // Generate sequential invoice number with FAC- prefix
       const lastSale = await tx.sale.findFirst({
         orderBy: { createdAt: 'desc' },
         select: { invoiceNumber: true },
       });
       let nextNum = 1;
       if (lastSale && lastSale.invoiceNumber) {
-        nextNum = parseInt(lastSale.invoiceNumber, 10) + 1;
+        const match = lastSale.invoiceNumber.match(/FAC-(\d+)/);
+        nextNum = match ? parseInt(match[1], 10) + 1 : parseInt(lastSale.invoiceNumber.replace(/\D/g, ''), 10) + 1;
       }
-      const invoiceNumber = String(nextNum).padStart(8, '0');
+      const invoiceNumber = `FAC-${String(nextNum).padStart(8, '0')}`;
 
       const newSale = await tx.sale.create({
         data: {

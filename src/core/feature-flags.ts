@@ -308,24 +308,33 @@ export function planFromLicenseType(licenseType: string): PlanType {
 }
 
 // ─── Obtener información de plan para UI ──────────────────────────
-export const PLAN_INFO: Record<PlanType, { name: string; slogan: string; color: string; icon: string }> = {
+export const PLAN_INFO: Record<PlanType, { name: string; slogan: string; color: string; icon: string; price: number; priceLabel: string; trialDays: number }> = {
   gratis: {
-    name: 'Conecta',
-    slogan: 'Empieza a vender hoy',
+    name: 'TRIAL',
+    slogan: 'Prueba gratis 30 dias',
     color: '#3b82f6',
     icon: 'Link',
+    price: 0,
+    priceLabel: 'Gratis',
+    trialDays: 30,
   },
   basico: {
-    name: 'Gestiona',
+    name: 'BASICO',
     slogan: 'Control total de tu negocio',
     color: '#10b981',
     icon: 'Settings',
+    price: 160,
+    priceLabel: '$160/mes',
+    trialDays: 0,
   },
   profesional: {
-    name: 'Crece',
-    slogan: 'Escala sin límites',
+    name: 'PROFESIONAL',
+    slogan: 'Escala sin limites',
     color: '#8b5cf6',
     icon: 'Rocket',
+    price: 220,
+    priceLabel: '$220/mes',
+    trialDays: 0,
   },
 };
 
@@ -345,6 +354,7 @@ export const TAB_FEATURE_MAP: Record<string, string> = {
   'purchases': 'advanced.purchases',
   'suppliers': 'advanced.suppliers',
   'expenses': 'advanced.expenses',
+  'accounts-payable': 'advanced.purchases',  // CxP shares purchases feature
   'kardex': 'inventory.kardex',
   'held-sales': 'pos.hold-sale',
   'catalog': 'pos.basic',

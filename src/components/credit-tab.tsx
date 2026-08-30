@@ -28,7 +28,7 @@ interface CreditClient {
   creditSalesCount: number;
   totalOwedUsd: number;
   totalOwedBs: number;
-  sales: { id: string; date: string; total: number; paid: number; remaining: number; creditDays?: number; creditDueDate?: string }[];
+  sales: { id: string; date: string; total: number; paid: number; remaining: number; creditStatus?: string; creditDays?: number; creditDueDate?: string }[];
 }
 
 interface CreditSale {
@@ -37,6 +37,7 @@ interface CreditSale {
   total: number;
   totalBs: number;
   creditPaid: number;
+  creditStatus?: string;
   creditDays?: number;
   creditDueDate?: string;
   exchangeRate: number;
@@ -144,6 +145,7 @@ export default function CreditTab({ bcvRate, currency, sellerName }: CreditTabPr
           total: sn(s.total),
           paid: sn(s.paid ?? s.creditPaid),
           remaining: sn(s.remaining ?? (sn(s.total) - sn(s.paid ?? s.creditPaid))),
+          creditStatus: s.creditStatus || 'PENDIENTE',
           creditDays: s.creditDays,
           creditDueDate: s.creditDueDate,
         })) : [],
@@ -180,6 +182,7 @@ export default function CreditTab({ bcvRate, currency, sellerName }: CreditTabPr
           total: sn(s.total),
           totalBs: sn(s.totalBs),
           creditPaid: sn(s.creditPaid),
+          creditStatus: s.creditStatus || 'PENDIENTE',
           creditDays: s.creditDays,
           creditDueDate: s.creditDueDate,
           exchangeRate: sn(s.exchangeRate),
@@ -406,6 +409,7 @@ export default function CreditTab({ bcvRate, currency, sellerName }: CreditTabPr
                               </div>
                             </div>
                             <div className="flex items-center gap-3 text-xs">
+                              <Badge className={`text-[9px] ${sale.creditStatus === 'LIQUIDADO' ? 'bg-green-100 text-green-700 border-green-300' : sale.creditStatus === 'PARCIAL' ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-red-100 text-red-700 border-red-300'}`} variant="outline">{sale.creditStatus || 'PENDIENTE'}</Badge>
                               <span>Total: <strong>${saleTotal.toFixed(2)}</strong></span>
                               <span className={isPaid ? "text-green-600" : "text-red-600"}>
                                 {isPaid ? "Pagado" : `Pendiente: $${remaining.toFixed(2)}`}

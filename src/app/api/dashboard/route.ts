@@ -49,6 +49,8 @@ export async function GET() {
     const yesterdaySales = recentSales.filter(s => s.date >= yesterdayStart && s.date <= yesterdayEnd);
 
     // ===== HOY =====
+    const settings = await db.settings.findFirst();
+    const bcvRate = settings?.bcvRate || 36.5;
     // VENTAS BRUTAS: incluye TODO (efectivo, credito, cashea, etc.)
     const todayGrossUsd = todaySales.reduce((s, v) => s + v.total, 0);
     const todayGrossBs = todaySales.reduce((s, v) => s + v.totalBs, 0);
@@ -165,10 +167,30 @@ export async function GET() {
       itemCount: s.items.length,
     }));
 
+    // ===== DEVOLUCIONES Y GASTOS DE HOY =====
+    const todayDevolutions = await db.devolution.findMany({
+      where: { date: { gte: startOfDay, lte: endOfDay } },
+    });
+    const todayDevolutionsUsd = todayDevolutions.reduce((s, d) => s + d.totalUsd, 0);
+    const todayDevolutionsBs = todayDevolutions.reduce((s, d) => s + d.totalBs, 0);
+
+    const todayExpenses = await db.expense.findMany({
+      where: { date: { gte: startOfDay, lte: endOfDay } },
+    });
+    const todayExpensesUsd = todayExpenses.reduce((s, e) => s + e.amount, 0);
+    const todayExpensesBs = todayExpenses.reduce((s, e) => s + e.amountBs, 0);
+
+    // Ventas Netas = Brutas - Devoluciones - Descuentos
+    const todayDiscounts = todaySales.reduce((s, v) => s + (v.discount || 0), 0);
+    const todayNetUsd = todayGrossUsd - todayDevolutionsUsd - todayDiscounts;
+    const todayNetBs = todayGrossBs - todayDevolutionsBs - (todayDiscounts * (settings?.bcvRate || 36.5));
+
     return NextResponse.json({
       today: {
         grossUsd: todayGrossUsd,
         grossBs: todayGrossBs,
+        netUsd: todayNetUsd,
+        netBs: todayNetBs,
         totalUsd: todayTotalUsd,  // entradas netas (sin cashea, sin credito)
         totalBs: todayTotalBs,
         count: todayCount,
@@ -178,6 +200,13 @@ export async function GET() {
         casheaCount: todayCasheaCount,
         casheaUsd: todayCasheaUsd,
         casheaBs: todayCasheaBs,
+        devolutionsUsd: todayDevolutionsUsd,
+        devolutionsBs: todayDevolutionsBs,
+        devolutionsCount: todayDevolutions.length,
+        expensesUsd: todayExpensesUsd,
+        expensesBs: todayExpensesBs,
+        expensesCount: todayExpenses.length,
+        discounts: todayDiscounts,
       },
       yesterday: {
         totalUsd: yesterdayTotal,

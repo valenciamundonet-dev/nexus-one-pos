@@ -340,9 +340,15 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(closing);
     } else {
-      // ===== CIERRE FINAL =====
+      // ===== CIERRE FINAL (Z) =====
+      // Include pre-cierres (X) from today in the Z report
+      const preClosings = await db.cashClosing.findMany({
+        where: { date: { gte: startOfDay, lte: endOfDay }, closingType: 'pre' },
+        orderBy: { createdAt: 'asc' },
+      });
       const sales = await db.sale.findMany({ where: { date: { gte: startOfDay, lte: endOfDay } }, include: { items: true } });
       const devolutions = await db.devolution.findMany({ where: { date: { gte: startOfDay, lte: endOfDay } } });
+      const expenses = await db.expense.findMany({ where: { date: { gte: startOfDay, lte: endOfDay } } });
 
       const settings = await db.settings.findFirst();
       const rate = settings?.bcvRate || 36.50;
@@ -403,7 +409,13 @@ export async function POST(req: NextRequest) {
         closing = await db.cashClosing.create({ data: { date: startOfDay, closingType: 'final', ...closingData } });
       }
 
-      return NextResponse.json(closing);
+      // Return Z cierre with consolidated X pre-cierres
+      return NextResponse.json({
+        ...closing,
+        preClosings,
+        expensesTotal: expenses.reduce((s: number, e: any) => s + e.amount, 0),
+        expensesCount: expenses.length,
+      });
     }
   } catch (error) {
     console.error('Error creating cash closing:', error);

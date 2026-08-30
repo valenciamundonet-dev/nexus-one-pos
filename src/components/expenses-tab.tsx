@@ -64,14 +64,18 @@ interface ProfitLossReport {
 }
 
 const PAYMENT_METHODS = [
-  { value: "efectivo", label: "Efectivo" },
+  { value: "efectivo", label: "Efectivo (Bs)" },
+  { value: "efectivo-usd", label: "Efectivo ($)" },
+  { value: "cashea", label: "Cashea" },
   { value: "transferencia", label: "Transferencia" },
-  { value: "tarjeta", label: "Tarjeta" },
-  { value: "zelle", label: "Zelle" },
-  { value: "usdt", label: "USDT" },
-  { value: "punto", label: "Punto de Venta" },
-  { value: "otro", label: "Otro" },
+  { value: "pago-movil", label: "Pago Movil" },
+  { value: "punto-de-venta", label: "Punto de Venta" },
+  { value: "zelle", label: "Zelle ($)" },
+  { value: "usdt", label: "USDT ($)" },
+  { value: "otros", label: "OTROS" },
 ];
+
+const REFERENCE_METHODS = ["transferencia", "pago-movil", "zelle", "usdt", "punto-de-venta"];
 
 const DEFAULT_CATEGORIES = [
   { name: "Servicios", icon: "zap", color: "#3b82f6", description: "Luz, internet, agua, telefono" },
@@ -858,14 +862,18 @@ export default function ExpensesTab({ bcvRate = 36.5, currency = "USD", sellerNa
               </div>
             </div>
 
-            <div>
-              <Label className="text-xs">Referencia / Nro Comprobante</Label>
-              <Input
-                placeholder="Opcional"
-                value={form.reference}
-                onChange={(e) => setForm({ ...form, reference: e.target.value })}
-              />
-            </div>
+              {REFERENCE_METHODS.includes(form.paymentMethod) && (
+                <div>
+                  <Label className="text-xs">Referencia *</Label>
+                  <Input placeholder="Nro de referencia" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
+                </div>
+              )}
+              {form.paymentMethod === "otros" && (
+                <div>
+                  <Label className="text-xs">Especificar metodo de pago *</Label>
+                  <Input placeholder="Ej: Cheque, Depósito bancario" value={form.reference} onChange={(e) => setForm({ ...form, reference: e.target.value })} />
+                </div>
+              )}
 
             <div>
               <Label className="text-xs">Notas</Label>
