@@ -1,4 +1,4 @@
-<html><head><title>NexusOne POS - Instalando</title>
+<html><head><title>Nexus One POS - Instalando</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Segoe UI',system-ui,sans-serif;font-size:13px;background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
@@ -26,32 +26,42 @@ Dim timerID
 timerID = setInterval("updateStatus", 400)
 
 Sub updateStatus()
+  On Error Resume Next
   Set fso = CreateObject("Scripting.FileSystemObject")
   statusFile = CreateObject("WScript.Shell").ExpandEnvironmentStrings("%TEMP%") & "\mepos_status.txt"
   If Not fso.FileExists(statusFile) Then Exit Sub
+
   Set f = fso.OpenTextFile(statusFile, 1)
-  lineData = f.ReadAll: f.Close
+  If Err.Number <> 0 Then Exit Sub
+
+  lineData = ""
+  If Not f.AtEndOfStream Then lineData = f.ReadAll
+  f.Close
+
   parts = Split(lineData, "|")
   If UBound(parts) < 5 Then Exit Sub
   stepN = parts(0): totalN = parts(1): msgTxt = parts(2): detailTxt = parts(3): pctVal = parts(4)
   doneVal = "": errMsg = ""
   If UBound(parts) >= 6 Then doneVal = parts(5)
   If UBound(parts) >= 7 Then errMsg = parts(6)
+
   document.getElementById("stepBadge").innerText = "Paso " & stepN & " de " & totalN
   document.getElementById("msg").innerText = msgTxt
   document.getElementById("detail").innerText = detailTxt
   document.getElementById("pctFill").style.width = pctVal & "%"
   document.getElementById("pctText").innerText = pctVal & "%"
+
   If errMsg <> "" Then
     document.getElementById("detail").style.color = "#fca5a5"
     document.getElementById("msg").style.color = "#fca5a5"
   End If
+
   If doneVal = "OK" Then
     clearInterval timerID
     document.getElementById("msg").innerText = "INSTALACION COMPLETADA"
     document.getElementById("msg").style.color = "#4ade80"
     document.getElementById("pctFill").style.width = "100%"
-    document.getElementById("pctFill").style.backgroundColor = "#22c55e"
+    document.getElementById("pctFill").style.background = "linear-gradient(90deg,#22c55e,#16a34a)"
     document.getElementById("pctText").innerText = "100%"
     document.getElementById("pctText").style.color = "#4ade80"
     document.getElementById("stepBadge").innerText = "Listo"
@@ -64,20 +74,21 @@ Sub updateStatus()
     clearInterval timerID
     document.getElementById("msg").innerText = "ERROR"
     document.getElementById("msg").style.color = "#fca5a5"
-    document.getElementById("pctFill").style.backgroundColor = "#ef4444"
+    document.getElementById("pctFill").style.background = "linear-gradient(90deg,#ef4444,#dc2626)"
     document.getElementById("detail").innerText = errMsg
     document.getElementById("detail").style.color = "#fca5a5"
     document.getElementById("statusDot").className = "dot err"
     document.getElementById("statusText").innerText = "Error"
     document.getElementById("statusText").style.color = "#fca5a5"
   End If
+  On Error GoTo 0
 End Sub
 </script>
 </head><body>
 <div class="box">
   <div class="header">
     <div class="icon">N</div>
-    <div><div class="title">NexusOne POS</div><div class="sub">Instalando v2.9.91.0</div></div>
+    <div><div class="title">Nexus One POS</div><div class="sub">Instalando v3.0.2</div></div>
   </div>
   <div class="pct-box"><div class="pct-fill" id="pctFill"></div></div>
   <div class="pct-row">
