@@ -1,19 +1,8 @@
 ' ==========================================================
-' NexusOne POS v2.9.91 - Instalador Profesional (FUSION)
+' NexusOne POS v3.1.1 - Instalador Profesional
 '
-' Fusion de lo mejor de cada version:
-'   v2.9.72: Secuencia de instalacion probada y confiable
-'   v2.9.75: Caddy HTTPS + firewall + acceso movil
-'   v2.9.78: VBS con progreso visual HTA
-'   v2.9.91: Correcciones de robustez total
-'
-' Caracteristicas:
-'   - Barra de progreso visual (PROGRESS.hta)
-'   - Instalacion completa en 8 pasos
-'   - Caddy HTTPS + acceso movil :8443
-'   - Impresion termica ESC/POS (agente winspool)
-'   - Inicio oculto via acceso directo al escritorio
-'   - Tolerancia a errores en registro/archivos
+' Fix v3.1.1: RunHidden ahora usa archivo .cmd temporal
+' para evitar fallos con rutas que tienen espacios.
 ' ==========================================================
 
 Set WshShell = CreateObject("WScript.Shell")
@@ -43,13 +32,56 @@ Sub WriteStatus(stepN, totalN, msg, detail, pct, doneFlag, errMsg)
     On Error GoTo 0
 End Sub
 
+' ==================================================================
+' RunHidden v2 - Usa archivo .cmd temporal para evitar problemas
+' con rutas que tienen espacios y redirecciones en WshShell.Run
+' ==================================================================
 Function RunHidden(cmd)
-    WshShell.CurrentDirectory = strDir
-    tmpOut = strDir & "\__cmd_out.tmp"
-    On Error Resume Next: objFSO.DeleteFile tmpOut: On Error GoTo 0
-    cmdFull = "cmd /c " & cmd & " > " & Chr(34) & tmpOut & Chr(34) & " 2>&1"
-    ret = WshShell.Run(cmdFull, 0, True)
-    RunHidden = ret
+    tmpBat = strDir & "\__run_tmp.cmd"
+    tmpOut = strDir & "\__run_out.tmp"
+    tmpRc  = strDir & "\__run_rc.tmp"
+
+    ' Limpiar archivos temporales previos
+    On Error Resume Next
+    objFSO.DeleteFile tmpBat
+    objFSO.DeleteFile tmpOut
+    objFSO.DeleteFile tmpRc
+    On Error GoTo 0
+
+    ' Crear archivo .cmd temporal con cd /d + comando + captura de salida y codigo de retorno
+    Set bat = objFSO.CreateTextFile(tmpBat, True)
+    bat.WriteLine "@echo off"
+    bat.WriteLine "cd /d " & Chr(34) & strDir & Chr(34)
+    bat.WriteLine cmd & " > " & Chr(34) & tmpOut & Chr(34) & " 2>&1"
+    bat.WriteLine "echo %ERRORLEVEL% > " & Chr(34) & tmpRc & Chr(34)
+    bat.Close
+
+    LogWrite "  Ejecutando: " & cmd
+
+    ' Ejecutar el .cmd (espera a que termine)
+    On Error Resume Next
+    WshShell.Run Chr(34) & tmpBat & Chr(34), 0, True
+    runErr = Err.Number
+    On Error GoTo 0
+
+    If runErr <> 0 Then
+        LogWrite "  ERROR WshShell.Run: " & runErr
+        RunHidden = 1
+        Exit Function
+    End If
+
+    ' Leer codigo de retorno
+    ret = 1
+    On Error Resume Next
+    If objFSO.FileExists(tmpRc) Then
+        Set f = objFSO.OpenTextFile(tmpRc, 1)
+        rcLine = Trim(f.ReadAll)
+        f.Close
+        If IsNumeric(rcLine) Then ret = CInt(rcLine)
+    End If
+    On Error GoTo 0
+
+    ' Leer salida y loguear
     On Error Resume Next
     If objFSO.FileExists(tmpOut) Then
         Set f = objFSO.OpenTextFile(tmpOut, 1)
@@ -57,16 +89,26 @@ Function RunHidden(cmd)
         f.Close
         If ret <> 0 And Len(output) > 0 Then
             Set dbg = objFSO.CreateTextFile(strDir & "\npm-debug-output.txt", True)
-            dbg.Write output: dbg.Close
+            dbg.Write output
+            dbg.Close
         End If
         objFSO.DeleteFile tmpOut
-        If Len(output) > 2000 Then output = "..." & Right(output, 2000)
+        If Len(output) > 3000 Then output = "..." & Right(output, 3000)
         If Len(output) > 0 Then LogWrite "  >> " & Replace(output, vbCrLf, " | ")
     End If
     On Error GoTo 0
+
+    ' Limpiar temporales
+    On Error Resume Next
+    objFSO.DeleteFile tmpBat
+    objFSO.DeleteFile tmpRc
+    On Error GoTo 0
+
+    LogWrite "  Retorno: " & ret
+    RunHidden = ret
 End Function
 
-' Eliminar clave de registro silenciosamente (no falla si no existe)
+' Eliminar clave de registro silenciosamente
 Sub SafeRegDelete(keyPath)
     On Error Resume Next
     WshShell.RegDelete keyPath
@@ -101,12 +143,11 @@ On Error GoTo 0
 
 ' ---- Confirmacion ----
 Dim bienvenida
-bienvenida = "NexusOne POS v2.9.91" & vbCrLf & vbCrLf & _
+bienvenida = "Nexus One POS v3.1.1" & vbCrLf & vbCrLf & _
   "Sistema Punto de Venta Profesional" & vbCrLf & _
   "Doble Moneda USD/Bs con tasa BCV" & vbCrLf & _
-  "Impresion Termica ESC/POS (agente winspool)" & vbCrLf & _
-  "Dominio local https://nexusone.ve" & vbCrLf & _
-  "Acceso movil HTTPS :8443 (camara telefono)" & vbCrLf & vbCrLf & _
+  "Impresion Termica ESC/POS" & vbCrLf & _
+  "Acceso HTTPS + movil :8443" & vbCrLf & vbCrLf & _
   "REQUISITOS:" & vbCrLf & _
   "  - Node.js 18+ instalado" & vbCrLf & _
   "  - Conexion a internet" & vbCrLf & _
@@ -114,14 +155,14 @@ bienvenida = "NexusOne POS v2.9.91" & vbCrLf & vbCrLf & _
   "NOTA: Instalacion LIMPIA (se borran datos anteriores)." & vbCrLf & vbCrLf & _
   "Desea continuar?"
 
-resultado = MsgBox(bienvenida, vbYesNo + vbQuestion, "NexusOne POS - Instalacion")
+resultado = MsgBox(bienvenida, vbYesNo + vbQuestion, "Nexus One POS - Instalacion")
 If resultado <> vbYes Then
     On Error Resume Next: objFSO.DeleteFile statusFile: On Error GoTo 0
     WScript.Quit
 End If
 
 On Error Resume Next: objFSO.DeleteFile logFile: On Error GoTo 0
-LogWrite "=== INSTALACION LIMPIA v2.9.91 ==="
+LogWrite "=== INSTALACION LIMPIA v3.1.1 ==="
 LogWrite "Carpeta: " & strDir
 
 ' ============================================================
@@ -158,18 +199,17 @@ WScript.Sleep 2000
 WriteStatus 2, 8, "Procesos cerrados", "", 25, "", ""
 
 ' ============================================================
-' PASO 3: Limpieza total (tolerante a errores)
+' PASO 3: Limpieza total
 ' ============================================================
 WriteStatus 3, 8, "Limpiando instalacion anterior...", "", 25, "", ""
 LogWrite "PASO 3: Limpiando..."
 
-' Carpetas
 Call RunHidden("if exist node_modules rmdir /s /q node_modules")
 Call RunHidden("if exist .next rmdir /s /q .next")
 Call RunHidden("if exist .prisma rmdir /s /q .prisma")
 
-' Archivos individuales
 Call SafeDelete(strDir & "\package-lock.json")
+Call SafeDelete(strDir & "\bun.lockb")
 Call SafeDelete(strDir & "\prisma\dev.db")
 Call SafeDelete(strDir & "\prisma\dev.db-journal")
 Call SafeDelete(strDir & "\prisma\dev.db-wal")
@@ -178,11 +218,9 @@ Call SafeDelete(strDir & "\caddy\caddy.exe")
 Call SafeDelete(strDir & "\.caddy-env.bat")
 Call SafeDelete(strDir & "\.caddy-domain")
 
-' Carpetas de spool y datos moviles
 Call RunHidden("if exist printer-agent\spool rmdir /s /q printer-agent\spool")
 Call RunHidden("if exist caddy\mobile-data rmdir /s /q caddy\mobile-data")
 
-' Accesos directos antiguos del escritorio
 On Error Resume Next
 strDesktop = WshShell.SpecialFolders("Desktop")
 SafeDelete(strDesktop & "\MyeCommerce POS.lnk")
@@ -190,12 +228,10 @@ SafeDelete(strDesktop & "\MyeCommerce.lnk")
 SafeDelete(strDesktop & "\NexusOne POS.lnk")
 On Error GoTo 0
 
-' Claves de registro de inicio automatico (tolerante - no falla si no existen)
 Call SafeRegDelete("HKCU\Software\Microsoft\Windows\CurrentVersion\Run\MyeCommercePOS")
 Call SafeRegDelete("HKCU\Software\Microsoft\Windows\CurrentVersion\Run\MyeCommerceHidden")
 Call SafeRegDelete("HKCU\Software\Microsoft\Windows\CurrentVersion\Run\NexusOnePOS")
 
-' Crear carpeta respaldos
 On Error Resume Next
 If Not objFSO.FolderExists(strDir & "\respaldos") Then objFSO.CreateFolder strDir & "\respaldos"
 On Error GoTo 0
@@ -208,7 +244,6 @@ WriteStatus 3, 8, "Limpieza completada", "", 37, "", ""
 WriteStatus 4, 8, "Verificando Node.js...", "", 37, "", ""
 LogWrite "PASO 4: Node.js..."
 
-' Refrescar PATH desde registro (por si Node se instalo recien)
 On Error Resume Next
 Set objReg = GetObject("winmgmts:\\.\root\default:StdRegProv")
 objReg.GetStringValue &H80000002, "SYSTEM\CurrentControlSet\Control\Session Manager\Environment", "Path", sysPath
@@ -219,7 +254,6 @@ If usrPath <> "" Then newPath = newPath & usrPath & ";"
 If newPath <> "" Then WshShell.Environment("PROCESS").Item("PATH") = newPath & WshShell.Environment("PROCESS").Item("PATH")
 On Error GoTo 0
 
-' Verificar Node.js
 On Error Resume Next
 Set objExec = WshShell.Exec("cmd /c node -v 2>nul")
 Do While objExec.Status = 0: WScript.Sleep 100: Loop
@@ -233,7 +267,6 @@ If nodeVer = "" Then
     WScript.Quit
 End If
 
-' Verificar version mayor o igual a 18
 nodeMajor = 0
 nv = Trim(nodeVer): If Left(nv, 1) = "v" Then nv = Mid(nv, 2)
 dp = InStr(nv, "."): If dp > 0 Then nodeMajor = CInt(Left(nv, dp - 1))
@@ -252,10 +285,9 @@ WriteStatus 4, 8, "Node.js " & Trim(nodeVer), "Version compatible", 50, "", ""
 WriteStatus 5, 8, "Instalando dependencias...", "npm install (1-3 min)", 50, "", ""
 LogWrite "PASO 5: npm install..."
 
-' Intento 1: normal
+' Intento 1
 ret = RunHidden("npm install --legacy-peer-deps --ignore-scripts")
 If ret <> 0 Then
-    ' Intento 2: limpiar cache y reintentar
     LogWrite "  Reintentando (limpiando cache)..."
     Call RunHidden("npm cache clean --force")
     Call RunHidden("if exist node_modules rmdir /s /q node_modules")
@@ -264,19 +296,18 @@ If ret <> 0 Then
     ret = RunHidden("npm install --legacy-peer-deps")
 End If
 If ret <> 0 Then
-    ' Intento 3: --force
     LogWrite "  Reintentando con --force..."
     Call RunHidden("if exist node_modules rmdir /s /q node_modules")
     WScript.Sleep 2000
     ret = RunHidden("npm install --force")
 End If
 If ret <> 0 Then
-    WriteStatus 0, 8, "ERROR", "npm install fallo", 0, "FAIL", "npm install fallo tras 3 intentos. Revise install-log.txt."
+    WriteStatus 0, 8, "ERROR", "npm install fallo", 0, "FAIL", "npm install fallo tras 3 intentos. Revise install-log.txt y npm-debug-output.txt."
     MsgBox "No se pudieron instalar las dependencias." & vbCrLf & vbCrLf & _
       "Posibles soluciones:" & vbCrLf & _
       "1. Verifique su conexion a internet" & vbCrLf & _
       "2. Actualice Node.js a la version 20 LTS" & vbCrLf & _
-      "3. Revise install-log.txt para detalles", vbCritical, "ERROR - Dependencias"
+      "3. Revise install-log.txt y npm-debug-output.txt", vbCritical, "ERROR - Dependencias"
     WScript.Quit
 End If
 WriteStatus 5, 8, "Dependencias instaladas", "", 62, "", ""
@@ -287,7 +318,6 @@ WriteStatus 5, 8, "Dependencias instaladas", "", 62, "", ""
 WriteStatus 6, 8, "Configurando base de datos...", "", 62, "", ""
 LogWrite "PASO 6: Prisma..."
 
-' Generar cliente Prisma (con reintento)
 ret = RunHidden("npx prisma generate")
 If ret <> 0 Then
     LogWrite "  Reintentando prisma generate..."
@@ -299,7 +329,6 @@ If ret <> 0 Then
     WScript.Quit
 End If
 
-' Crear/actualizar base de datos
 ret = RunHidden("npx prisma db push --skip-generate")
 If ret <> 0 Then
     LogWrite "  Reintentando prisma db push..."
@@ -311,7 +340,6 @@ If ret <> 0 Then
     WScript.Quit
 End If
 
-' Crear .env si no existe
 On Error Resume Next
 If Not objFSO.FileExists(strDir & "\.env") Then
     If objFSO.FileExists(strDir & "\.env.example") Then
@@ -322,7 +350,7 @@ If Not objFSO.FileExists(strDir & "\.env") Then
         envFile.WriteLine "DATABASE_URL=""file:./prisma/dev.db"""
         envFile.WriteLine "APP_PORT=3000"
         envFile.WriteLine "NODE_ENV=production"
-        envFile.WriteLine "JWT_SECRET=nexusone-pos-jwt-secret-v2.9.91-change-in-production"
+        envFile.WriteLine "JWT_SECRET=nexusone-pos-jwt-secret-v3.1.1-change-in-production"
         envFile.Close
         LogWrite "  .env creado con valores predeterminados"
     End If
@@ -336,13 +364,12 @@ WriteStatus 6, 8, "Base de datos lista", "Prisma + SQLite OK", 75, "", ""
 ' ============================================================
 ' PASO 7: Caddy HTTPS + DNS + Firewall
 ' ============================================================
-WriteStatus 7, 8, "Configurando Caddy HTTPS...", "", 75, "", ""
+WriteStatus 7, 8, "Configurando Caddy...", "", 75, "", ""
 LogWrite "PASO 7: Caddy..."
 
 caddyReady = False
 
 If isAdmin Then
-    ' Configurar archivo hosts para DNS local
     hostsFile = WshShell.ExpandEnvironmentStrings("%SystemRoot%") & "\System32\drivers\etc\hosts"
     On Error Resume Next
     If objFSO.FileExists(hostsFile) Then
@@ -360,7 +387,6 @@ If isAdmin Then
     End If
     On Error GoTo 0
 
-    ' Descargar Caddy si no existe
     If Not objFSO.FileExists(strDir & "\caddy\caddy.exe") Then
         LogWrite "  Descargando Caddy..."
         WriteStatus 7, 8, "Descargando Caddy...", "", 78, "", ""
@@ -368,17 +394,15 @@ If isAdmin Then
         psCmd = "powershell -NoProfile -Command " & Chr(34) & _
           "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; " & _
           "try { Invoke-WebRequest -Uri 'https://caddyserver.com/api/download?os=windows&arch=amd64' -OutFile '" & strDir & "\caddy\caddy.exe' -UseBasicParsing; Write-Host 'OK' } catch { Write-Host 'FAIL' }" & Chr(34)
-        WshShell.Run "cmd /c " & psCmd, 0, True
+        Call RunHidden(psCmd)
         LogWrite "  Caddy descargado"
     Else
         LogWrite "  Caddy ya existe"
     End If
 
-    ' Configurar Caddyfiles si no existen
     If objFSO.FileExists(strDir & "\caddy\caddy.exe") Then
         caddyReady = True
 
-        ' Caddyfile principal (dominio nexusone.ve)
         If Not objFSO.FileExists(strDir & "\caddy\Caddyfile") Then
             Set cf = objFSO.CreateTextFile(strDir & "\caddy\Caddyfile", True)
             cf.WriteLine "# NexusOne POS - Caddy HTTPS Local"
@@ -388,7 +412,6 @@ If isAdmin Then
             LogWrite "  Caddyfile creado"
         End If
 
-        ' Caddyfile movil (:8443 para camara telefono)
         If Not objFSO.FileExists(strDir & "\caddy\Caddyfile-mobile") Then
             Set cf = objFSO.CreateTextFile(strDir & "\caddy\Caddyfile-mobile", True)
             cf.WriteLine "{" : cf.WriteLine "    admin off" : cf.WriteLine "}" : cf.WriteLine ""
@@ -400,23 +423,20 @@ If isAdmin Then
             LogWrite "  Caddyfile-mobile creado"
         End If
 
-        ' Confianza del certificado SSL
         LogWrite "  caddy trust..."
         WriteStatus 7, 8, "Instalando certificado SSL...", "", 82, "", ""
         WshShell.CurrentDirectory = strDir & "\caddy"
         WshShell.Run "cmd /c caddy.exe trust", 0, True
         WshShell.CurrentDirectory = strDir
 
-        ' Firewall para puerto 8443
         WshShell.Run "cmd /c netsh advfirewall firewall delete rule name=""NexusOne POS Mobile 8443"" >nul 2>&1", 0, True
         WshShell.Run "cmd /c netsh advfirewall firewall add rule name=""NexusOne POS Mobile 8443"" dir=in action=allow protocol=TCP localport=8443 profile=private,public", 0, True
         LogWrite "  Firewall configurado"
     End If
 Else
-    ' No es admin - intentar usar Caddy si ya existe
     If objFSO.FileExists(strDir & "\caddy\caddy.exe") Then
         caddyReady = True
-        LogWrite "  Caddy existe pero sin permisos de admin (DNS/firewall omitidos)"
+        LogWrite "  Caddy existe pero sin permisos de admin"
     Else
         LogWrite "  Sin permisos de admin, Caddy omitido"
     End If
@@ -425,7 +445,7 @@ End If
 If caddyReady Then
     WriteStatus 7, 8, "Caddy configurado", "HTTPS dominio + movil :8443", 87, "", ""
 Else
-    WriteStatus 7, 8, "Caddy configurado", "HTTP localhost:3000 (sin admin)", 87, "", ""
+    WriteStatus 7, 8, "Caddy omitido", "HTTP localhost:3000", 87, "", ""
 End If
 
 ' ============================================================
@@ -440,7 +460,6 @@ Else
     ret = RunHidden("npx --no-install next build")
 End If
 If ret <> 0 Then
-    ' Reintentar con npx
     LogWrite "  Reintentando con npx next build..."
     ret = RunHidden("npx next build")
 End If
@@ -448,23 +467,21 @@ If ret <> 0 Then
     WriteStatus 0, 8, "ERROR", "Compilacion fallo", 0, "FAIL", "next build fallo. Revise install-log.txt."
     MsgBox "La compilacion fallo." & vbCrLf & vbCrLf & _
       "Posibles soluciones:" & vbCrLf & _
-      "1. Ejecute INICIAR-TODO.bat para ver el error detallado" & vbCrLf & _
+      "1. Ejecute INICIAR-TODO.bat para ver el error" & vbCrLf & _
       "2. Revise install-log.txt" & vbCrLf & _
       "3. Actualice Node.js", vbCritical, "ERROR - Compilacion"
     WScript.Quit
 End If
 
-' Copiar static a standalone para arranque rapido
 Call RunHidden("xcopy /E /I /Q /Y .next\static .next\standalone\.next\static")
 Call RunHidden("xcopy /E /I /Q /Y public .next\standalone\public")
 
-' Crear acceso directo al escritorio -> INICIAR-TODO-OCULTO.vbs (inicio sin consolas)
 On Error Resume Next
 strDesktop = WshShell.SpecialFolders("Desktop")
 Set oLink = WshShell.CreateShortcut(strDesktop & "\NexusOne POS.lnk")
 oLink.TargetPath = strDir & "\INICIAR-TODO-OCULTO.vbs"
 oLink.WorkingDirectory = strDir
-oLink.Description = "NexusOne POS v2.9.91 - Iniciar sistema"
+oLink.Description = "Nexus One POS v3.1.1"
 oLink.IconLocation = "shell32.dll,14"
 oLink.Save
 On Error GoTo 0
@@ -473,11 +490,9 @@ LogWrite "  Acceso directo creado -> INICIAR-TODO-OCULTO.vbs"
 LogWrite "=== INSTALACION COMPLETADA ==="
 WriteStatus 8, 8, "INSTALACION COMPLETADA", "Abra NexusOne POS del escritorio", 100, "OK", ""
 
-' Cerrar ventana de progreso tras 3 segundos
 WScript.Sleep 3000
 On Error Resume Next: objFSO.DeleteFile statusFile: On Error GoTo 0
 
-' Mensaje final
 Dim finale
 finale = "INSTALACION COMPLETADA" & vbCrLf & vbCrLf & _
   "Doble clic en: NexusOne POS (escritorio)" & vbCrLf & _
@@ -489,4 +504,4 @@ finale = "INSTALACION COMPLETADA" & vbCrLf & vbCrLf & _
   "USUARIO: admin   CLAVE: admin" & vbCrLf & vbCrLf & _
   "Para detener: DETENER-TODO.bat"
 
-MsgBox finale, vbInformation, "NexusOne POS v2.9.91"
+MsgBox finale, vbInformation, "Nexus One POS v3.1.1"
