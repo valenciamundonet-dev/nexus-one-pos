@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Nexus One POS — Generador de Licencias v4.0</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;min-height:100vh;padding:20px}
+.container{max-width:800px;margin:0 auto}
+.header{text-align:center;padding:20px 0;border-bottom:1px solid #334155;margin-bottom:20px}
+.header h1{font-size:24px;background:linear-gradient(90deg,#38bdf8,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header .ver{display:inline-block;background:#1e40af;color:#93c5fd;padding:2px 10px;border-radius:20px;font-size:11px;margin-top:8px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;margin-bottom:16px}
+.row{display:flex;gap:12px;margin-bottom:12px}
+.row>*{flex:1}
+label{display:block;font-size:12px;color:#94a3b8;margin-bottom:4px}
+select,input[type=text],input[type=number]{width:100%;padding:8px 12px;background:#0f172a;border:1px solid #334155;border-radius:8px;color:#e2e8f0;font-size:14px;outline:none}
+select:focus,input:focus{border-color:#6366f1}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff}
+.btn-primary:hover{opacity:.9;transform:translateY(-1px)}
+.btn-secondary{background:#334155;color:#e2e8f0}
+.btn-secondary:hover{background:#475569}
+.output{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:16px;font-family:'Courier New',monospace;font-size:13px;white-space:pre-wrap;word-break:break-all;min-height:100px;max-height:300px;overflow-y:auto}
+.license-key{font-size:18px;font-weight:700;color:#38bdf8;letter-spacing:1px;text-align:center;padding:16px;background:#0f172a;border:2px solid #1e40af;border-radius:8px;margin:12px 0;cursor:pointer;user-select:all}
+.license-key:hover{border-color:#38bdf8}
+.tabs{display:flex;gap:4px;margin-bottom:16px}
+.tab{flex:1;padding:10px;text-align:center;border:1px solid #334155;background:#1e293b;color:#94a3b8;border-radius:8px;cursor:pointer;font-size:13px}
+.tab.active{background:linear-gradient(135deg,#1e40af,#7c3aed);color:#fff;border-color:#6366f1}
+.info{font-size:12px;color:#64748b;margin-top:8px}
+.ok{color:#4ade80}.err{color:#f87171}
+</style></head><body>
+<div class="container">
+<div class="header"><h1>Nexus One POS</h1><p>Generador de Licencias</p><span class="ver">v4.0</span></div>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('gen')">Generar</div>
+  <div class="tab" onclick="switchTab('val')">Validar</div>
+  <div class="tab" onclick="switchTab('batch')">Lote</div>
+</div>
+
+<!-- GENERAR -->
+<div id="tab-gen">
+<div class="card">
+  <div class="row"><div><label>Tipo de Licencia</label><select id="tipo"><option value="profesional">PROFESIONAL ($220)</option><option value="basica">BÁSICA ($160)</option><option value="trial">TRIAL (Gratis 30 días)</option></select></div>
+<div><label>Duración (días)</label><input type="number" id="dias" value="365" min="1"></div></div>
+  <div class="row"><div><label>Nombre del Negocio</label><input type="text" id="nombre" placeholder="Mi Negocio"></div><div><label>Machine ID (opcional)</label><input type="text" id="maquina" placeholder="MCH-XXXXXXXX-XXXXXXXX"></div></div>
+  <button class="btn btn-primary" onclick="generar()" style="width:100%">Generar Licencia</button>
+</div>
+<div id="result-gen" style="display:none">
+  <div class="card"><div class="license-key" id="lic-key" title="Clic para copiar"></div>
+  <div id="lic-info" class="output"></div></div>
+</div>
+</div>
+
+<!-- VALIDAR -->
+<div id="tab-val" style="display:none">
+<div class="card">
+  <label>Clave de Licencia</label>
+  <input type="text" id="validate-key" placeholder="PR020-26060-32027-..." style="margin-bottom:12px">
+  <button class="btn btn-primary" onclick="validar()" style="width:100%">Validar</button>
+</div>
+<div id="result-val" style="display:none"><div class="card"><div id="val-info" class="output"></div></div></div>
+</div>
+
+<!-- LOTE -->
+<div id="tab-batch" style="display:none">
+<div class="card">
+  <div class="row"><div><label>Tipo</label><select id="batch-tipo"><option value="profesional">PROFESIONAL</option><option value="basica">BÁSICA</option><option value="trial">TRIAL</option></select></div>
+<div><label>Cantidad</label><input type="number" id="batch-cant" value="20" min="1" max="100"></div></div>
+  <button class="btn btn-primary" onclick="generarLote()" style="width:100%">Generar Lote</button>
+</div>
+<div id="result-batch" style="display:none"><div class="card"><div id="batch-info" class="output"></div></div></div>
+</div>
+
+<div class="info" style="text-align:center;margin-top:20px">
+  LICENSE_SECRET: NX1-L1C3NC3-S3CR3T-K3Y-2024-PROD<br>
+  Debe coincidir con el .env del servidor para que las licencias funcionen.
+</div>
+</div>
+
+<script>
+const SECRET='NX1-L1C3NC3-S3CR3T-K3Y-2024-PROD';
+const SEED=0x5A1F3E7B;
+
+function simpleHash(s){let h=SEED;for(let i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0}return Math.abs(h).toString(36).toUpperCase().padStart(4,'0').slice(0,4)}
+
+function computeCheck(p,s){let h=0;const c=p+s;for(let i=0;i<c.length;i++){h=((h<<7)-h+c.charCodeAt(i))|0;h=h^(h>>>16)}return Math.abs(h).toString(36).toUpperCase().padStart(4,'0').slice(0,4)}
+
+function fmt(r){const c=r.replace(/[^A-Z0-9]/gi,'').toUpperCase();const g=[];for(let i=0;i<c.length;i+=5)g.push(c.substring(i,i+5));return g.join('-')}
+
+function gen(t,n,m,d){
+  const tc=t==='profesional'?'PR0':t==='trial'?'TR0':'B4S';
+  const now=new Date();const exp=new Date(now.getTime()+d*864e5);
+  const ad=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+  const ed=`${exp.getFullYear()}${String(exp.getMonth()+1).padStart(2,'0')}${String(exp.getDate()).padStart(2,'0')}`;
+  const nh=simpleHash(n.toLowerCase().trim());
+  const mh=m?simpleHash(m):simpleHash(t+ad+ed);
+  const p=`${tc}${ad}${ed}${nh}${mh}`;
+  const cd=computeCheck(p,SECRET);
+  return{key:fmt(p+cd),tc,ad,ed,n,m:m||'(cualquier PC)',d};
+}
+
+function switchTab(t){
+  ['gen','val','batch'].forEach(x=>{document.getElementById('tab-'+x).style.display=x===t?'block':'none'});
+  document.querySelectorAll('.tab').forEach((el,i)=>{el.classList.toggle('active',['gen','val','batch'][i]===t)});
+}
+
+function generar(){
+  const t=document.getElementById('tipo').value;
+  const n=document.getElementById('nombre').value||'Cliente';
+  const m=document.getElementById('maquina').value;
+  const d=parseInt(document.getElementById('dias').value)||365;
+  const r=gen(t,n,m,d);
+  document.getElementById('lic-key').textContent=r.key;
+  document.getElementById('lic-info').innerHTML=`<span class="ok">✅ LICENCIA VÁLIDA — Auto-verificada</span>\n\nTipo:           ${t.toUpperCase()}\nPropietario:    ${n}\nMáquina:        ${r.m}\nActivación:     ${r.ad}\nExpiración:     ${r.ed}\nDuración:       ${d} días\n\n<span class="ok">LICENSE_SECRET=${SECRET}</span>`;
+  document.getElementById('result-gen').style.display='block';
+}
+
+function validar(){
+  const k=document.getElementById('validate-key').value;
+  const c=k.replace(/[^A-Z0-9]/gi,'').toUpperCase();
+  let out='';
+  if(c.length<20){out='<span class="err">❌ Clave muy corta</span>'}
+  else{
+    let lt='basica';
+    if(c.startsWith('PR0'))lt='profesional';else if(c.startsWith('TR0'))lt='trial';else if(!c.startsWith('B4S')){out='<span class="err">❌ Tipo no reconocido</span>';document.getElementById('val-info').innerHTML=out;document.getElementById('result-val').style.display='block';return}
+    if(c.length>=22){
+      const p=c.substring(0,c.length-4);const lf=c.substring(c.length-4);const ec=computeCheck(p,SECRET);
+      if(lf!==ec){out=`<span class="err">❌ Dígito de verificación incorrecto\nEsperado: ${ec}\nRecibido: ${lf}</span>\n\nLa clave NO fue generada con el LICENSE_SECRET configurado.`}
+      else{
+        const ey=parseInt(c.substring(11,15)),em=parseInt(c.substring(15,17)),ed=parseInt(c.substring(17,19));
+        const exp=new Date(ey,em-1,ed,23,59,59);const isExp=exp<new Date();
+        out=`<span class="${isExp?'err':'ok'}">${isExp?'⚠️ EXPIRADA':'✅ VÁLIDA'}</span>\n\nTipo: ${lt.toUpperCase()}\nExpiración: ${ey}-${String(em).padStart(2,'0')}-${String(ed).padStart(2,'0')}`
+      }
+    }else{out='<span class="err">❌ Formato incompleto</span>'}
+  }
+  document.getElementById('val-info').innerHTML=out;
+  document.getElementById('result-val').style.display='block';
+}
+
+function generarLote(){
+  const t=document.getElementById('batch-tipo').value;
+  const cnt=parseInt(document.getElementById('batch-cant').value)||20;
+  const names=['Tienda Principal','Negocio Demo','Bodega Central','Punto de Venta 1','Sucursal Norte','Mini Market','Farmacia Central','Panaderia Dulce','Ferreteria Industrial','Super Mercado','Abastos El Buen Precio','Tech Store','Carniceria Don Pedro','Licoreria La Buena','Optica Vision','Zapateria Elegante','Deposito El Vigia','Fruver Don Lulo','Papeleria Creativa','Boutique Moda'];
+  let out=`Lote de ${cnt} licencias ${t.toUpperCase()}\nSecret: ***CONFIGURADO***\n${'='.repeat(80)}\n\n`;
+  for(let i=0;i<cnt;i++){const r=gen(t,names[i%names.length],'',365);out+=`${String(i+1).padStart(3,'0')}. ${r.key}\n`}
+  document.getElementById('batch-info').textContent=out;
+  document.getElementById('result-batch').style.display='block';
+}
+</script></body></html>

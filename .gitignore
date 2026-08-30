@@ -77,7 +77,9 @@ cache/
 .eslintcache
 
 # Misc
-generar-licencia.js
+# Legacy copies (not submodules, just old snapshots)
+nexus-one-pos/
+nexus-repo/
 printer-agent/rawprint.ps1
 printer-agent/spool/
 printer-agent/agent-startup.log

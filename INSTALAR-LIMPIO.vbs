@@ -351,6 +351,7 @@ If Not objFSO.FileExists(strDir & "\.env") Then
         envFile.WriteLine "APP_PORT=3000"
         envFile.WriteLine "NODE_ENV=production"
         envFile.WriteLine "JWT_SECRET=nexusone-pos-jwt-secret-v3.1.1-change-in-production"
+        envFile.WriteLine "LICENSE_SECRET=NX1-L1C3NC3-S3CR3T-K3Y-2024-PROD"
         envFile.Close
         LogWrite "  .env creado con valores predeterminados"
     End If
