@@ -354,6 +354,16 @@ export default function Home() {
     };
   }, [currentUser]);
 
+  // ─── Feature Flags Store (atomic, zero unnecessary re-renders) ──
+  // MOVED BEFORE conditional returns to satisfy Rules of Hooks (React #310)
+  const loadFromLicense = useFeaturesStore((s) => s.loadFromLicense);
+  const featureFlags = useFeaturesStore((s) => s.flags);
+
+  // Sync license data into atomic features store
+  useEffect(() => {
+    if (license) loadFromLicense(license);
+  }, [license, loadFromLicense]);
+
   // Show loading screen
   if (loading || !authReady) {
     return (<div className="flex items-center justify-center min-h-screen"><div className="text-center space-y-3"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" /><p className="text-muted-foreground">Cargando Nexus One...</p></div></div>);
@@ -371,16 +381,7 @@ export default function Home() {
   const showWatermark = isTrial || !license?.features?.noWatermark;
   const canDevolutions = license?.features?.devolutions || false;
   const canCashClosing = license?.features?.cashClosing || false;
-
-  // ─── Fase 3a: Feature Flags Store (atomic, zero unnecessary re-renders) ──
-  const loadFromLicense = useFeaturesStore((s) => s.loadFromLicense);
-  const featureFlags = useFeaturesStore((s) => s.flags);
   const canFrequentCustomers = featureFlags['pos.basic'] || false;
-
-  // Sync license data into atomic features store
-  useEffect(() => {
-    if (license) loadFromLicense(license);
-  }, [license, loadFromLicense]);
 
   // Admin-only and role-gated tabs
   const ADMIN_ONLY_TABS = new Set(['users', 'config', 'license', 'backup', 'diagnostics', 'db-health', 'tax-reload']);
