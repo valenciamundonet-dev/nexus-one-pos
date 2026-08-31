@@ -1,9 +1,11 @@
 ' ==========================================================
-' NexusOne POS v3.1.2 - Instalador Profesional
+' NexusOne POS v3.1.3 - Instalador Profesional
 '
 ' Fix v3.1.1: RunHidden usa archivo .cmd temporal (rutas con espacios)
 ' Fix v3.1.2: npm install exit code 1 por warnings no es error real.
-'   Ahora verifica node_modules en vez de solo confiar en exit code.
+' Fix v3.1.3: prisma db push y next build tambien retornan 1 por
+'   avisos/updates. Ahora TODOS los pasos verifican resultados
+'   reales (archivos/carpetas) en vez de solo exit code.
 ' ==========================================================
 
 Set WshShell = CreateObject("WScript.Shell")
@@ -144,7 +146,7 @@ On Error GoTo 0
 
 ' ---- Confirmacion ----
 Dim bienvenida
-bienvenida = "Nexus One POS v3.1.2" & vbCrLf & vbCrLf & _
+bienvenida = "Nexus One POS v3.1.3" & vbCrLf & vbCrLf & _
   "Sistema Punto de Venta Profesional" & vbCrLf & _
   "Doble Moneda USD/Bs con tasa BCV" & vbCrLf & _
   "Impresion Termica ESC/POS" & vbCrLf & _
@@ -163,7 +165,7 @@ If resultado <> vbYes Then
 End If
 
 On Error Resume Next: objFSO.DeleteFile logFile: On Error GoTo 0
-LogWrite "=== INSTALACION LIMPIA v3.1.2 ==="
+LogWrite "=== INSTALACION LIMPIA v3.1.3 ==="
 LogWrite "Carpeta: " & strDir
 
 ' ============================================================
@@ -367,15 +369,29 @@ If Not prismaOk Then
 End If
 LogWrite "  Prisma client generado correctamente"
 
+' prisma db push - tambien retorna 1 por avisos de update
+' Verificamos que dev.db se creo correctamente
 ret = RunHidden("npx prisma db push --skip-generate")
 If ret <> 0 Then
-    LogWrite "  Reintentando prisma db push..."
-    ret = RunHidden("npx prisma db push --skip-generate")
+    ' Verificar si la BD ya existe antes de reintentar
+    If Not objFSO.FileExists(strDir & "\prisma\dev.db") Then
+        LogWrite "  Reintentando prisma db push..."
+        ret = RunHidden("npx prisma db push --skip-generate")
+    End If
 End If
-If ret <> 0 Then
-    WriteStatus 0, 8, "ERROR", "prisma db push fallo", 0, "FAIL", "prisma db push fallo. Revise install-log.txt."
-    MsgBox "La creacion de la base de datos fallo." & vbCrLf & "Revise install-log.txt", vbCritical, "ERROR - Base de datos"
+' Verificar que la BD se creo (independientemente del exit code)
+If Not objFSO.FileExists(strDir & "\prisma\dev.db") Then
+    WriteStatus 0, 8, "ERROR", "BD no se creo", 0, "FAIL", "prisma/dev.db no existe despues de db push"
+    MsgBox "La base de datos no se creo correctamente." & vbCrLf & "Revise install-log.txt", vbCritical, "ERROR - Base de datos"
     WScript.Quit
+End If
+On Error Resume Next
+dbSize = objFSO.GetFile(strDir & "\prisma\dev.db").Size
+On Error GoTo 0
+If ret <> 0 Then
+    LogWrite "  prisma db push retorno " & ret & " pero dev.db OK (" & dbSize & " bytes, avisos ignorados)"
+Else
+    LogWrite "  BD creada correctamente (" & dbSize & " bytes)"
 End If
 
 On Error Resume Next
@@ -493,16 +509,21 @@ End If
 WriteStatus 8, 8, "Compilando para produccion...", "next build (1-2 min)", 87, "", ""
 LogWrite "PASO 8: next build..."
 
+' next build - verificar que .next se creo correctamente
 If objFSO.FileExists(strDir & "\node_modules\.bin\next.cmd") Then
     ret = RunHidden("node_modules\.bin\next build")
 Else
     ret = RunHidden("npx --no-install next build")
 End If
 If ret <> 0 Then
-    LogWrite "  Reintentando con npx next build..."
-    ret = RunHidden("npx next build")
+    ' Verificar si .next ya existe antes de reintentar
+    If Not objFSO.FolderExists(strDir & "\.next") Then
+        LogWrite "  Reintentando con npx next build..."
+        ret = RunHidden("npx next build")
+    End If
 End If
-If ret <> 0 Then
+' Verificar compilacion por resultado real (carpeta .next)
+If Not objFSO.FolderExists(strDir & "\.next") Then
     WriteStatus 0, 8, "ERROR", "Compilacion fallo", 0, "FAIL", "next build fallo. Revise install-log.txt."
     MsgBox "La compilacion fallo." & vbCrLf & vbCrLf & _
       "Posibles soluciones:" & vbCrLf & _
@@ -510,6 +531,9 @@ If ret <> 0 Then
       "2. Revise install-log.txt" & vbCrLf & _
       "3. Actualice Node.js", vbCritical, "ERROR - Compilacion"
     WScript.Quit
+End If
+If ret <> 0 Then
+    LogWrite "  next build retorno " & ret & " pero .next OK (warnings ignorados)"
 End If
 
 Call RunHidden("xcopy /E /I /Q /Y .next\static .next\standalone\.next\static")
@@ -520,7 +544,7 @@ strDesktop = WshShell.SpecialFolders("Desktop")
 Set oLink = WshShell.CreateShortcut(strDesktop & "\NexusOne POS.lnk")
 oLink.TargetPath = strDir & "\INICIAR-TODO-OCULTO.vbs"
 oLink.WorkingDirectory = strDir
-oLink.Description = "Nexus One POS v3.1.2"
+oLink.Description = "Nexus One POS v3.1.3"
 oLink.IconLocation = "shell32.dll,14"
 oLink.Save
 On Error GoTo 0
@@ -543,4 +567,4 @@ finale = "INSTALACION COMPLETADA" & vbCrLf & vbCrLf & _
   "USUARIO: admin   CLAVE: admin" & vbCrLf & vbCrLf & _
   "Para detener: DETENER-TODO.bat"
 
-MsgBox finale, vbInformation, "Nexus One POS v3.1.2"
+MsgBox finale, vbInformation, "Nexus One POS v3.1.3"

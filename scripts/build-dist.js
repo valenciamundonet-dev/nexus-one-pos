@@ -36,6 +36,7 @@ const includePaths = [
   'INSTALAR-LIMPIO.vbs', 'PROGRESS.hta', 'INSTALAR.bat',
   'INICIAR-TODO.bat', 'INICIAR-TODO-OCULTO.vbs', 'DETENER-TODO.bat',
   'CREAR-ADMIN.bat', 'RESPALDAR-BD.bat', 'SALUD-SISTEMA.bat',
+  'GENERAR-LICENCIA.bat', 'GENERAR-LICENCIA.js',
   'caddy/Caddyfile', 'caddy/Caddyfile-mobile',
   'printer-agent/', 'README.md',
 ];
