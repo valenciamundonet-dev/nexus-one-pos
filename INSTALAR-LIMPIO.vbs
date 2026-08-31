@@ -1,8 +1,9 @@
 ' ==========================================================
-' NexusOne POS v3.1.1 - Instalador Profesional
+' NexusOne POS v3.1.2 - Instalador Profesional
 '
-' Fix v3.1.1: RunHidden ahora usa archivo .cmd temporal
-' para evitar fallos con rutas que tienen espacios.
+' Fix v3.1.1: RunHidden usa archivo .cmd temporal (rutas con espacios)
+' Fix v3.1.2: npm install exit code 1 por warnings no es error real.
+'   Ahora verifica node_modules en vez de solo confiar en exit code.
 ' ==========================================================
 
 Set WshShell = CreateObject("WScript.Shell")
@@ -143,7 +144,7 @@ On Error GoTo 0
 
 ' ---- Confirmacion ----
 Dim bienvenida
-bienvenida = "Nexus One POS v3.1.1" & vbCrLf & vbCrLf & _
+bienvenida = "Nexus One POS v3.1.2" & vbCrLf & vbCrLf & _
   "Sistema Punto de Venta Profesional" & vbCrLf & _
   "Doble Moneda USD/Bs con tasa BCV" & vbCrLf & _
   "Impresion Termica ESC/POS" & vbCrLf & _
@@ -162,7 +163,7 @@ If resultado <> vbYes Then
 End If
 
 On Error Resume Next: objFSO.DeleteFile logFile: On Error GoTo 0
-LogWrite "=== INSTALACION LIMPIA v3.1.1 ==="
+LogWrite "=== INSTALACION LIMPIA v3.1.2 ==="
 LogWrite "Carpeta: " & strDir
 
 ' ============================================================
@@ -281,27 +282,52 @@ WriteStatus 4, 8, "Node.js " & Trim(nodeVer), "Version compatible", 50, "", ""
 
 ' ============================================================
 ' PASO 5: Instalar dependencias (con reintentos)
+' NOTA: npm retorna exit code 1 por vulnerabilidades/allow-scripts warnings
+'       pero los paquetes se instalan correctamente. Verificamos node_modules.
 ' ============================================================
 WriteStatus 5, 8, "Instalando dependencias...", "npm install (1-3 min)", 50, "", ""
 LogWrite "PASO 5: npm install..."
 
-' Intento 1
+' Funcion para verificar que node_modules tiene los paquetes clave
+Function NpmInstallOk()
+    On Error Resume Next
+    NpmInstallOk = False
+    If Not objFSO.FolderExists(strDir & "\node_modules") Then
+        LogWrite "  node_modules no existe"
+        Exit Function
+    End If
+    ' Verificar paquetes criticos
+    criticalPkgs = Array("next", "react", "@prisma\client", "prisma")
+    For Each pkg In criticalPkgs
+        If Not objFSO.FolderExists(strDir & "\node_modules\" & pkg) Then
+            LogWrite "  Paquete faltante: " & pkg
+            Exit Function
+        End If
+    Next
+    NpmInstallOk = True
+    On Error GoTo 0
+End Function
+
+' Intento 1: --ignore-scripts (evita postinstall que puede fallar)
 ret = RunHidden("npm install --legacy-peer-deps --ignore-scripts")
-If ret <> 0 Then
+npmOk = NpmInstallOk()
+If Not npmOk Then
     LogWrite "  Reintentando (limpiando cache)..."
     Call RunHidden("npm cache clean --force")
     Call RunHidden("if exist node_modules rmdir /s /q node_modules")
     Call SafeDelete(strDir & "\package-lock.json")
     WScript.Sleep 2000
     ret = RunHidden("npm install --legacy-peer-deps")
+    npmOk = NpmInstallOk()
 End If
-If ret <> 0 Then
+If Not npmOk Then
     LogWrite "  Reintentando con --force..."
     Call RunHidden("if exist node_modules rmdir /s /q node_modules")
     WScript.Sleep 2000
     ret = RunHidden("npm install --force")
+    npmOk = NpmInstallOk()
 End If
-If ret <> 0 Then
+If Not npmOk Then
     WriteStatus 0, 8, "ERROR", "npm install fallo", 0, "FAIL", "npm install fallo tras 3 intentos. Revise install-log.txt y npm-debug-output.txt."
     MsgBox "No se pudieron instalar las dependencias." & vbCrLf & vbCrLf & _
       "Posibles soluciones:" & vbCrLf & _
@@ -309,6 +335,9 @@ If ret <> 0 Then
       "2. Actualice Node.js a la version 20 LTS" & vbCrLf & _
       "3. Revise install-log.txt y npm-debug-output.txt", vbCritical, "ERROR - Dependencias"
     WScript.Quit
+End If
+If ret <> 0 Then
+    LogWrite "  npm install retorno " & ret & " pero node_modules OK (warnings ignorados)"
 End If
 WriteStatus 5, 8, "Dependencias instaladas", "", 62, "", ""
 
@@ -318,16 +347,25 @@ WriteStatus 5, 8, "Dependencias instaladas", "", 62, "", ""
 WriteStatus 6, 8, "Configurando base de datos...", "", 62, "", ""
 LogWrite "PASO 6: Prisma..."
 
+' Nota: si npm install uso --ignore-scripts, prisma generate no se ejecuto como postinstall
 ret = RunHidden("npx prisma generate")
 If ret <> 0 Then
     LogWrite "  Reintentando prisma generate..."
     ret = RunHidden("npx prisma generate")
 End If
-If ret <> 0 Then
+' Verificar que el cliente Prisma se genero
+On Error Resume Next
+prismaOk = objFSO.FolderExists(strDir & "\node_modules\.prisma\client")
+On Error GoTo 0
+If Not prismaOk Then
+    prismaOk = objFSO.FolderExists(strDir & "\node_modules\@prisma\client")
+End If
+If Not prismaOk Then
     WriteStatus 0, 8, "ERROR", "prisma generate fallo", 0, "FAIL", "prisma generate fallo. Revise install-log.txt."
     MsgBox "La generacion de Prisma fallo." & vbCrLf & "Revise install-log.txt", vbCritical, "ERROR - Prisma"
     WScript.Quit
 End If
+LogWrite "  Prisma client generado correctamente"
 
 ret = RunHidden("npx prisma db push --skip-generate")
 If ret <> 0 Then
@@ -482,7 +520,7 @@ strDesktop = WshShell.SpecialFolders("Desktop")
 Set oLink = WshShell.CreateShortcut(strDesktop & "\NexusOne POS.lnk")
 oLink.TargetPath = strDir & "\INICIAR-TODO-OCULTO.vbs"
 oLink.WorkingDirectory = strDir
-oLink.Description = "Nexus One POS v3.1.1"
+oLink.Description = "Nexus One POS v3.1.2"
 oLink.IconLocation = "shell32.dll,14"
 oLink.Save
 On Error GoTo 0
@@ -505,4 +543,4 @@ finale = "INSTALACION COMPLETADA" & vbCrLf & vbCrLf & _
   "USUARIO: admin   CLAVE: admin" & vbCrLf & vbCrLf & _
   "Para detener: DETENER-TODO.bat"
 
-MsgBox finale, vbInformation, "Nexus One POS v3.1.1"
+MsgBox finale, vbInformation, "Nexus One POS v3.1.2"

@@ -1,4 +1,4 @@
-# Caddyfile - NexusOne POS
+# Caddyfile - Nexus One POS
 # HTTPS con certificado CA interno de Caddy
 # El navegador mostrara el candado verde (sin advertencias)
 # porque la CA de Caddy se instala en Windows con 'caddy trust'

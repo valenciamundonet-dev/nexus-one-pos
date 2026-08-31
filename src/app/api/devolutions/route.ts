@@ -117,38 +117,11 @@ export async function POST(req: NextRequest) {
         include: { items: true, sale: true },
       });
 
-      // Restaurar stock + crear movimiento Kardex
+      // Restaurar stock
       for (const item of body.items) {
-        const qty = parseFloat(item.quantity) || 0;
-        const updated = await tx.product.update({
+        await tx.product.update({
           where: { id: item.productId },
-          data: { stock: { increment: qty } },
-        });
-        // Obtener ultimo balance para calcular Kardex
-        const lastMovement = await tx.inventoryMovement.findFirst({
-          where: { productId: item.productId },
-          orderBy: { createdAt: 'desc' },
-        });
-        const prevQty = lastMovement?.balanceQty || 0;
-        const prevTotalCost = lastMovement?.balanceTotalCost || 0;
-        const prevAvgCost = lastMovement?.balanceAvgCost || Number(updated.cost) || 0;
-        const newQty = prevQty + qty;
-        const newTotalCost = prevTotalCost + (qty * prevAvgCost);
-        const newAvgCost = newQty > 0 ? newTotalCost / newQty : 0;
-        await tx.inventoryMovement.create({
-          data: {
-            productId: item.productId,
-            movementType: 'devolucion',
-            concept: `Devolucion Venta #${body.saleId}`,
-            quantity: qty,
-            absQuantity: qty,
-            unitCost: prevAvgCost,
-            totalCost: qty * prevAvgCost,
-            balanceQty: newQty,
-            balanceTotalCost: newTotalCost,
-            balanceAvgCost: newAvgCost,
-            referenceId: body.saleId,
-          },
+          data: { stock: { increment: parseFloat(item.quantity) } },
         });
       }
 

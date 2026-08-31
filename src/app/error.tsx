@@ -10,7 +10,7 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[NexusOne Error]", error);
+    console.error("[Nexus One POS] Error de aplicacion:", error);
   }, [error]);
 
   return (
@@ -21,77 +21,84 @@ export default function Error({
       justifyContent: "center",
       background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
       fontFamily: "'Segoe UI', system-ui, sans-serif",
-      padding: 20,
     }}>
       <div style={{
         background: "#1e293b",
         border: "1px solid #334155",
-        borderRadius: 16,
-        padding: "40px 32px",
-        maxWidth: 420,
+        borderRadius: "12px",
+        padding: "40px",
+        maxWidth: "460px",
         width: "100%",
         textAlign: "center",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
       }}>
         <div style={{
-          width: 56,
-          height: 56,
-          borderRadius: 14,
+          width: "56px",
+          height: "56px",
           background: "linear-gradient(135deg, #ef4444, #dc2626)",
+          borderRadius: "14px",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           margin: "0 auto 20px",
-          fontSize: 24,
-          color: "white",
+          fontSize: "24px",
+          color: "#fff",
         }}>
           !
         </div>
-        <h2 style={{ color: "#f1f5f9", fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
-          Error en NexusOne POS
+        <h2 style={{ color: "#f1f5f9", fontSize: "18px", marginBottom: "8px" }}>
+          Error inesperado
         </h2>
-        <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 6, lineHeight: 1.5 }}>
-          Ocurrio un error inesperado. Esto puede ser temporal.
+        <p style={{ color: "#94a3b8", fontSize: "13px", marginBottom: "24px", lineHeight: "1.5" }}>
+          Ocurrio un error al cargar la aplicacion.
+          Esto puede deberse a una interrupcion del servidor.
         </p>
-        <p style={{ color: "#64748b", fontSize: 11, marginBottom: 24, fontFamily: "monospace" }}>
-          {error.message || "Error desconocido"}
-        </p>
-        <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+        {error?.message && (
+          <p style={{
+            color: "#fca5a5",
+            fontSize: "11px",
+            fontFamily: "monospace",
+            background: "#0f172a",
+            padding: "8px 12px",
+            borderRadius: "6px",
+            marginBottom: "20px",
+            wordBreak: "break-all",
+            textAlign: "left",
+          }}>
+            {error.message}
+          </p>
+        )}
+        <div style={{ display: "flex", gap: "10px", justifyContent: "center" }}>
           <button
-            onClick={reset}
+            onClick={() => reset()}
             style={{
-              padding: "10px 24px",
-              borderRadius: 10,
-              border: "1px solid #475569",
+              padding: "10px 20px",
+              borderRadius: "8px",
+              border: "1px solid #334155",
               background: "transparent",
               color: "#e2e8f0",
-              fontSize: 13,
-              fontWeight: 600,
               cursor: "pointer",
+              fontSize: "13px",
             }}
           >
             Reintentar
           </button>
           <button
-            onClick={() => window.location.href = "/"}
+            onClick={() => window.location.reload()}
             style={{
-              padding: "10px 24px",
-              borderRadius: 10,
+              padding: "10px 20px",
+              borderRadius: "8px",
               border: "none",
               background: "linear-gradient(135deg, #3b82f6, #2563eb)",
-              color: "white",
-              fontSize: 13,
-              fontWeight: 600,
+              color: "#fff",
               cursor: "pointer",
+              fontSize: "13px",
+              fontWeight: "600",
             }}
           >
-            Recargar
+            Recargar Pagina
           </button>
         </div>
-        {error.digest && (
-          <p style={{ color: "#475569", fontSize: 10, marginTop: 16 }}>
-            ID: {error.digest}
-          </p>
-        )}
       </div>
     </div>
   );

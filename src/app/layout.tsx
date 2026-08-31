@@ -7,7 +7,7 @@ import { getAppVersion } from "@/lib/app-version";
 const APP_VERSION = getAppVersion();
 
 export const metadata: Metadata = {
-  title: `NexusOne POS v${APP_VERSION}`,
+  title: `Nexus One POS v${APP_VERSION}`,
   description: "Sistema Punto de Venta - Venezuela | Doble Moneda $/Bs",
   manifest: "/manifest.json",
 };
@@ -38,15 +38,6 @@ export default function RootLayout({
           {children}
           <Toaster position="top-right" richColors />
         </ThemeProvider>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js');
-              }
-            `,
-          }}
-        />
       </body>
     </html>
   );

@@ -1,5 +1,5 @@
 /**
- * NexusOne POS — Local-First Database v1.1
+ * Nexus One POS — Local-First Database v1.1
  * 
  * Capa de persistencia ultra-resiliente con tolerancia a fallos.
  * 
@@ -85,7 +85,7 @@ export class NexusLocalDB {
   private lazyInit(): void {
     if (!this._initPromise) {
       this._initPromise = this._doInit().catch(err => {
-        console.error('[NexusOne DB] Init failed:', err);
+        console.error('[Nexus One DB] Init failed:', err);
         this._initPromise = null; // Permitir reintento
       });
     }
@@ -95,7 +95,7 @@ export class NexusLocalDB {
     try {
       await this.enableWALMode();
     } catch (err) {
-      console.warn('[NexusOne DB] WAL mode setup deferred:', err);
+      console.warn('[Nexus One DB] WAL mode setup deferred:', err);
     }
     this.startHealthMonitor();
     this.setupGracefulShutdown();
@@ -122,9 +122,9 @@ export class NexusLocalDB {
       await this.client.$executeRawUnsafe('PRAGMA cache_size = -8000;'); // 8MB cache
       await this.client.$executeRawUnsafe('PRAGMA temp_store = MEMORY;');
       this.walEnabled = true;
-      console.log('[NexusOne DB] WAL mode enabled with 8MB cache');
+      console.log('[Nexus One DB] WAL mode enabled with 8MB cache');
     } catch (err) {
-      console.error('[NexusOne DB] Failed to enable WAL mode:', err);
+      console.error('[Nexus One DB] Failed to enable WAL mode:', err);
     }
   }
 
@@ -177,7 +177,7 @@ export class NexusLocalDB {
       this.lastCheckpoint = Date.now();
       this.writeCount = 0;
     } catch (err) {
-      console.warn('[NexusOne DB] WAL checkpoint failed:', err);
+      console.warn('[Nexus One DB] WAL checkpoint failed:', err);
     }
   }
 
@@ -241,9 +241,9 @@ export class NexusLocalDB {
   async emergencyBackup(reason: string): Promise<void> {
     try {
       await this.checkpointWAL();
-      console.log(`[NexusOne DB] Emergency backup triggered: ${reason}`);
+      console.log(`[Nexus One DB] Emergency backup triggered: ${reason}`);
     } catch (err) {
-      console.error(`[NexusOne DB] Emergency backup failed:`, err);
+      console.error(`[Nexus One DB] Emergency backup failed:`, err);
     }
   }
 
@@ -254,13 +254,13 @@ export class NexusLocalDB {
     const shutdown = async () => {
       if (this.isShuttingDown) return;
       this.isShuttingDown = true;
-      console.log('[NexusOne DB] Graceful shutdown: flushing WAL...');
+      console.log('[Nexus One DB] Graceful shutdown: flushing WAL...');
       try {
         await this.client.$executeRawUnsafe('PRAGMA wal_checkpoint(TRUNCATE);');
         await this.client.$disconnect();
-        console.log('[NexusOne DB] Clean shutdown complete');
+        console.log('[Nexus One DB] Clean shutdown complete');
       } catch (err) {
-        console.error('[NexusOne DB] Shutdown error:', err);
+        console.error('[Nexus One DB] Shutdown error:', err);
       }
     };
 

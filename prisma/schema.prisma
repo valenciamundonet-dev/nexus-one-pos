@@ -36,7 +36,6 @@ model Product {
   unitsPerBox       Int        @default(0)
   boxPrice          Float      @default(0)
   boxMarginPercent  Float      @default(0)
-  unitsPerPackage   Int        @default(0)  // Unidades por paquete para venta bulk
   // Gran Mayor (GM) - precio basado en tasa Euro/USDT vs BCV
   granMayorPrice    Float      @default(0)
   isGranMayor       Boolean    @default(false)
@@ -121,7 +120,6 @@ model Sale {
   sellerRole        String       @default("")
   isCredit          Boolean      @default(false)
   creditPaid        Float        @default(0)
-  creditStatus      String       @default("PENDIENTE")  // PENDIENTE, PARCIAL, LIQUIDADO
   creditDays        Int        @default(30)
   creditDueDate     DateTime?
   notes             String       @default("")
@@ -163,7 +161,6 @@ model Settings {
   theme           String @default("blue")
   // Ticket printer settings
   ticketFontSize       Int    @default(8)
-  ticketHeaderFontSize Int    @default(12)  // Tamaño fuente header (Small=10, Med=12, Large=16, Custom)
   ticketFontFamily     String @default("monospace")
   ticketHeaderMsg      String @default("")
   ticketFooterMsg      String @default("Gracias por su compra!")
@@ -231,7 +228,7 @@ model License {
   id                String   @id @default(cuid())
   machineId         String   @unique
   licenseKey        String   @default("")
-  licenseType       String   @default("trial")  // trial, basico, profesional
+  licenseType       String   @default("trial")
   activatedAt       DateTime @default(now())
   expiresAt         DateTime
   maxProducts       Int      @default(30)
@@ -247,13 +244,6 @@ model License {
   ownerPhone        String   @default("")
   ownerRif          String   @default("")
   notes             String   @default("")
-  // 3-plan fields
-  planName          String   @default("TRIAL")          // TRIAL, BASICO, PROFESIONAL
-  planPrice         Float    @default(0)             // monthly price in USD
-  planMaxProducts   Int      @default(30)
-  planMaxUsers      Int      @default(1)
-  planMaxDailySales Int      @default(15)
-  planFeatures      String   @default("{}")          // JSON: enabled features per plan
   updatedAt         DateTime @updatedAt
 }
 
@@ -337,7 +327,6 @@ model Supplier {
   notes      String     @default("")
   isActive   Boolean    @default(true)
   purchases  Purchase[]
-  payables   AccountPayable[]
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
@@ -355,7 +344,6 @@ model Purchase {
   exchangeRate Float          @default(0)
   notes        String         @default("")
   items        PurchaseItem[]
-  payables     AccountPayable[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt
 
@@ -588,46 +576,4 @@ model Expense {
   @@index([date])
   @@index([categoryId])
   @@index([userId])
-}
-
-// ========== CUENTAS POR PAGAR (CxP) ==========
-model AccountPayable {
-  id              String               @id @default(cuid())
-  supplierId      String?
-  supplier        Supplier?            @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-  purchaseId      String?
-  purchase        Purchase?            @relation(fields: [purchaseId], references: [id], onDelete: SetNull)
-  description     String
-  totalAmount     Float
-  paidAmount      Float                @default(0)
-  balance         Float
-  status          String               @default("PENDIENTE") // PENDIENTE, PARCIAL, PAGADA
-  dueDate         DateTime?
-  paymentTerms    String               @default("")
-  notes           String               @default("")
-  payments        AccountPayablePayment[]
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
-
-  @@index([supplierId])
-  @@index([status])
-  @@index([dueDate])
-}
-
-model AccountPayablePayment {
-  id                String         @id @default(cuid())
-  accountPayableId  String
-  accountPayable    AccountPayable @relation(fields: [accountPayableId], references: [id], onDelete: Cascade)
-  date              DateTime       @default(now())
-  amount            Float
-  exchangeRate      Float          @default(0)
-  amountBs          Float          @default(0)
-  method            String         @default("efectivo")
-  reference         String         @default("")
-  notes             String         @default("")
-  createdBy         String         @default("")
-  createdAt         DateTime       @default(now())
-
-  @@index([accountPayableId])
-  @@index([date])
 }

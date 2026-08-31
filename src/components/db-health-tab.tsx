@@ -290,7 +290,7 @@ export default function DbHealthTab() {
       <Card>
         <CardContent className="p-4 text-xs text-muted-foreground space-y-1">
           <p className="font-medium text-foreground">Acerca del Motor de Base de Datos</p>
-          <p>NexusOne usa SQLite con WAL (Write-Ahead Logging) para permitir lecturas concurrentes sin bloqueos. Cada 1000 escrituras se ejecuta un checkpoint automatico. Si el WAL supera 5MB se fuerza un checkpoint. El modo synchronous=NORMAL ofrece un balance entre seguridad y rendimiento para operaciones locales.</p>
+          <p>Nexus One usa SQLite con WAL (Write-Ahead Logging) para permitir lecturas concurrentes sin bloqueos. Cada 1000 escrituras se ejecuta un checkpoint automatico. Si el WAL supera 5MB se fuerza un checkpoint. El modo synchronous=NORMAL ofrece un balance entre seguridad y rendimiento para operaciones locales.</p>
         </CardContent>
       </Card>
     </div>

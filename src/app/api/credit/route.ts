@@ -58,12 +58,9 @@ export async function GET(req: NextRequest) {
     });
 
     // Build map of clientId -> actual debt from sales
-    // Credit sales with status LIQUIDADO are excluded unless ?all=true
     const clientDebtMap = new Map<string, number>();
     for (const s of allCreditSales) {
       if (!s.clientId) continue;
-      // Skip LIQUIDADO sales unless all=true
-      if (!all && s.creditStatus === 'LIQUIDADO') continue;
       const remaining = (s.total || 0) - (s.creditPaid || 0);
       if (remaining > 0.01) {
         clientDebtMap.set(s.clientId, (clientDebtMap.get(s.clientId) || 0) + remaining);
@@ -102,7 +99,7 @@ export async function GET(req: NextRequest) {
     // Traer TODAS las ventas a credito de esos clientes en 1 sola query
     const allCreditSalesDetail = await db.sale.findMany({
       where: { clientId: { in: clientIdsWithDebt }, isCredit: true },
-      select: { clientId: true, id: true, total: true, totalBs: true, creditPaid: true, creditStatus: true, creditDays: true, creditDueDate: true, date: true, exchangeRate: true },
+      select: { clientId: true, id: true, total: true, totalBs: true, creditPaid: true, creditDays: true, creditDueDate: true, date: true, exchangeRate: true },
       orderBy: { date: 'desc' },
     });
 
@@ -132,7 +129,6 @@ export async function GET(req: NextRequest) {
           date: s.date,
           total: s.total || 0,
           paid: s.creditPaid || 0,
-          creditStatus: s.creditStatus || 'PENDIENTE',
           creditDays: s.creditDays,
           creditDueDate: s.creditDueDate,
           remaining: Number(((s.total || 0) - (s.creditPaid || 0)).toFixed(2)),
@@ -185,19 +181,11 @@ export async function POST(req: NextRequest) {
 
       const newPaid = Number(freshSale.creditPaid || 0) + txAmount;
 
-      // Determine credit status
-      let creditStatus = 'PARCIAL';
-      if (newPaid >= Number(freshSale.total || 0) - 0.01) {
-        creditStatus = 'LIQUIDADO';
-      } else if (newPaid <= 0.01) {
-        creditStatus = 'PENDIENTE';
-      }
-
       // Create payment record - usar SIEMPRE el clientId de la venta, no del body
       const newPayment = await tx.creditPayment.create({
         data: {
           saleId: body.saleId,
-          clientId: sale.clientId || null,
+          clientId: sale.clientId || null, // Siempre usar el de la venta, nunca el del body
           date: new Date(),
           amount: txAmount,
           exchangeRate,
@@ -209,13 +197,10 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Update sale creditPaid + creditStatus
+      // Update sale creditPaid
       await tx.sale.update({
         where: { id: body.saleId },
-        data: {
-          creditPaid: Number((Number(freshSale.creditPaid || 0) + txAmount).toFixed(2)),
-          creditStatus,
-        },
+        data: { creditPaid: Number((Number(freshSale.creditPaid || 0) + txAmount).toFixed(2)) },
       });
 
       // Update client credit balance

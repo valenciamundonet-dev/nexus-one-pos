@@ -1,5 +1,5 @@
 /**
- * ticket-printer.ts — Ticket Engine v8.0 (NexusOne POS)
+ * ticket-printer.ts — Ticket Engine v8.0 (Nexus One POS)
  *
  * MODO DUAL: ESC/POS via Agente Local + Fallback HTML
  * ─────────────────────────────────────────────────

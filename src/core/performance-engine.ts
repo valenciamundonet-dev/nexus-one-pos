@@ -1,5 +1,5 @@
 /**
- * NexusOne POS — Performance Engine v1.0
+ * Nexus One POS — Performance Engine v1.0
  * 
  * Monitoreo de rendimiento adaptativo para Windows 10 + 4GB RAM.
  * Objetivo: 60-120 FPS estables en la UI del POS.
@@ -69,7 +69,7 @@ export class PerformanceEngine {
     // Apply initial CSS optimizations for 4GB RAM target
     this.applyOptimizations();
 
-    console.log(`[NexusOne Perf] Monitoring started (target: ${this.config.targetFps} FPS)`);
+    console.log(`[Nexus One Perf] Monitoring started (target: ${this.config.targetFps} FPS)`);
   }
 
   // ─── Stop monitoring ───────────────────────────────────────
@@ -79,7 +79,7 @@ export class PerformanceEngine {
       this.rafId = null;
     }
     this.isRunning = false;
-    console.log(`[NexusOne Perf] Monitoring stopped. Total frames: ${this.totalFrames}, dropped: ${this.droppedFrames}`);
+    console.log(`[Nexus One Perf] Monitoring stopped. Total frames: ${this.totalFrames}, dropped: ${this.droppedFrames}`);
   }
 
   // ─── Main loop ─────────────────────────────────────────────
@@ -159,11 +159,11 @@ export class PerformanceEngine {
     if (shouldActivate && !this.adaptiveQualityActive) {
       this.adaptiveQualityActive = true;
       document.documentElement.classList.add('nexus-adaptive-quality');
-      console.warn(`[NexusOne Perf] FPS dropped to ${Math.round(fps)}. Adaptive quality ON.`);
+      console.warn(`[Nexus One Perf] FPS dropped to ${Math.round(fps)}. Adaptive quality ON.`);
     } else if (!shouldActivate && this.adaptiveQualityActive) {
       this.adaptiveQualityActive = false;
       document.documentElement.classList.remove('nexus-adaptive-quality');
-      console.log(`[NexusOne Perf] FPS recovered to ${Math.round(fps)}. Adaptive quality OFF.`);
+      console.log(`[Nexus One Perf] FPS recovered to ${Math.round(fps)}. Adaptive quality OFF.`);
     }
   }
 
@@ -186,7 +186,7 @@ export class PerformanceEngine {
     const style = document.createElement('style');
     style.id = 'nexus-perf-hints';
     style.textContent = `
-      /* NexusOne Performance Hints — Windows 10 + 4GB RAM */
+      /* Nexus One Performance Hints — Windows 10 + 4GB RAM */
       .nexus-gpu-layer {
         will-change: var(--nexus-will-change);
         contain: var(--nexus-contain);

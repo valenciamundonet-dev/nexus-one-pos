@@ -410,41 +410,12 @@ export async function GET(req: NextRequest) {
 
     const roleBreakdown = Object.values(roleMap).sort((a, b) => b.totalBs - a.totalBs);
 
-    // ===== DEVOLUCIONES Y GASTOS DEL PERIODO =====
-    const devolutions = await db.devolution.findMany({
-      where: { date: { gte: start, lte: end } },
-    });
-    const totalDevolutionsUsd = devolutions.reduce((s, d) => s + d.totalUsd, 0);
-    const totalDevolutionsBs = devolutions.reduce((s, d) => s + d.totalBs, 0);
-    const devolutionsCount = devolutions.length;
-
-    const expenses = await db.expense.findMany({
-      where: { date: { gte: start, lte: end } },
-    });
-    const totalExpensesUsd = expenses.reduce((s, e) => s + e.amount, 0);
-    const totalExpensesBs = expenses.reduce((s, e) => s + e.amountBs, 0);
-    const expensesCount = expenses.length;
-
-    // Ventas Netas = Brutas - Devoluciones - Descuentos
-    const totalDiscounts = sales.reduce((s, v) => s + (v.discount || 0), 0);
-    const netSalesUsd = grossTotalSales - totalDevolutionsUsd - totalDiscounts;
-    const netSalesBs = grossTotalBs - totalDevolutionsBs - (totalDiscounts * currentBcvRate);
-
     return NextResponse.json({
       sales,
       totalSales,
       totalBs,
       grossTotalSales,
       grossTotalBs,
-      netSalesUsd,
-      netSalesBs,
-      totalDevolutionsUsd,
-      totalDevolutionsBs,
-      devolutionsCount,
-      totalExpensesUsd,
-      totalExpensesBs,
-      expensesCount,
-      totalDiscounts,
       salesCount: sales.length,
       paymentBreakdown,
       topProducts,

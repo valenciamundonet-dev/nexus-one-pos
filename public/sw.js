@@ -1,4 +1,4 @@
-const CACHE_NAME = 'myecommerce-v2.0.0';
+const CACHE_NAME = 'nexus-one-pos-v2.9.81';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -12,9 +12,10 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
+  // Limpiar TODOS los caches viejos (incluyendo versiones anteriores y el old 'myecommerce' cache)
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
+      Promise.all(keys.map((key) => caches.delete(key)))
     )
   );
   self.clients.claim();
@@ -22,7 +23,6 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  // No cachear APIs para evitar datos stale entre cajeros
   if (event.request.url.includes('/api/')) return;
   event.respondWith(
     fetch(event.request)

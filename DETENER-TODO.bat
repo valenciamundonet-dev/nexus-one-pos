@@ -1,12 +1,12 @@
 @echo off
 chcp 65001 >nul 2>&1
-title NexusOne POS v2.9.80 - Detener
+title Nexus One POS v2.9.80 - Detener
 
 cd /d "%~dp0"
 
 echo.
 echo  ========================================================
-echo     NexusOne POS v2.9.80 - Deteniendo todos los servicios
+echo     Nexus One POS v2.9.80 - Deteniendo todos los servicios
 echo  ========================================================
 echo.
 
@@ -38,7 +38,7 @@ if %ERRORLEVEL% EQU 0 (
 )
 
 echo.
-echo  NexusOne POS detenido.
-echo  Para reiniciar: doble clic en "NexusOne POS" del escritorio.
+echo  Nexus One POS detenido.
+echo  Para reiniciar: doble clic en "Nexus One POS" del escritorio.
 echo.
 timeout /t 3

@@ -1,5 +1,5 @@
 /**
- * NexusOne POS — Atomic Cart Store v1.0
+ * Nexus One POS — Atomic Cart Store v1.0
  * 
  * Arquitectura de Estado Atómico con Zustand v5.
  * Cada selector es atómico: los componentes solo se re-renderizan

@@ -1,5 +1,5 @@
 /**
- * NexusOne POS — Diagnostics API v1.0
+ * Nexus One POS — Diagnostics API v1.0
  * 
  * Endpoint unificado para diagnostico de perifericos.
  * Expone el estado del Circuit Breaker de cada periferico,

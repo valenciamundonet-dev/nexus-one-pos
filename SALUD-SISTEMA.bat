@@ -1,13 +1,13 @@
 @echo off
 chcp 65001 >nul 2>&1
-title NexusOne POS v2.9.80 - Salud del Sistema
+title Nexus One POS v2.9.80 - Salud del Sistema
 color 0B
 
 cd /d "%~dp0"
 
 echo.
 echo  ╔══════════════════════════════════════════════════════════════╗
-echo  ║          NexusOne POS v2.9.80 - Diagnostico del Sistema    ║
+echo  ║          Nexus One POS v2.9.80 - Diagnostico del Sistema    ║
 echo  ╚══════════════════════════════════════════════════════════════╝
 echo.
 
@@ -20,7 +20,7 @@ setlocal enabledelayedexpansion
 set "ISSUES=0"
 
 :: Leer version desde package.json
-set "APP_VERSION=2.9.73"
+set "APP_VERSION=2.9.80"
 if exist "package.json" (
     for /f "tokens=2 delims=:, " %%a in ('findstr /R /C:"\"version\"" package.json') do (
         set "APP_VERSION=%%~a"
@@ -173,7 +173,7 @@ call :showRow "Espacio Disco" "Libre: %DISK_FREE% bytes" "[  OK  ]"
 :: ============================================================
 :: 8. Version
 :: ============================================================
-call :showRow "Version App" "NexusOne POS %APP_VERSION%" "[  OK  ]"
+call :showRow "Version App" "Nexus One POS %APP_VERSION%" "[  OK  ]"
 
 :: ============================================================
 :: 9. Printer Agent

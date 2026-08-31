@@ -1,4 +1,4 @@
-// Sistema de logging centralizado para NexusOne
+// Sistema de logging centralizado para Nexus One
 // Escribe logs en /public/logs/system.log (accesible via /api/logs)
 // Los errores se guardan en archivo y se pueden consultar desde la app
 

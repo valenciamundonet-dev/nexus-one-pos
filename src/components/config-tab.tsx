@@ -26,7 +26,6 @@ interface Settings {
   maxDiscountPct: number;
   theme: string;
   ticketFontSize: number;
-  ticketHeaderFontSize: number;
   ticketFontFamily: string;
   ticketHeaderMsg: string;
   ticketFooterMsg: string;
@@ -469,7 +468,6 @@ export default function ConfigTab({ settings, onSettingsChange, licenseFeatures 
     const val = settings.ticketFontSize || preset.baseFontSize;
     return Math.min(val, preset.maxFontSize);
   });
-  const [ticketHeaderFontSize, setTicketHeaderFontSize] = useState(settings.ticketHeaderFontSize || 12);
   const [ticketFontFamily, setTicketFontFamily] = useState(settings.ticketFontFamily || 'monospace');
   const [ticketHeaderMsg, setTicketHeaderMsg] = useState(settings.ticketHeaderMsg || '');
   const [ticketFooterMsg, setTicketFooterMsg] = useState(settings.ticketFooterMsg || 'Gracias por su compra!');
@@ -655,7 +653,6 @@ export default function ConfigTab({ settings, onSettingsChange, licenseFeatures 
         theme: theme || 'blue',
         themeMode: themeMode || 'light',
         ticketFontSize,
-        ticketHeaderFontSize,
         ticketFontFamily,
         ticketHeaderMsg,
         ticketFooterMsg,
@@ -1287,20 +1284,6 @@ export default function ConfigTab({ settings, onSettingsChange, licenseFeatures 
                 Ancho util: {getPreset(ticketPaperWidth).contentMm}mm.
                 ~{calcMaxChars(getPreset(ticketPaperWidth).contentMm, ticketFontSize)} chars por linea.
               </p>
-            </div>
-            <div>
-              <Label>Fuente Header (nombre tienda)</Label>
-              <select
-                value={ticketHeaderFontSize}
-                onChange={(e) => setTicketHeaderFontSize(parseInt(e.target.value))}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              >
-                <option value={10}>Pequeno (10px)</option>
-                <option value={12}>Mediano (12px)</option>
-                <option value={16}>Grande (16px)</option>
-                <option value={20}>Extra Grande (20px)</option>
-              </select>
-              <p className="text-xs text-muted-foreground mt-1">Solo aplica al encabezado (nombre, rif, direccion).</p>
             </div>
             <div>
               <Label>Tipo de letra</Label>

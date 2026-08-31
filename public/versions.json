@@ -35,5 +35,5 @@
   {"version":"2.9.64","nombre":"v2.9.64","notas":"Mejora en VersionChecker: indicador de ultima verificacion exitosa, optimizacion del flujo de actualizacion","fecha":"2026-08-17","tipo":"estable"},
   {"version":"2.9.65","nombre":"v2.9.65","notas":"Nuevo diseno visual del carrito: imagen de fondo SVG, icono de carrito en header, estado vacio mejorado con ilustracion y texto descriptivo","fecha":"2026-08-17","tipo":"estable"},
   {"version":"2.9.66","nombre":"v2.9.66","notas":"Fix critico: actualizacion online ahora ejecuta npm run build para reconstruir la app. Auto-recarga de pagina tras actualizar.","fecha":"2026-08-17","tipo":"estable"},
-  {"version":"3.0.0","nombre":"v3.0.0","notas":"VERSION PRODUCCION: Fix critico React #310 (Objects not valid as React child). ErrorBoundary top-level + try-catch de seguridad en render + global-error.tsx + defensive type guards en licencia y banners. Primera version estable lista para produccion.","fecha":"2026-08-28","tipo":"estable"}
+  {"version":"2.9.81","nombre":"v2.9.81","notas":"Fix critico: JWT_SECRET sincronizado entre middleware y session, PrismaClient cacheado en produccion, .env creado antes de Prisma, verificacion de BD al iniciar","fecha":"2026-08-24","tipo":"estable"}
 ]

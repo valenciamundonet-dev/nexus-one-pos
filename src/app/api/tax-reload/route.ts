@@ -1,5 +1,5 @@
 /**
- * NexusOne POS — Tax Hot-Reload API v1.0
+ * Nexus One POS — Tax Hot-Reload API v1.0
  * 
  * Permite recargar estrategias fiscales en caliente sin reiniciar.
  * Soporta:

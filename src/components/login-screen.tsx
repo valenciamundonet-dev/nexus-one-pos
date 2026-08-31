@@ -13,7 +13,7 @@ interface LoginScreenProps {
   storeName?: string;
 }
 
-export default function LoginScreen({ onLogin, storeName = "NexusOne" }: LoginScreenProps) {
+export default function LoginScreen({ onLogin, storeName = "Nexus One" }: LoginScreenProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -158,36 +158,30 @@ export default function LoginScreen({ onLogin, storeName = "NexusOne" }: LoginSc
   // Pantalla de cambio forzado de contraseña
   if (showForceChange && pendingUser) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0c1222 0%, #162033 40%, #1a1a2e 100%)' }}>
-        {/* Animated background orbs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-20 blur-[100px]" style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)' }} />
-          <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full opacity-10 blur-[120px]" style={{ background: 'radial-gradient(circle, #f59e0b 0%, transparent 70%)' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-[0.03]" style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }} />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl" />
         </div>
 
-        {/* Subtle grid pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-
-        <div className="relative w-full max-w-[400px] animate-fade-up">
-          {/* Icon */}
+        <div className="relative w-full max-w-sm">
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', boxShadow: '0 8px 32px rgba(245, 158, 11, 0.25)' }}>
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-amber-500/10 mb-4">
+              <svg className="w-8 h-8 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Cambiar Contrasena</h1>
-            <p className="text-slate-400 text-sm mt-2 leading-relaxed">
+            <h1 className="text-2xl font-bold text-white">Cambiar Contrasena</h1>
+            <p className="text-amber-400 text-sm mt-2">
               Por seguridad, debe cambiar la contrasena por defecto antes de usar el sistema.
             </p>
           </div>
 
-          <Card className="border-white/[0.08] shadow-2xl" style={{ background: 'rgba(30, 41, 59, 0.7)', backdropFilter: 'blur(24px) saturate(150%)' }}>
-            <CardContent className="p-7">
-              <form onSubmit={handleForceChangePassword} className="space-y-5">
+          <Card className="border-amber-500/30 bg-slate-800/80 backdrop-blur-sm shadow-2xl">
+            <CardContent className="p-6">
+              <form onSubmit={handleForceChangePassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="newPassword" className="text-slate-300 text-sm font-medium">
+                  <Label htmlFor="newPassword" className="text-slate-300 text-sm">
                     Nueva Contrasena
                   </Label>
                   <div className="relative">
@@ -199,14 +193,14 @@ export default function LoginScreen({ onLogin, storeName = "NexusOne" }: LoginSc
                       onChange={(e) => setNewPassword(e.target.value)}
                       autoFocus
                       autoComplete="new-password"
-                      className="bg-slate-800/60 border-white/10 text-white placeholder:text-slate-500 focus:ring-amber-500/50 focus:border-amber-500/50 h-11 rounded-lg pr-10 transition-all"
+                      className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 focus:ring-amber-500 focus:border-amber-500 pr-10"
                     />
                     <EyeButton show={showNewPwd} onToggle={() => setShowNewPwd(!showNewPwd)} />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-slate-300 text-sm font-medium">
+                  <Label htmlFor="confirmPassword" className="text-slate-300 text-sm">
                     Confirmar Contrasena
                   </Label>
                   <div className="relative">
@@ -218,7 +212,7 @@ export default function LoginScreen({ onLogin, storeName = "NexusOne" }: LoginSc
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       autoComplete="new-password"
                       onKeyDown={(e) => e.key === "Enter" && handleForceChangePassword(e)}
-                      className="bg-slate-800/60 border-white/10 text-white placeholder:text-slate-500 focus:ring-amber-500/50 focus:border-amber-500/50 h-11 rounded-lg pr-10 transition-all"
+                      className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 focus:ring-amber-500 focus:border-amber-500 pr-10"
                     />
                     <EyeButton show={showConfirmPwd} onToggle={() => setShowConfirmPwd(!showConfirmPwd)} />
                   </div>
@@ -226,13 +220,12 @@ export default function LoginScreen({ onLogin, storeName = "NexusOne" }: LoginSc
 
                 <Button
                   type="submit"
-                  className="w-full h-11 text-sm font-semibold rounded-lg mt-2"
-                  style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', boxShadow: '0 4px 16px rgba(245, 158, 11, 0.3)' }}
+                  className="w-full h-11 text-sm font-semibold bg-amber-600 hover:bg-amber-700"
                   disabled={changingPassword}
                 >
                   {changingPassword ? (
                     <span className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                       Cambiando...
                     </span>
                   ) : (
@@ -243,8 +236,8 @@ export default function LoginScreen({ onLogin, storeName = "NexusOne" }: LoginSc
             </CardContent>
           </Card>
 
-          <p className="text-center text-slate-600 text-xs mt-8 font-medium">
-            NexusOne POS v{appVer}
+          <p className="text-center text-slate-500 text-xs mt-6">
+            Nexus One POS v{appVer}
           </p>
         </div>
       </div>
@@ -253,35 +246,31 @@ export default function LoginScreen({ onLogin, storeName = "NexusOne" }: LoginSc
 
   // Pantalla de login normal
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0c1222 0%, #162033 40%, #1a1a2e 100%)' }}>
-      {/* Animated background orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-15 blur-[100px]" style={{ background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)' }} />
-        <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full opacity-10 blur-[120px]" style={{ background: 'radial-gradient(circle, #8b5cf6 0%, transparent 70%)' }} />
-        <div className="absolute top-1/3 right-1/4 w-64 h-64 rounded-full opacity-[0.06] blur-[80px]" style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
       </div>
 
-      {/* Subtle grid pattern */}
-      <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
-
-      <div className="relative w-full max-w-[400px] animate-fade-up">
+      <div className="relative w-full max-w-sm">
         {/* Logo / Branding */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-[72px] h-[72px] rounded-2xl mb-5" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 50%, #8b5cf6 100%)', boxShadow: '0 12px 40px rgba(59, 130, 246, 0.3)' }}>
-            <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-4">
+            <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
           </div>
-          <h1 className="text-[26px] font-bold text-white tracking-tight">{storeName}</h1>
-          <p className="text-slate-400 text-sm mt-1.5 font-medium">Sistema Punto de Venta</p>
+          <h1 className="text-2xl font-bold text-white">{storeName}</h1>
+          <p className="text-slate-400 text-sm mt-1">Sistema Punto de Venta</p>
         </div>
 
         {/* Login Card */}
-        <Card className="border-white/[0.08] shadow-2xl" style={{ background: 'rgba(30, 41, 59, 0.6)', backdropFilter: 'blur(24px) saturate(150%)' }}>
-          <CardContent className="p-7">
-            <form onSubmit={handleLogin} className="space-y-5">
+        <Card className="border-slate-700 bg-slate-800/80 backdrop-blur-sm shadow-2xl">
+          <CardContent className="p-6">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-slate-300 text-sm font-medium">
+                <Label htmlFor="username" className="text-slate-300 text-sm">
                   Usuario
                 </Label>
                 <Input
@@ -292,12 +281,12 @@ export default function LoginScreen({ onLogin, storeName = "NexusOne" }: LoginSc
                   onChange={(e) => setUsername(e.target.value)}
                   autoFocus
                   autoComplete="username"
-                  className="bg-slate-800/60 border-white/10 text-white placeholder:text-slate-500 focus:ring-blue-500/50 focus:border-blue-500/50 h-11 rounded-lg transition-all"
+                  className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 focus:ring-primary focus:border-primary"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-300 text-sm font-medium">
+                <Label htmlFor="password" className="text-slate-300 text-sm">
                   Contrasena
                 </Label>
                 <div className="relative">
@@ -309,7 +298,7 @@ export default function LoginScreen({ onLogin, storeName = "NexusOne" }: LoginSc
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                     onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
-                    className="bg-slate-800/60 border-white/10 text-white placeholder:text-slate-500 focus:ring-blue-500/50 focus:border-blue-500/50 h-11 rounded-lg pr-10 transition-all"
+                    className="bg-slate-900 border-slate-600 text-white placeholder:text-slate-500 focus:ring-primary focus:border-primary pr-10"
                   />
                   <EyeButton show={showLoginPwd} onToggle={() => setShowLoginPwd(!showLoginPwd)} />
                 </div>
@@ -317,13 +306,12 @@ export default function LoginScreen({ onLogin, storeName = "NexusOne" }: LoginSc
 
               <Button
                 type="submit"
-                className="w-full h-11 text-sm font-semibold rounded-lg mt-1"
-                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)', boxShadow: '0 4px 16px rgba(59, 130, 246, 0.3)' }}
+                className="w-full h-11 text-sm font-semibold"
                 disabled={loading}
               >
                 {loading ? (
                   <span className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white" />
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                     Ingresando...
                   </span>
                 ) : (
@@ -334,11 +322,9 @@ export default function LoginScreen({ onLogin, storeName = "NexusOne" }: LoginSc
           </CardContent>
         </Card>
 
-        <div className="flex items-center justify-center gap-1.5 mt-7">
-          <span className="text-slate-600 text-xs font-medium">NexusOne POS v{appVer}</span>
-          <span className="text-slate-700">&bull;</span>
-          <span className="text-slate-600 text-xs">Doble Moneda $/Bs</span>
-        </div>
+        <p className="text-center text-slate-500 text-xs mt-6">
+          Nexus One POS v{appVer} &bull; Doble Moneda $/Bs
+        </p>
       </div>
     </div>
   );

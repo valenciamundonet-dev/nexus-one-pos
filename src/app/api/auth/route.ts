@@ -156,8 +156,15 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error('Auth error:', error);
-    return NextResponse.json({ error: 'Error en el servidor' }, { status: 500 });
+    const errDetails = error instanceof Error ? error.message : String(error);
+    const errStack = error instanceof Error ? error.stack : '';
+    console.error('[AUTH] Login error:', errDetails);
+    if (errStack) console.error('[AUTH] Stack:', errStack);
+    // Diferenciar error de BD vs error interno
+    if (errDetails.includes('Prisma') || errDetails.includes('database') || errDetails.includes('SQLITE')) {
+      return NextResponse.json({ error: 'Error de base de datos. Ejecute INSTALAR-LIMPIO.vbs nuevamente.', code: 'DB_ERROR' }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'Error en el servidor', code: 'SERVER_ERROR' }, { status: 500 });
   }
 }
 

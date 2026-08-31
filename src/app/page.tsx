@@ -24,7 +24,6 @@ import BackupTab from "@/components/backup-tab";
 import SuppliersTab from "@/components/suppliers-tab";
 import PurchasesTab from "@/components/purchases-tab";
 import CreditTab from "@/components/credit-tab";
-import AccountsPayableTab from "@/components/accounts-payable-tab";
 import ExpensesTab from "@/components/expenses-tab";
 import DashboardTab from "@/components/dashboard-tab";
 import KardexTab from "@/components/kardex-tab";
@@ -355,19 +354,15 @@ export default function Home() {
     };
   }, [currentUser]);
 
-  // ─── Fase 3a: Feature Flags Store (atomic, zero unnecessary re-renders) ──
-  // CRITICAL: All hooks MUST be before any conditional return (Rules of Hooks)
-  const loadFromLicense = useFeaturesStore((s) => s.loadFromLicense);
-  const featureFlags = useFeaturesStore((s) => s.flags);
+  // Show loading screen
+  if (loading || !authReady) {
+    return (<div className="flex items-center justify-center min-h-screen"><div className="text-center space-y-3"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto" /><p className="text-muted-foreground">Cargando Nexus One...</p></div></div>);
+  }
+  // Show login screen
+  if (!currentUser) {
+    return <LoginScreen onLogin={handleLogin} storeName={settings.storeName} />;
+  }
 
-  // Sync license data into atomic features store
-  useEffect(() => {
-    if (license) loadFromLicense(license);
-  }, [license, loadFromLicense]);
-
-  const canFrequentCustomers = featureFlags['pos.basic'] || false;
-
-  // ── Computed values (safe even when license is null) ──
   const isTrial = license?.licenseType === "trial";
   const isExpired = license?.isExpired || false;
   const activationsRemaining = license ? (license.maxActivations - (license.activationCount || 0)) : 0;
@@ -377,14 +372,15 @@ export default function Home() {
   const canDevolutions = license?.features?.devolutions || false;
   const canCashClosing = license?.features?.cashClosing || false;
 
-  // Show loading screen
-  if (loading || !authReady) {
-    return (<div className="flex items-center justify-center min-h-screen"><div className="text-center space-y-4"><div className="animate-spin rounded-full h-8 w-8 border-2 border-primary/20 border-t-primary mx-auto" /><p className="text-muted-foreground text-sm">Cargando NexusOne...</p></div></div>);
-  }
-  // Show login screen
-  if (!currentUser) {
-    return <LoginScreen onLogin={handleLogin} storeName={settings.storeName} />;
-  }
+  // ─── Fase 3a: Feature Flags Store (atomic, zero unnecessary re-renders) ──
+  const loadFromLicense = useFeaturesStore((s) => s.loadFromLicense);
+  const featureFlags = useFeaturesStore((s) => s.flags);
+  const canFrequentCustomers = featureFlags['pos.basic'] || false;
+
+  // Sync license data into atomic features store
+  useEffect(() => {
+    if (license) loadFromLicense(license);
+  }, [license, loadFromLicense]);
 
   // Admin-only and role-gated tabs
   const ADMIN_ONLY_TABS = new Set(['users', 'config', 'license', 'backup', 'diagnostics', 'db-health', 'tax-reload']);
@@ -405,7 +401,6 @@ export default function Home() {
     { value: "suppliers", label: "Proveedores", icon: "🏪" },
     { value: "purchases", label: "Compras", icon: "🛒" },
     { value: "credit", label: "Cuentas por Cobrar", icon: "💳" },
-    { value: "accounts-payable", label: "Cuentas por Pagar", icon: "📤" },
     { value: "kardex", label: "Inventario/Kardex", icon: "📦" },
     { value: "held-sales", label: "Ventas en Espera", icon: "⏸️" },
     { value: "quotes", label: "Presupuestos", icon: "📋" },
@@ -429,57 +424,54 @@ export default function Home() {
     return hasFeature;
   });
 
-  // ── Top-level safety: catch any object-rendered-as-child errors ──
-  try {
   return (
-    <ErrorBoundary name="Nexus One POS">
     <div className="min-h-screen flex flex-col relative">
       {/* BANNERS */}
       {isTrial && !isExpired && (
-        <div className="system-banner system-banner-warning">
-          <span className="font-medium">MODO PRUEBA - {license?.daysRemaining} dias restantes</span>
-          <button onClick={() => setShowActivateModal(true)} className="bg-white/95 text-amber-700 px-3 py-0.5 rounded-md text-xs font-bold hover:bg-white transition-colors ml-2 shadow-sm">ACTIVAR LICENCIA</button>
+        <div className="bg-yellow-500 text-white text-center py-1.5 px-4 text-xs font-medium flex items-center justify-center gap-2">
+          <span>MODO PRUEBA - {license?.daysRemaining} dias restantes</span>
+          <button onClick={() => setShowActivateModal(true)} className="bg-white text-yellow-700 px-3 py-0.5 rounded text-xs font-bold hover:bg-yellow-100 ml-2">ACTIVAR LICENCIA</button>
         </div>
       )}
       {isExpired && (
-        <div className="system-banner system-banner-danger">
-          <span className="font-bold">LICENCIA EXPIRADA</span>
-          <button onClick={() => setShowActivateModal(true)} className="bg-white/95 text-red-700 px-3 py-0.5 rounded-md text-xs font-bold hover:bg-white transition-colors ml-2 shadow-sm">ACTIVAR</button>
+        <div className="bg-red-600 text-white text-center py-2 px-4 text-xs font-bold flex items-center justify-center gap-2">
+          <span>LICENCIA EXPIRADA</span>
+          <button onClick={() => setShowActivateModal(true)} className="bg-white text-red-700 px-3 py-0.5 rounded text-xs font-bold hover:bg-red-100 ml-2">ACTIVAR</button>
         </div>
       )}
       {isDifferentMachine && !isExpired && (
-        <div className="system-banner system-banner-warning">
-          <span className="font-medium">LICENCIA EN OTRO EQUIPO - Activaciones restantes: {activationsRemaining}</span>
-          <button onClick={() => setShowBlockedModal(true)} className="bg-white/95 text-amber-700 px-3 py-0.5 rounded-md text-xs font-bold hover:bg-white transition-colors ml-2 shadow-sm">ACTIVAR AQUI</button>
+        <div className="bg-yellow-500 text-white text-center py-1.5 px-4 text-xs font-bold flex items-center justify-center gap-2">
+          <span>&#9888;&#65039; LICENCIA EN OTRO EQUIPO - Activaciones restantes: {activationsRemaining}</span>
+          <button onClick={() => setShowBlockedModal(true)} className="bg-white text-yellow-700 px-3 py-0.5 rounded text-xs font-bold hover:bg-yellow-100 ml-2">ACTIVAR AQUI</button>
         </div>
       )}
       {isMachineBlocked && !isExpired && (
-        <div className="system-banner system-banner-danger">
-          <span className="font-bold">LICENCIA BLOQUEADA - Maximo de activaciones alcanzado</span>
-          <button onClick={() => setShowBlockedModal(true)} className="bg-white/95 text-red-700 px-3 py-0.5 rounded-md text-xs font-bold hover:bg-white transition-colors ml-2 shadow-sm">VER DETALLES</button>
+        <div className="bg-red-600 text-white text-center py-1.5 px-4 text-xs font-bold flex items-center justify-center gap-2">
+          <span>&#128274; LICENCIA BLOQUEADA - Maximo de activaciones alcanzado</span>
+          <button onClick={() => setShowBlockedModal(true)} className="bg-white text-red-700 px-3 py-0.5 rounded text-xs font-bold hover:bg-red-100 ml-2">VER DETALLES</button>
         </div>
       )}
       {!isTrial && !isExpired && license?.isValid && !isMachineBlocked && !isDifferentMachine && (
-        <div className="system-banner system-banner-success">
-          <span className="font-medium">{String(license.licenseType || '').toUpperCase()} | Vence: {new Date(license.expiresAt || Date.now()).toLocaleDateString("es-VE")} | {Number(license.daysRemaining || 0)} dias</span>
-          {typeof license.ownerName === 'string' && <span className="ml-1">| {license.ownerName}</span>}
+        <div className="bg-green-600 text-white text-center py-0.5 px-4 text-[10px]">
+          <span className="font-medium">{license.licenseType.toUpperCase()} | Vence: {new Date(license.expiresAt).toLocaleDateString("es-VE")} | {license.daysRemaining} dias</span>
+          {license.ownerName && <span> | {license.ownerName}</span>}
         </div>
       )}
 
       {/* STOCK ALERTS BANNER */}
       {stockAlertCount > 0 && !stockBannerDismissed && (
-        <div className="system-banner system-banner-info" style={{ background: 'linear-gradient(90deg, #f97316 0%, #ea580c 100%)' }}>
-          <span className="font-medium">{stockAlertCount} producto(s) con alerta de stock</span>
-          {stockZeroCount > 0 && <span className="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-md font-bold shadow-sm">{stockZeroCount} SIN STOCK</span>}
+        <div className="bg-orange-500 text-white text-center py-1.5 px-4 text-xs font-medium flex items-center justify-center gap-2">
+          <span>&#9888; {stockAlertCount} producto(s) con alerta de stock</span>
+          {stockZeroCount > 0 && <span className="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded font-bold">{stockZeroCount} SIN STOCK</span>}
           <button
             onClick={() => { setActiveTab("products"); setStockBannerDismissed(true); }}
-            className="bg-white/95 text-orange-700 px-3 py-0.5 rounded-md text-xs font-bold hover:bg-white transition-colors ml-2 shadow-sm"
+            className="bg-white text-orange-700 px-3 py-0.5 rounded text-xs font-bold hover:bg-orange-100 ml-2"
           >
             VER PRODUCTOS
           </button>
           <button
             onClick={() => setStockBannerDismissed(true)}
-            className="text-white/60 hover:text-white ml-1 text-sm leading-none transition-colors"
+            className="text-white/70 hover:text-white ml-1 text-base leading-none"
             title="Ocultar"
           >
             &#10005;
@@ -488,9 +480,9 @@ export default function Home() {
       )}
 
       {/* HEADER */}
-      <header className="header-glass">
+      <header className="border-b bg-card sticky top-0 z-40">
         {/* ── Row 1: Store info + date + user (arriba) ── */}
-        <div className="container mx-auto px-4 py-2 flex items-center justify-between border-b border-border/30">
+        <div className="container mx-auto px-4 py-2 flex items-center justify-between border-b border-border/50">
           <div className="flex items-center gap-3">
             <AppNav activeTab={activeTab} onTabChange={(v: string) => {
               const tab = availableTabs.find(t => t.value === v);
@@ -498,14 +490,12 @@ export default function Home() {
               safeSetTab(v);
             }} tabs={availableTabs.map(t => ({ value: t.value, label: t.label, icon: t.icon, restricted: false, plan: '' }))} stockAlertCount={stockAlertCount} currentUser={currentUser.fullName || currentUser.username} onLogout={handleLogout} version={appVersion} />
             <div>
-              <h1 className="text-lg font-bold text-primary tracking-tight">
+              <h1 className="text-xl font-bold text-primary">
                 {settings.storeName}
-                {showWatermark && <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 ml-2 bg-amber-100 dark:bg-amber-950/40 px-1.5 py-0.5 rounded-md">TRIAL</span>}
+                {showWatermark && <span className="text-xs font-normal text-yellow-600 ml-2">(TRIAL)</span>}
               </h1>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                <span className="text-[10px]">v{appVersion}</span>
-                <span className="text-border">|</span>
-                <span className="text-[10px]">1$ =</span>
+                <span>v{appVersion} | 1$ =</span>
                 {editingBcv ? (
                   <input type="number" min="0" step="0.01" value={inlineBcv}
                     onChange={(e) => setInlineBcv(e.target.value)}
@@ -519,37 +509,38 @@ export default function Home() {
                     {(settings.bcvRate ?? 36.5).toFixed(2)}
                   </button>
                 )}
-                <span className="text-[10px]">Bs</span>
+                <span>Bs</span>
+                {!editingBcv && <span className="text-[9px] text-muted-foreground/60">(click para cambiar)</span>}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="text-right hidden sm:block">
-              <p className="text-[11px] text-muted-foreground">{new Date().toLocaleDateString("es-VE", { weekday: "short", year: "numeric", month: "short", day: "numeric" })}</p>
-              <p className="text-[11px] font-mono text-muted-foreground/70">{new Date().toLocaleTimeString("es-VE")}</p>
+            <div className="text-right text-xs text-muted-foreground">
+              <p>{new Date().toLocaleDateString("es-VE", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
+              <p>{new Date().toLocaleTimeString("es-VE")}</p>
             </div>
             <ThemeSwitcher />
-            <Separator orientation="vertical" className="h-7" />
+            <Separator orientation="vertical" className="h-8" />
             <div className="flex items-center gap-2">
               {currentUser.avatar ? (
-                <img crossOrigin="anonymous" src={currentUser.avatar} alt="Avatar" className="w-7 h-7 rounded-lg object-cover border border-border/50 shadow-sm" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                <img crossOrigin="anonymous" src={currentUser.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover border border-primary/30" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               ) : (
-                <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-[10px] font-bold">
+                <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center text-primary text-xs font-bold">
                   {(currentUser.fullName || currentUser.username).split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()}
                 </div>
               )}
-              <Badge variant={currentUser.role === "admin" ? "default" : "secondary"} className="text-[10px] px-2 py-0">
+              <Badge variant={currentUser.role === "admin" ? "default" : "secondary"}>
                 {currentUser.role === "admin" ? "Admin" : currentUser.role === "vendedor" ? "Vendedor" : "Cajero"}
               </Badge>
-              <span className="text-xs font-medium max-w-[100px] truncate hidden md:inline-block text-muted-foreground">
+              <span className="text-sm font-medium max-w-[120px] truncate hidden sm:inline-block">
                 {currentUser.fullName || currentUser.username}
               </span>
               <button
                 onClick={handleLogout}
-                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors px-2 py-1 rounded-lg hover:bg-destructive/5"
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors px-2 py-1 rounded hover:bg-destructive/10"
                 title="Cerrar sesion"
               >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
                 <span className="hidden sm:inline">Salir</span>
               </button>
             </div>
@@ -565,7 +556,7 @@ export default function Home() {
       <main className="flex-1 container mx-auto px-4 py-4">
         <TabsContent value="dashboard" activeTab={activeTab}>
           <ErrorBoundary name="Dashboard">
-            <DashboardTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} onNavigate={safeSetTab} availableTabs={availableTabs.map(t => t.value)} />
+            <DashboardTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} />
           </ErrorBoundary>
         </TabsContent>
         <TabsContent value="pos" activeTab={activeTab}>
@@ -736,12 +727,7 @@ export default function Home() {
               bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} currentUser={currentUser} />
           </ErrorBoundary>
         </TabsContent>
-        <TabsContent value="accounts-payable" activeTab={activeTab}>
-            <div className="h-full overflow-y-auto p-3 md:p-4">
-              <AccountsPayableTab bcvRate={settings.bcvRate ?? 36.5} sellerName={currentUser?.fullName || ''} />
-            </div>
-          </TabsContent>
-          <TabsContent value="expenses" activeTab={activeTab}>
+        <TabsContent value="expenses" activeTab={activeTab}>
           <ErrorBoundary name="Gastos">
             <ExpensesTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency}
               sellerName={currentUser.fullName || currentUser.username}
@@ -774,10 +760,10 @@ export default function Home() {
         </TabsContent>
       </main>
 
-      {showWatermark && <div className="fixed bottom-12 right-4 text-amber-500/20 text-5xl font-black pointer-events-none select-none rotate-[-15deg] z-50 tracking-wider">TRIAL</div>}
+      {showWatermark && <div className="fixed bottom-12 right-4 text-yellow-500/30 text-6xl font-bold pointer-events-none select-none rotate-[-15deg] z-50">TRIAL</div>}
 
-      <footer className="border-t border-border/40 py-2.5 text-center">
-        <p className="text-[11px] text-muted-foreground/60">NexusOne POS v{appVersion} &middot; Sistema Punto de Venta Venezuela &middot; Doble Moneda $/Bs{showWatermark && " &middot; Version de Prueba"}</p>
+      <footer className="border-t py-2 text-center text-xs text-muted-foreground">
+        <p>Nexus One POS v{appVersion} - Sistema Punto de Venta Venezuela | Doble Moneda $/Bs{showWatermark && " | Version de Prueba"}</p>
       </footer>
 
       {/* MODALES */}
@@ -839,23 +825,7 @@ export default function Home() {
         </DialogContent>
       </Dialog>
     </div>
-    </ErrorBoundary>
   );
-  } catch (renderError: any) {
-    // v3.0.0: Fallback UI if any object slips through rendering
-    console.error('[Home render catch]', renderError);
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4 p-8">
-          <div className="text-5xl">⚠️</div>
-          <h2 className="text-xl font-bold text-destructive">Error al cargar la interfaz</h2>
-          <p className="text-sm text-muted-foreground max-w-md">Ocurrio un error inesperado al renderizar.</p>
-          <pre className="text-xs bg-muted p-3 rounded-lg max-w-lg mx-auto overflow-auto">{renderError?.message || String(renderError)}</pre>
-          <Button onClick={() => window.location.reload()}>Recargar Pagina</Button>
-        </div>
-      </div>
-    );
-  }
 }
 
 function UpgradePrompt({ feature, plan, desc }: { feature: string; plan: string; desc?: string }) {
@@ -867,19 +837,16 @@ function UpgradePrompt({ feature, plan, desc }: { feature: string; plan: string;
     try { const res = await authFetch("/api/license", { method: "POST", body: JSON.stringify({ licenseKey: key.trim() }) }); const data = await res.json(); if (!res.ok) throw new Error(data.error); toast.success(data.message); setShowActivate(false); setTimeout(() => window.location.reload(), 1000); } catch (e: any) { toast.error(e.message); } finally { setLoading(false); }
   };
   return (
-    <div className="flex flex-col items-center justify-center py-16 space-y-5 animate-fade-up">
-      <Card className="max-w-md w-full border-amber-200/60 dark:border-amber-800/30 card-shadow-md">
+    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+      <Card className="max-w-md w-full border-yellow-300">
         <CardContent className="p-6 text-center space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-950/40 flex items-center justify-center mx-auto">
-            <svg className="w-7 h-7 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold">Funcion Bloqueada</h3>
-            <p className="text-sm text-muted-foreground mt-1"><strong>{feature}</strong> no disponible en su plan.</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Actualice a <span className="font-semibold text-foreground">{plan}</span> para desbloquear.</p>
-          </div>
+          <div className="text-4xl">&#128274;</div>
+          <h3 className="text-lg font-semibold">Funcion Bloqueada</h3>
+          <p className="text-sm text-muted-foreground"><strong>{feature}</strong> no disponible en su plan. Actualice a <strong>{plan}</strong>.</p>
           {desc && <p className="text-xs text-muted-foreground">{desc}</p>}
-          <Button className="w-full" onClick={() => setShowActivate(true)}>Activar Licencia</Button>
+          <div className="space-y-2">
+            <Button className="w-full" onClick={() => setShowActivate(true)}>Activar Licencia</Button>
+          </div>
         </CardContent>
       </Card>
       <Dialog open={showActivate} onOpenChange={setShowActivate}>

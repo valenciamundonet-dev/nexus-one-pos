@@ -1,6 +1,6 @@
 {
-  "name": "NexusOne POS",
-  "short_name": "NexusOne",
+  "name": "Nexus One POS",
+  "short_name": "Nexus One",
   "description": "Sistema Punto de Venta - Venezuela",
   "start_url": "/",
   "display": "standalone",

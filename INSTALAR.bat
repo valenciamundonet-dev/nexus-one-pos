@@ -1,12 +1,12 @@
 @echo off
 chcp 65001 >nul 2>&1
-title NexusOne POS v2.9.80 - Instalador Completo
+title Nexus One POS v2.9.80 - Instalador Completo
 color 0A
 setlocal enabledelayedexpansion
 
 echo.
 echo  ========================================================
-echo    NexusOne POS v2.9.80 - Instalador Profesional
+echo    Nexus One POS v2.9.80 - Instalador Profesional
 echo    Sistema Punto de Venta - Venezuela
 echo    Doble Moneda USD/Bs + Impresion Termica + Caddy HTTPS
 echo  ========================================================
@@ -50,7 +50,7 @@ if exist .caddy-domain del .caddy-domain 2>nul
 :: Eliminar accesos directos antiguos
 if exist "%USERPROFILE%\Desktop\MyeCommerce POS.lnk" del "%USERPROFILE%\Desktop\MyeCommerce POS.lnk" 2>nul
 if exist "%USERPROFILE%\Desktop\MyeCommerce.lnk" del "%USERPROFILE%\Desktop\MyeCommerce.lnk" 2>nul
-if exist "%USERPROFILE%\Desktop\NexusOne POS.lnk" del "%USERPROFILE%\Desktop\NexusOne POS.lnk" 2>nul
+if exist "%USERPROFILE%\Desktop\Nexus One POS.lnk" del "%USERPROFILE%\Desktop\Nexus One POS.lnk" 2>nul
 
 :: Eliminar claves de registro (tolerante - no falla si no existen)
 reg delete "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "MyeCommercePOS" /f >nul 2>&1
@@ -340,7 +340,7 @@ if !ERRORLEVEL! NEQ 0 (
 
 :: Configurar Caddyfiles
 if not exist "caddy\Caddyfile" (
-    echo # NexusOne POS - Caddy HTTPS Local> caddy\Caddyfile
+    echo # Nexus One POS - Caddy HTTPS Local> caddy\Caddyfile
     echo http://nexusone.ve {>> caddy\Caddyfile
     echo     redir https://nexusone.ve{uri}>> caddy\Caddyfile
     echo }>> caddy\Caddyfile
@@ -387,10 +387,10 @@ echo  [11/11] Creando acceso directo en el escritorio...
 :: Crear acceso directo -> INICIAR-TODO-OCULTO.vbs (inicio SIN ventanas de consola)
 echo Set WshShell = WScript.CreateObject("WScript.Shell") > "%TEMP%\nexus_shortcut.vbs"
 echo strDesktop = WshShell.SpecialFolders("Desktop") >> "%TEMP%\nexus_shortcut.vbs"
-echo Set oShellLink = WshShell.CreateShortcut(strDesktop ^& "\NexusOne POS.lnk") >> "%TEMP%\nexus_shortcut.vbs"
+echo Set oShellLink = WshShell.CreateShortcut(strDesktop ^& "\Nexus One POS.lnk") >> "%TEMP%\nexus_shortcut.vbs"
 echo oShellLink.TargetPath = "%~dp0INICIAR-TODO-OCULTO.vbs" >> "%TEMP%\nexus_shortcut.vbs"
 echo oShellLink.WorkingDirectory = "%~dp0" >> "%TEMP%\nexus_shortcut.vbs"
-echo oShellLink.Description = "NexusOne POS v2.9.80" >> "%TEMP%\nexus_shortcut.vbs"
+echo oShellLink.Description = "Nexus One POS v2.9.80" >> "%TEMP%\nexus_shortcut.vbs"
 echo oShellLink.IconLocation = "shell32.dll,14" >> "%TEMP%\nexus_shortcut.vbs"
 echo oShellLink.Save >> "%TEMP%\nexus_shortcut.vbs"
 cscript //nologo "%TEMP%\nexus_shortcut.vbs" >nul 2>&1
@@ -418,7 +418,7 @@ echo  (Caddy no disponible - instale como Administrador para HTTPS)
 )
 echo.
 echo  Para iniciar el sistema:
-echo    - Doble clic en "NexusOne POS" del Escritorio
+echo    - Doble clic en "Nexus One POS" del Escritorio
 echo    - El sistema iniciara SIN ventanas de consola
 echo    - Se abrira automaticamente en su navegador
 echo.
@@ -426,6 +426,6 @@ echo  Para detener: ejecute DETENER-TODO.bat
 echo.
 echo  USUARIO POR DEFECTO: admin / admin
 echo.
-echo  NexusOne POS v2.9.80
+echo  Nexus One POS v2.9.80
 echo.
 pause

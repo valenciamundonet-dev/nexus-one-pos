@@ -1,5 +1,5 @@
 /**
- * NexusOne POS — Core Engine Index v1.0
+ * Nexus One POS — Core Engine Index v1.0
  * 
  * Punto de entrada unificado para los motores core de Etapa 4.
  * Todos los módulos están diseñados para trabajo offline de élite.

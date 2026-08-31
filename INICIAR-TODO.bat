@@ -1,13 +1,13 @@
 @echo off
 chcp 65001 >nul 2>&1
-title NexusOne POS v2.9.80 - Iniciar Todo
+title Nexus One POS v2.9.80 - Iniciar Todo
 setlocal enabledelayedexpansion
 
 cd /d "%~dp0"
 
 echo.
 echo  ========================================================
-echo    NexusOne POS v2.9.80 - Iniciando todos los servicios
+echo    Nexus One POS v2.9.80 - Iniciando todos los servicios
 echo    (version visible - para depuracion)
 echo  ========================================================
 echo.
@@ -138,7 +138,7 @@ echo.
 echo  [7/7] Iniciando servidor en puerto 3000...
 echo.
 echo  ========================================================
-echo  NexusOne POS v2.9.80 - SERVIDOR ACTIVO
+echo  Nexus One POS v2.9.80 - SERVIDOR ACTIVO
 echo.
 if "!CADDY_STARTED!"=="1" (
 echo  HTTPS:  https://nexusone.ve

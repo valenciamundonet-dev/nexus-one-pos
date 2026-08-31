@@ -1,4 +1,4 @@
-# Caddyfile-mobile - NexusOne POS
+# Caddyfile-mobile - Nexus One POS
 # ============================================================================
 # Acceso movil via HTTPS :8443 (con certificado auto-firmado)
 # La camara del telefono REQUIERE HTTPS para funcionar

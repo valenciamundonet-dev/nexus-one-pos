@@ -1,4 +1,4 @@
-# NexusOne POS v2.9.73
+# Nexus One POS v2.9.73
 
 Sistema Punto de Venta offline-first construido con Next.js 15, Bun, Prisma, SQLite (WAL) y shadcn/ui. Diseñado para ejecutarse en un solo equipo sin dependencias externas.
 
