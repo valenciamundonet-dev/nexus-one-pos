@@ -287,7 +287,7 @@ WriteStatus 4, 8, "Node.js " & Trim(nodeVer), "Version compatible", 50, "", ""
 ' NOTA: npm retorna exit code 1 por vulnerabilidades/allow-scripts warnings
 '       pero los paquetes se instalan correctamente. Verificamos node_modules.
 ' ============================================================
-WriteStatus 5, 8, "Instalando dependencias...", "npm install (1-3 min)", 50, "", ""
+WriteStatus 5, 8, "Instalando dependencias...", "npm install (~2-4 min segun internet)", 50, "", ""
 LogWrite "PASO 5: npm install..."
 
 ' Funcion para verificar que node_modules tiene los paquetes clave
@@ -443,14 +443,25 @@ If isAdmin Then
     On Error GoTo 0
 
     If Not objFSO.FileExists(strDir & "\caddy\caddy.exe") Then
-        LogWrite "  Descargando Caddy..."
-        WriteStatus 7, 8, "Descargando Caddy...", "", 78, "", ""
+        LogWrite "  Descargando Caddy (~15-30 seg)..."
+        WriteStatus 7, 8, "Descargando Caddy...", "~20 seg si internet es lento", 78, "", ""
         If Not objFSO.FolderExists(strDir & "\caddy") Then objFSO.CreateFolder strDir & "\caddy"
+        ' Descargar con timeout de 60 segundos para no colgar si internet es lento
         psCmd = "powershell -NoProfile -Command " & Chr(34) & _
-          "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; " & _
-          "try { Invoke-WebRequest -Uri 'https://caddyserver.com/api/download?os=windows&arch=amd64' -OutFile '" & strDir & "\caddy\caddy.exe' -UseBasicParsing; Write-Host 'OK' } catch { Write-Host 'FAIL' }" & Chr(34)
+          "$ProgressPreference='SilentlyContinue'; [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; " & _
+          "try { $null=Invoke-WebRequest -Uri 'https://caddyserver.com/api/download?os=windows&arch=amd64' -OutFile '" & strDir & "\caddy\caddy.exe' -UseBasicParsing -TimeoutSec 60; if(Test-Path '" & strDir & "\caddy\caddy.exe'){Write-Host 'OK'}else{Write-Host 'FAIL-EMPTY'} } catch { Write-Host 'FAIL' }" & Chr(34)
         Call RunHidden(psCmd)
-        LogWrite "  Caddy descargado"
+        ' Verificar que se descargo correctamente
+        On Error Resume Next
+        caddySize = 0
+        If objFSO.FileExists(strDir & "\caddy\caddy.exe") Then caddySize = objFSO.GetFile(strDir & "\caddy\caddy.exe").Size
+        On Error GoTo 0
+        If caddySize < 1000000 Then
+            LogWrite "  Caddy no se descargo correctamente (" & caddySize & " bytes). Se omitira."
+            LogWrite "  La app funcionara en http://localhost:3000 sin HTTPS"
+        Else
+            LogWrite "  Caddy descargado (" & (caddySize \ 1024 \ 1024) & " MB)"
+        End If
     Else
         LogWrite "  Caddy ya existe"
     End If
@@ -506,7 +517,7 @@ End If
 ' ============================================================
 ' PASO 8: Compilar + crear acceso directo
 ' ============================================================
-WriteStatus 8, 8, "Compilando para produccion...", "next build (1-2 min)", 87, "", ""
+WriteStatus 8, 8, "Compilando para produccion...", "next build (~1-3 min)", 87, "", ""
 LogWrite "PASO 8: next build..."
 
 ' next build - verificar que .next se creo correctamente

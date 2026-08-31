@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus One POS — Generador de Licencias</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    background: #1e293b; border: 1px solid #334155; border-radius: 16px;
+    padding: 32px; max-width: 560px; width: 100%;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  h1 {
+    color: #f1f5f9; font-size: 20px; font-weight: 700; margin-bottom: 4px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  h1 span { font-size: 24px; }
+  .subtitle { color: #64748b; font-size: 12px; margin-bottom: 24px; }
+  .label {
+    color: #94a3b8; font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 6px; display: block;
+  }
+  .input-group { margin-bottom: 16px; }
+  input, select {
+    width: 100%; padding: 10px 14px; border-radius: 8px;
+    border: 1px solid #334155; background: #0f172a; color: #f1f5f9;
+    font-size: 14px; outline: none; transition: border-color 0.2s;
+  }
+  input:focus, select:focus { border-color: #3b82f6; }
+  select { cursor: pointer; }
+  .plan-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .plan-card {
+    padding: 14px; border-radius: 10px; border: 2px solid #334155;
+    cursor: pointer; transition: all 0.2s; text-align: center;
+  }
+  .plan-card:hover { border-color: #475569; }
+  .plan-card.selected-basica { border-color: #f59e0b; background: rgba(245,158,11,0.08); }
+  .plan-card.selected-profesional { border-color: #3b82f6; background: rgba(59,130,246,0.08); }
+  .plan-card .plan-name { color: #f1f5f9; font-weight: 700; font-size: 14px; }
+  .plan-card .plan-price { color: #64748b; font-size: 12px; margin-top: 2px; }
+  .plan-card .plan-features { color: #475569; font-size: 11px; margin-top: 6px; line-height: 1.5; }
+  .btn {
+    width: 100%; padding: 12px; border-radius: 10px; border: none;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .btn-generate {
+    background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;
+  }
+  .btn-generate:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.4); }
+  .btn-generate:active { transform: translateY(0); }
+  .result-box {
+    margin-top: 20px; padding: 16px; border-radius: 10px;
+    background: #0f172a; border: 1px solid #334155; display: none;
+  }
+  .result-box.show { display: block; }
+  .result-label { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .license-key {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 15px; color: #22c55e; font-weight: 700;
+    word-break: break-all; line-height: 1.6;
+    user-select: all; padding: 10px; border-radius: 6px;
+    background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.2);
+  }
+  .result-info { color: #94a3b8; font-size: 12px; margin-top: 10px; line-height: 1.6; }
+  .result-info strong { color: #e2e8f0; }
+  .btn-copy {
+    margin-top: 10px; padding: 8px 16px; border-radius: 6px;
+    background: #334155; color: #e2e8f0; border: 1px solid #475569;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-copy:hover { background: #475569; }
+  .btn-copy.copied { background: #166534; border-color: #22c55e; color: #22c55e; }
+  .history { margin-top: 20px; border-top: 1px solid #1e293b; padding-top: 16px; }
+  .history-title { color: #64748b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .history-item {
+    padding: 8px 10px; border-radius: 6px; background: #0f172a;
+    margin-bottom: 6px; font-size: 11px; color: #94a3b8;
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; transition: background 0.2s;
+  }
+  .history-item:hover { background: #1a2332; }
+  .history-key {
+    font-family: 'Consolas', monospace; color: #22c55e; font-size: 11px;
+    user-select: all;
+  }
+  .footer { color: #334155; font-size: 10px; text-align: center; margin-top: 20px; }
+  .days-input { display: flex; gap: 8px; align-items: end; }
+  .days-input input { flex: 1; }
+  .days-presets { display: flex; gap: 4px; }
+  .days-presets button {
+    padding: 10px 12px; border-radius: 8px; border: 1px solid #334155;
+    background: #0f172a; color: #94a3b8; font-size: 11px;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .days-presets button:hover { border-color: #3b82f6; color: #3b82f6; }
+  .days-presets button.active { border-color: #3b82f6; color: #3b82f6; background: rgba(59,130,246,0.1); }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1><span>🔑</span> Nexus One POS</h1>
+  <div class="subtitle">Generador de Licencias Offline v3.1.5</div>
+
+  <span class="label">Plan</span>
+  <div class="plan-cards">
+    <div class="plan-card" id="card-basica" onclick="selectPlan('basica')">
+      <div class="plan-name">BASICA</div>
+      <div class="plan-price">$160/mes</div>
+      <div class="plan-features">300 productos<br>1 usuario<br>2 activaciones</div>
+    </div>
+    <div class="plan-card" id="card-profesional" onclick="selectPlan('profesional')">
+      <div class="plan-name">PROFESIONAL</div>
+      <div class="plan-price">$220/mes</div>
+      <div class="plan-features">Ilimitado<br>5 usuarios<br>3 activaciones</div>
+    </div>
+  </div>
+
+  <div class="input-group">
+    <label class="label">Nombre del Negocio</label>
+    <input type="text" id="ownerName" placeholder="Ej: Mi Negocio C.A." />
+  </div>
+
+  <div class="input-group">
+    <label class="label">Duracion</label>
+    <div class="days-input">
+      <input type="number" id="days" value="365" min="1" max="3650" />
+      <div class="days-presets">
+        <button onclick="setDays(30)">30d</button>
+        <button onclick="setDays(90)">90d</button>
+        <button class="active" onclick="setDays(365)">1a</button>
+        <button onclick="setDays(730)">2a</button>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn btn-generate" onclick="generate()">Generar Licencia</button>
+
+  <div class="result-box" id="resultBox">
+    <div class="result-label">Licencia Generada</div>
+    <div class="license-key" id="licenseKey"></div>
+    <div class="result-info" id="resultInfo"></div>
+    <button class="btn-copy" id="btnCopy" onclick="copyKey()">Copiar al portapapeles</button>
+  </div>
+
+  <div class="history" id="historySection" style="display:none">
+    <div class="history-title">Licencias Generadas</div>
+    <div id="historyList"></div>
+  </div>
+
+  <div class="footer">Nexus One POS — Archivo offline. No requiere conexion a internet.</div>
+</div>
+
+<script>
+// ===== MISMO ALGORITMO DEL SERVIDOR (license.ts) =====
+const LICENSE_SEED = 0x5A1F3E7B;
+const LICENSE_SECRET = 'NX1-L1C3NC3-S3CR3T-K3Y-2024-PROD';
+
+function simpleHash(str) {
+  let hash = LICENSE_SEED;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash + char) | 0;
+  }
+  return Math.abs(hash).toString(36).toUpperCase().padStart(4, '0').slice(0, 4);
+}
+
+function computeCheckDigit(payload, secret) {
+  let hash = 0;
+  const combined = payload + secret;
+  for (let i = 0; i < combined.length; i++) {
+    const char = combined.charCodeAt(i);
+    hash = ((hash << 7) - hash + char) | 0;
+    hash = hash ^ (hash >>> 16);
+  }
+  return Math.abs(hash).toString(36).toUpperCase().padStart(4, '0').slice(0, 4);
+}
+
+function formatKey(raw) {
+  const clean = raw.replace(/[^A-Z0-9]/gi, '').toUpperCase();
+  const groups = [];
+  for (let i = 0; i < clean.length; i += 5) {
+    groups.push(clean.substring(i, i + 5));
+  }
+  return groups.join('-');
+}
+
+function generateLicenseKey(licenseType, ownerName, days) {
+  const typeCode = licenseType === 'profesional' ? 'PR0' : 'B4S';
+  const now = new Date();
+  const expiry = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+  const pad = (n, l) => String(n).padStart(l || 2, '0');
+  const timeCode = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${expiry.getFullYear()}${pad(expiry.getMonth()+1)}${pad(expiry.getDate())}`;
+  const nameHash = simpleHash(ownerName.toLowerCase().trim());
+  const machineHash = simpleHash(licenseType + timeCode);
+  const payload = `${typeCode}${timeCode}${nameHash}${machineHash}`;
+  const checkDigit = computeCheckDigit(payload, LICENSE_SECRET);
+  return formatKey(`${typeCode}${timeCode}${nameHash}${machineHash}${checkDigit}`);
+}
+
+// ===== UI =====
+let selectedPlan = 'profesional';
+const history = [];
+
+function selectPlan(plan) {
+  selectedPlan = plan;
+  document.querySelectorAll('.plan-card').forEach(c => {
+    c.className = 'plan-card';
+  });
+  document.getElementById('card-' + plan).classList.add('selected-' + plan);
+}
+
+function setDays(d) {
+  document.getElementById('days').value = d;
+  document.querySelectorAll('.days-presets button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function generate() {
+  const name = document.getElementById('ownerName').value.trim();
+  const days = parseInt(document.getElementById('days').value) || 365;
+
+  if (!name) {
+    document.getElementById('ownerName').style.borderColor = '#ef4444';
+    document.getElementById('ownerName').focus();
+    return;
+  }
+  document.getElementById('ownerName').style.borderColor = '';
+
+  const key = generateLicenseKey(selectedPlan, name, days);
+  const now = new Date();
+  const expiry = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+  document.getElementById('licenseKey').textContent = key;
+  document.getElementById('resultInfo').innerHTML =
+    `<strong>Plan:</strong> ${selectedPlan.toUpperCase()} &nbsp;|&nbsp; ` +
+    `<strong>Cliente:</strong> ${name} &nbsp;|&nbsp; ` +
+    `<strong>Validez:</strong> ${days} dias<br>` +
+    `<strong>Activacion:</strong> ${now.toLocaleDateString('es-VE')} &nbsp;|&nbsp; ` +
+    `<strong>Vence:</strong> ${expiry.toLocaleDateString('es-VE')}`;
+
+  document.getElementById('resultBox').classList.add('show');
+  document.getElementById('btnCopy').textContent = 'Copiar al portapapeles';
+  document.getElementById('btnCopy').classList.remove('copied');
+
+  // Add to history
+  history.unshift({ plan: selectedPlan.toUpperCase(), name, days, key, date: new Date().toLocaleString('es-VE') });
+  if (history.length > 10) history.pop();
+  renderHistory();
+}
+
+function copyKey() {
+  const key = document.getElementById('licenseKey').textContent;
+  navigator.clipboard.writeText(key).then(() => {
+    const btn = document.getElementById('btnCopy');
+    btn.textContent = 'Copiado!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copiar al portapapeles'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function renderHistory() {
+  if (history.length === 0) return;
+  document.getElementById('historySection').style.display = 'block';
+  const list = document.getElementById('historyList');
+  list.innerHTML = history.map((h, i) =>
+    `<div class="history-item" onclick="navigator.clipboard.writeText('${h.key}')">
+      <div><strong>${h.plan}</strong> — ${h.name} (${h.days}d)<br><span style="color:#475569">${h.date}</span></div>
+      <div class="history-key">${h.key}</div>
+    </div>`
+  ).join('');
+}
+
+// Auto-select profesional on load
+selectPlan('profesional');
+</script>
+</body>
+</html>
