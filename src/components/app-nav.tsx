@@ -204,11 +204,11 @@ export default function AppNav({
       <div className="px-4 pt-5 pb-4 border-b border-white/10">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/25">
-            MC
+            N1
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-bold text-white truncate">{storeName || 'MyCommerce'}</h2>
-            <p className="text-[10px] text-blue-300/70 font-medium">Sistema de Ventas POS</p>
+            <h2 className="text-sm font-bold text-white truncate">{storeName || 'NexusOne'}</h2>
+            <p className="text-[10px] text-blue-300/70 font-medium">NexusOne POS v{version || '3.1.6'}</p>
           </div>
         </div>
       </div>

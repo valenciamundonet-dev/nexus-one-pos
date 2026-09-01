@@ -63,14 +63,15 @@ interface ProfitLossReport {
   };
 }
 
-const PAYMENT_METHODS = [
-  { value: "efectivo", label: "Efectivo" },
-  { value: "transferencia", label: "Transferencia" },
-  { value: "tarjeta", label: "Tarjeta" },
-  { value: "zelle", label: "Zelle" },
-  { value: "usdt", label: "USDT" },
-  { value: "punto", label: "Punto de Venta" },
-  { value: "otro", label: "Otro" },
+const EXPENSE_PAY_METHODS = [
+  { value: 'efectivo', label: 'Efectivo (Bs)' },
+  { value: 'efectivo-usd', label: 'Efectivo ($)' },
+  { value: 'transferencia', label: 'Transferencia' },
+  { value: 'pago-movil', label: 'Pago Movil' },
+  { value: 'punto-de-venta', label: 'Punto de Venta' },
+  { value: 'zelle', label: 'Zelle ($)' },
+  { value: 'usdt', label: 'USDT ($)' },
+  { value: 'otros', label: 'Otros' },
 ];
 
 const DEFAULT_CATEGORIES = [
@@ -99,7 +100,7 @@ function fmt(n: number, decimals = 2) {
 }
 
 function getPaymentLabel(method: string) {
-  return PAYMENT_METHODS.find((m) => m.value === method)?.label || method;
+  return EXPENSE_PAY_METHODS.find((m) => m.value === method)?.label || method;
 }
 
 export default function ExpensesTab({ bcvRate = 36.5, currency = "USD", sellerName = "", sellerRole = "", userId = "" }: {
@@ -132,6 +133,9 @@ export default function ExpensesTab({ bcvRate = 36.5, currency = "USD", sellerNa
   const [filterStartDate, setFilterStartDate] = useState(getFirstOfMonth());
   const [filterEndDate, setFilterEndDate] = useState(getToday());
   const [filterCategory, setFilterCategory] = useState("");
+
+  // Otros metodo de pago
+  const [otrosMethod, setOtrosMethod] = useState("");
 
   // Category form
   const [showCatForm, setShowCatForm] = useState(false);
@@ -211,9 +215,15 @@ export default function ExpensesTab({ bcvRate = 36.5, currency = "USD", sellerNa
     if (!form.amount || parseFloat(form.amount) <= 0) return toast.error("Monto inválido");
     if (!form.date) return toast.error("Seleccione una fecha");
 
+    // When 'otros' is selected, prepend the custom method to notes
+    const finalNotes = form.paymentMethod === 'otros' && otrosMethod.trim()
+      ? `Método de pago: ${otrosMethod.trim()}${form.notes ? ' | ' + form.notes : ''}`
+      : form.notes;
+
     try {
       const body = {
         ...form,
+        notes: finalNotes,
         amount: parseFloat(form.amount),
         exchangeRate: bcvRate,
         userId: userId || null,
@@ -267,6 +277,7 @@ export default function ExpensesTab({ bcvRate = 36.5, currency = "USD", sellerNa
       reference: "",
       notes: "",
     });
+    setOtrosMethod("");
     setEditingId(null);
   }
 
@@ -851,10 +862,18 @@ export default function ExpensesTab({ bcvRate = 36.5, currency = "USD", sellerNa
                   value={form.paymentMethod}
                   onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}
                 >
-                  {PAYMENT_METHODS.map((m) => (
+                  {EXPENSE_PAY_METHODS.map((m) => (
                     <option key={m.value} value={m.value}>{m.label}</option>
                   ))}
                 </select>
+                {form.paymentMethod === 'otros' && (
+                  <Input
+                    className="mt-2"
+                    placeholder="Especifique el metodo de pago"
+                    value={otrosMethod}
+                    onChange={(e) => setOtrosMethod(e.target.value)}
+                  />
+                )}
               </div>
             </div>
 

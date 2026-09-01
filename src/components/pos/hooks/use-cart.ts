@@ -102,7 +102,7 @@ export function useCart({ products, allowZeroStock, maxDiscountPct, bcvRate, eur
 
   // ── Add to cart ───────────────────────────────────────────────
   const addToCart = useCallback(
-    (product: Product) => {
+    (product: Product, qty: number = 1) => {
       // Determine initial price based on GM mode
       let initialPrice = product.price;
       if (isGranMayorMode && euroUsdtRate > 0 && bcvRate > 0) {
@@ -131,19 +131,19 @@ export function useCart({ products, allowZeroStock, maxDiscountPct, bcvRate, eur
       setCart((prev) => {
         const existing = prev.find((i) => i.id === product.id);
         if (existing) {
-          const qty = existing.quantity + 1;
-          if (!allowZeroStock && !product.noStock && qty > product.stock) {
+          const newQty = existing.quantity + qty;
+          if (!allowZeroStock && !product.noStock && newQty > product.stock) {
             toast.error("Stock insuficiente");
             return prev;
           }
           const price = existing.isWholesale ? product.wholesalePrice || product.price : (isGranMayorMode ? initialPrice : product.price);
-          return prev.map((i) => (i.id === product.id ? { ...i, quantity: qty, price, total: qty * price } : i));
+          return prev.map((i) => (i.id === product.id ? { ...i, quantity: newQty, price, total: newQty * price } : i));
         }
         if (!allowZeroStock && !product.noStock && product.stock <= 0) {
           toast.error("Producto sin stock");
           return prev;
         }
-        return [...prev, { ...product, quantity: 1, total: initialPrice, isWholesale: false, price: initialPrice }];
+        return [...prev, { ...product, quantity: qty, total: initialPrice * qty, isWholesale: false, price: initialPrice }];
       });
     },
     [allowZeroStock, isGranMayorMode, euroUsdtRate, bcvRate],

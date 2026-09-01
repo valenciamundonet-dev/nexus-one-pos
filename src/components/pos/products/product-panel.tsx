@@ -19,7 +19,7 @@ interface ProductPanelProps {
   setSelectedCategory: (v: string) => void;
   selectedBrand: string;
   setSelectedBrand: (v: string) => void;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: (product: Product, qty?: number) => void;
   onOpenQrModal: () => void;
   onStartScanner: () => void;
   searchInputRef: React.RefObject<HTMLInputElement | null>;

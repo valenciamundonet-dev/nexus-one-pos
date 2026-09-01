@@ -410,6 +410,21 @@ export async function GET(req: NextRequest) {
 
     const roleBreakdown = Object.values(roleMap).sort((a, b) => b.totalBs - a.totalBs);
 
+    // ===== DEVOLUCIONES EN PERIODO =====
+    const devolutions = await db.devolution.findMany({
+      where: dateFilter,
+    });
+    const devolutionsTotalUsd = devolutions.reduce((sum, d) => sum + d.totalUsd, 0);
+    const devolutionsTotalBs = devolutions.reduce((sum, d) => sum + d.totalBs, 0);
+    const devolutionsCount = devolutions.length;
+
+    // ===== GASTOS EN PERIODO =====
+    const expenses = await db.expense.findMany({
+      where: dateFilter,
+    });
+    const expensesTotalUsd = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const expensesTotalBs = expenses.reduce((sum, e) => sum + e.amountBs, 0);
+
     return NextResponse.json({
       sales,
       totalSales,
@@ -437,6 +452,11 @@ export async function GET(req: NextRequest) {
       casheaSalesCount,
       casheaSalesTotal,
       casheaSalesTotalBs,
+      devolutionsTotalUsd,
+      devolutionsTotalBs,
+      devolutionsCount,
+      expensesTotalUsd,
+      expensesTotalBs,
       periodLabel,
       startDate: start.toISOString(),
       endDate: end.toISOString(),

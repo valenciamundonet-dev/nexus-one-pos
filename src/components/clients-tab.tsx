@@ -138,7 +138,7 @@ export default function ClientsTab({ bcvRate, currency, storeRif, storeName, sto
   const getSaleStatus = (sale: any) => {
     if (!sale.isCredit) return 'completada';
     const paid = sale.creditPaid || 0;
-    if (paid >= sale.total) return 'completada';
+    if (paid >= sale.total - 0.01) return 'completada';
     if (sale.creditDueDate && new Date(sale.creditDueDate) < new Date()) return 'vencida';
     return 'pendiente';
   };

@@ -9,7 +9,7 @@ interface ProductGridProps {
   currency: string;
   bcvRate: number;
   allowZeroStock: boolean;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: (product: Product, qty?: number) => void;
 }
 
 // Genera URL con parámetro thumb para cargar versión pequeña
@@ -102,6 +102,15 @@ export const ProductGrid = React.memo(function ProductGrid({ products, currency,
             <Badge variant={isOut ? "destructive" : isLow ? "warning" : "secondary"} className="text-[9px] px-1.5 py-0">
               {product.stock}
             </Badge>
+            {product.unitsPerBox && product.unitsPerBox > 0 && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onAddToCart(product, product.unitsPerBox); }}
+                className="absolute bottom-0.5 right-0.5 bg-amber-500 hover:bg-amber-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded leading-none"
+                title={`Agregar ${product.unitsPerBox} unidades (bulto)`}
+              >
+                +{product.unitsPerBox} BULTO
+              </button>
+            )}
           </button>
         );
       })}

@@ -21,6 +21,8 @@ export interface Product {
   category?: { name: string } | null;
   brand?: { name: string } | null;
   taxType?: string;
+  unitsPerBox?: number;
+  boxPrice?: number;
 }
 
 export interface CartItem extends Product {

@@ -613,8 +613,8 @@ export default function CashClosingTab({ bcvRate, currency }: CashClosingTabProp
                 {closings.map((closing) => (
                   <tr key={closing.id} className="border-t hover:bg-muted/30">
                     <td className="p-2">
-                      <Badge variant="outline" className={`text-[10px] ${getBadgeColor(closing.closingType)}`}>
-                        {closing.closingType === 'pre' ? 'PRE-CIERRE' : 'CIERRE FINAL'}
+                      <Badge variant={closing.closingType === 'final' ? 'success' : 'warning'} className='text-[10px]'>
+                        {closing.closingType === 'final' ? 'CIERRE FINAL' : 'PRE-CIERRE'}
                       </Badge>
                     </td>
                     <td className="p-2 text-xs">

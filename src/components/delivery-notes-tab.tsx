@@ -365,15 +365,32 @@ export default function DeliveryNotesTab({
     }
   };
 
-  const handlePrint = (note: DeliveryNote) => {
+  const handlePrint = async (note: DeliveryNote) => {
     const totalBs = note.totalUsd * bcvRate;
+    // Cargar datos de la empresa para el membrete
+    let storeName = "NexusOne POS";
+    let storeRif = "";
+    let storeAddress = "";
+    let storePhone = "";
+    try {
+      const stRes = await authFetch("/api/settings");
+      const st = await stRes.json();
+      storeName = st.storeName || "NexusOne POS";
+      storeRif = st.storeRif || "";
+      storeAddress = st.storeAddress || "";
+      storePhone = st.storePhone || "";
+    } catch {}
     const printContent = `
       <html>
         <head>
           <title>Nota de Entrega #${note.number}</title>
           <style>
             body { font-family: Arial, sans-serif; font-size: 12px; padding: 20px; color: #1e293b; }
-            h1 { text-align: center; font-size: 18px; margin-bottom: 4px; }
+            .header { text-align: center; margin-bottom: 16px; border-bottom: 2px solid #1e293b; padding-bottom: 10px; }
+            .header h1 { font-size: 18px; margin: 0 0 2px 0; }
+            .header .rif { font-size: 11px; color: #64748b; }
+            .header .addr { font-size: 10px; color: #64748b; }
+            .doc-title { text-align: center; font-size: 14px; font-weight: 600; margin: 12px 0 8px; text-transform: uppercase; letter-spacing: 1px; }
             .subtitle { text-align: center; font-size: 11px; color: #64748b; margin-bottom: 16px; }
             table { width: 100%; border-collapse: collapse; margin-top: 12px; }
             th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; font-size: 11px; }
@@ -388,7 +405,13 @@ export default function DeliveryNotesTab({
           </style>
         </head>
         <body>
-          <h1>NOTA DE ENTREGA #${note.number}</h1>
+          <div class="header">
+            <h1>${storeName}</h1>
+            ${storeRif ? `<div class="rif">RIF: ${storeRif}</div>` : ''}
+            ${storeAddress ? `<div class="addr">${storeAddress}</div>` : ''}
+            ${storePhone ? `<div class="addr">Tel: ${storePhone}</div>` : ''}
+          </div>
+          <div class="doc-title">Nota de Entrega #${note.number}</div>
           <div class="subtitle">Generada el ${formatDate(note.date)}</div>
           <div class="info-grid">
             <div><span class="info-label">Destinatario:</span> ${note.recipientName}</div>

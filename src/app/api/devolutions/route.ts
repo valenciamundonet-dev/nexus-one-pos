@@ -117,11 +117,40 @@ export async function POST(req: NextRequest) {
         include: { items: true, sale: true },
       });
 
-      // Restaurar stock
+      // Restaurar stock + crear movimiento Kardex (entrada por devolucion)
       for (const item of body.items) {
+        const qty = parseFloat(item.quantity) || 0;
+        const productId = item.productId;
+
+        // Restaurar stock del producto
         await tx.product.update({
-          where: { id: item.productId },
-          data: { stock: { increment: parseFloat(item.quantity) } },
+          where: { id: productId },
+          data: { stock: { increment: qty } },
+        });
+
+        // Obtener saldo actual del producto para Kardex
+        const product = await tx.product.findUnique({ where: { id: productId } });
+        const currentStock = product ? (product.stock || 0) : 0;
+        const unitCost = product ? (product.cost || 0) : 0;
+
+        // Crear movimiento de inventario (ENTRADA por devolucion)
+        await tx.inventoryMovement.create({
+          data: {
+            productId,
+            date: new Date(),
+            movementType: 'devolucion',
+            concept: `Devolucion - ${body.reason || 'Sin motivo'}`,
+            quantity: qty,           // positivo = entrada
+            absQuantity: qty,
+            unitCost,
+            totalCost: qty * unitCost,
+            balanceQty: currentStock,
+            balanceTotalCost: currentStock * unitCost,
+            balanceAvgCost: unitCost,
+            referenceId: newDevolution.id,
+            userName: 'Sistema',
+            userRole: 'sistema',
+          },
         });
       }
 

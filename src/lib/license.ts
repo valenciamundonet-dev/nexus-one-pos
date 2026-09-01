@@ -1,6 +1,6 @@
 // Sistema de Licencias Nexus One POS
 // Genera y valida claves de licencia con algoritmo propietario
-// Estructura: TRIAL (15 dias) | BASICA (365 dias) | PROFESIONAL (365 dias)
+// Estructura: TRIAL (15 dias) | BASICA ($160/ano) | PRO ($220/ano)
 
 const LICENSE_SECRET = process.env.LICENSE_SECRET || '';
 
@@ -57,6 +57,15 @@ export interface LicenseFeatures {
   priceHistory: boolean;
   frequentCustomers: boolean;
   allowZeroStockConfig: boolean;
+  deliveryNotes: boolean;
+  quotes: boolean;
+  heldSales: boolean;
+  creditManagement: boolean;
+  expenses: boolean;
+  suppliers: boolean;
+  brands: boolean;
+  combos: boolean;
+  barcode: boolean;
 }
 
 // =================== LIMITES POR PLAN v2.1 ===================
@@ -89,6 +98,15 @@ const LICENSE_LIMITS = {
       priceHistory: false,
       frequentCustomers: false,
       allowZeroStockConfig: false,
+      deliveryNotes: false,
+      quotes: false,
+      heldSales: false,
+      creditManagement: false,
+      expenses: false,
+      suppliers: false,
+      brands: false,
+      combos: false,
+      barcode: false,
     },
   },
   basica: {
@@ -119,6 +137,15 @@ const LICENSE_LIMITS = {
       priceHistory: false,
       frequentCustomers: false,
       allowZeroStockConfig: true,
+      deliveryNotes: true,
+      quotes: true,
+      heldSales: true,
+      creditManagement: true,
+      expenses: true,
+      suppliers: true,
+      brands: true,
+      combos: false,
+      barcode: false,
     },
   },
   profesional: {
@@ -149,6 +176,15 @@ const LICENSE_LIMITS = {
       priceHistory: true,
       frequentCustomers: true,
       allowZeroStockConfig: true,
+      deliveryNotes: true,
+      quotes: true,
+      heldSales: true,
+      creditManagement: true,
+      expenses: true,
+      suppliers: true,
+      brands: true,
+      combos: true,
+      barcode: true,
     },
   },
 };
@@ -334,4 +370,13 @@ export const FEATURE_LABELS: Record<string, string> = {
   priceHistory: "Historial de Precios",
   frequentCustomers: "Clientes Frecuentes",
   allowZeroStockConfig: "Configurar Venta con Stock en 0",
+  deliveryNotes: "Notas de Entrega",
+  quotes: "Presupuestos/Cotizaciones",
+  heldSales: "Facturas en Espera",
+  creditManagement: "Cuentas por Cobrar",
+  expenses: "Modulo de Gastos",
+  suppliers: "Proveedores",
+  brands: "Marcas",
+  combos: "Productos Combo",
+  barcode: "Impresion de Codigos de Barra",
 };

@@ -28,6 +28,11 @@ interface DashboardData {
     casheaCount: number;
     casheaUsd: number;
     casheaBs: number;
+    devolutionsUsd: number;
+    devolutionsBs: number;
+    devolutionsCount: number;
+    expensesUsd: number;
+    expensesBs: number;
   };
   yesterday: { totalUsd: number; count: number };
   pctChange: number;
@@ -144,23 +149,23 @@ export default function DashboardTab({ bcvRate, currency }: DashboardProps) {
           </CardContent>
         </Card>
 
-        {/* Cashea (BNPL - se cobra despues) */}
-        <Card className={`border-l-4 border-l-purple-500 ${today.casheaCount > 0 ? 'bg-purple-50/40' : ''}`}>
+        {/* Devoluciones Hoy */}
+        <Card className={`border-l-4 border-l-red-500 ${(today.devolutionsCount || 0) > 0 ? 'bg-red-50/40' : ''}`}>
           <CardContent className="p-3">
-            <p className="text-[10px] text-muted-foreground uppercase font-medium">Cashea (BNPL)</p>
-            <p className="text-2xl font-black text-purple-600">{today.casheaCount}</p>
+            <p className="text-[10px] text-muted-foreground uppercase font-medium">Devoluciones</p>
+            <p className="text-2xl font-black text-red-600">{today.devolutionsCount || 0}</p>
             <p className="text-sm font-medium text-muted-foreground">
-              ${today.casheaUsd.toFixed(2)} <span className="text-[9px]">/ Bs {today.casheaBs.toFixed(2)}</span>
+              -${(today.devolutionsUsd || 0).toFixed(2)} <span className="text-[9px]">/ -Bs {(today.devolutionsBs || 0).toFixed(2)}</span>
             </p>
           </CardContent>
         </Card>
 
-        {/* Creditos Hoy */}
-        <Card className="border-l-4 border-l-amber-500">
+        {/* Gastos Hoy */}
+        <Card className={`border-l-4 border-l-orange-500 ${(today.expensesUsd || 0) > 0 ? 'bg-orange-50/40' : ''}`}>
           <CardContent className="p-3">
-            <p className="text-[10px] text-muted-foreground uppercase font-medium">Creditos Hoy</p>
-            <p className="text-2xl font-black text-amber-600">{today.creditCount}</p>
-            <p className="text-sm font-medium text-muted-foreground">${today.creditUsd.toFixed(2)}</p>
+            <p className="text-[10px] text-muted-foreground uppercase font-medium">Gastos Hoy</p>
+            <p className="text-2xl font-black text-orange-600">${(today.expensesUsd || 0).toFixed(2)}</p>
+            <p className="text-sm font-medium text-muted-foreground">Bs {(today.expensesBs || 0).toFixed(2)}</p>
           </CardContent>
         </Card>
       </div>

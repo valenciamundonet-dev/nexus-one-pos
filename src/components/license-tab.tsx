@@ -46,7 +46,7 @@ interface LicenseTabProps {
 const TYPE_LABELS: Record<string, string> = {
   trial: "TRIAL",
   basica: "BASICA",
-  profesional: "PROFESIONAL",
+  profesional: "PRO",
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -57,15 +57,18 @@ const TYPE_COLORS: Record<string, string> = {
 
 // Features ordenadas por importancia para mostrar
 const FEATURE_DISPLAY_ORDER = [
-  "pos", "products", "categories", "cashClosing", "devolutions",
+  "pos", "products", "categories", "brands", "combos", "cashClosing", "devolutions",
   "basicReports", "advancedReports", "salesCharts", "autoBackup",
   "exportImport", "noWatermark", "unlimitedProducts", "unlimitedSales",
   "multipleUsers", "inventoryAlerts", "printInvoice", "productDiscount",
   "saleNotes", "priceHistory", "frequentCustomers", "allowZeroStockConfig",
+  "deliveryNotes", "quotes", "heldSales", "creditManagement", "expenses",
+  "suppliers", "barcode",
 ];
 
 // Datos de la tabla comparativa
 const COMPARISON_TABLE = [
+  { feature: "Precio", trial: "Gratis", basica: "$160/ano", profesional: "$220/ano" },
   { feature: "Duracion", trial: "15 dias", basica: "365 dias", profesional: "365 dias" },
   { feature: "Productos max.", trial: "30", basica: "300", profesional: "Ilimitados" },
   { feature: "Ventas/dia", trial: "15", basica: "Ilimitadas", profesional: "Ilimitadas" },
@@ -73,8 +76,16 @@ const COMPARISON_TABLE = [
   { feature: "Punto de Venta", trial: "Si", basica: "Si", profesional: "Si" },
   { feature: "Gestion Productos", trial: "Si", basica: "Si", profesional: "Si" },
   { feature: "Categorias", trial: "Si", basica: "Si", profesional: "Si" },
+  { feature: "Marcas", trial: "No", basica: "Si", profesional: "Si" },
+  { feature: "Productos Combo", trial: "No", basica: "No", profesional: "Si" },
   { feature: "Cierre de Caja", trial: "No", basica: "Si", profesional: "Si" },
   { feature: "Devoluciones", trial: "No", basica: "Si", profesional: "Si" },
+  { feature: "Notas de Entrega", trial: "No", basica: "Si", profesional: "Si" },
+  { feature: "Presupuestos", trial: "No", basica: "Si", profesional: "Si" },
+  { feature: "Facturas en Espera", trial: "No", basica: "Si", profesional: "Si" },
+  { feature: "Cuentas por Cobrar", trial: "No", basica: "Si", profesional: "Si" },
+  { feature: "Modulo de Gastos", trial: "No", basica: "Si", profesional: "Si" },
+  { feature: "Proveedores", trial: "No", basica: "Si", profesional: "Si" },
   { feature: "Reportes Basicos", trial: "Si", basica: "Si", profesional: "Si" },
   { feature: "Reportes Avanzados", trial: "No", basica: "No", profesional: "Si" },
   { feature: "Graficos de Ventas", trial: "No", basica: "No", profesional: "Si" },
@@ -88,6 +99,7 @@ const COMPARISON_TABLE = [
   { feature: "Clientes Frecuentes", trial: "No", basica: "No", profesional: "Si" },
   { feature: "Alertas Inventario", trial: "No", basica: "No", profesional: "Si" },
   { feature: "Multi-Cajeros", trial: "No", basica: "No", profesional: "Si" },
+  { feature: "Codigos de Barra", trial: "No", basica: "No", profesional: "Si" },
   { feature: "Marca de Agua", trial: "Si", basica: "No", profesional: "No" },
   { feature: "Activaciones", trial: "1", basica: "2", profesional: "3" },
 ];
@@ -433,7 +445,7 @@ export default function LicenseTab({ license, onLicenseChange }: LicenseTabProps
               <div className="flex-1">
                 <p className="font-semibold text-yellow-800">Version de PRUEBA - {license.daysRemaining} dias restantes</p>
                 <p className="text-sm text-yellow-700 mt-1">
-                  Prueba Nexus One POS con funciones basicas. Al activar una licencia BASICA o PROFESIONAL
+                  Prueba Nexus One POS con funciones basicas. Al activar una licencia BASICA o PRO
                   desbloqueara todas las funciones y el sistema quedara vinculado permanentemente a este equipo.
                 </p>
                 <div className="mt-2 p-2 bg-yellow-100 rounded text-xs text-yellow-800">
@@ -488,7 +500,7 @@ export default function LicenseTab({ license, onLicenseChange }: LicenseTabProps
                   <th className="text-left p-2">Funcion</th>
                   <th className="text-center p-2 text-yellow-700 font-bold">TRIAL</th>
                   <th className="text-center p-2 text-blue-700 font-bold">BASICA</th>
-                  <th className="text-center p-2 text-green-700 font-bold">PROFESIONAL</th>
+                  <th className="text-center p-2 text-green-700 font-bold">PRO</th>
                 </tr>
               </thead>
               <tbody>
@@ -511,7 +523,7 @@ export default function LicenseTab({ license, onLicenseChange }: LicenseTabProps
             </div>
             <div className="p-3 rounded border border-blue-300 bg-blue-50 text-center">
               <p className="font-bold text-blue-800 text-sm">BASICA</p>
-              <p className="text-2xl font-bold text-blue-700">$110</p>
+              <p className="text-2xl font-bold text-blue-700">$160</p>
               <p className="text-[10px] text-muted-foreground">365 dias - Todo lo esencial</p>
             </div>
             <div
@@ -522,25 +534,7 @@ export default function LicenseTab({ license, onLicenseChange }: LicenseTabProps
                 animation: "promoPulse 2.5s ease-in-out infinite",
               }}
             >
-              {/* Badge ribbon */}
-              <span
-                className="absolute -top-1 -right-6 text-white text-[9px] px-3 py-0.5 font-extrabold uppercase tracking-wider rotate-45 shadow"
-                style={{
-                  background: "linear-gradient(135deg, #f59e0b, #d97706)",
-                  borderRadius: "0 0 6px 6px",
-                }}
-              >
-                Oferta
-              </span>
-              <p className="font-bold text-amber-800 text-sm mt-1">PROFESIONAL</p>
-              {/* Precio anterior tachado */}
-              <p
-                className="text-sm line-through text-gray-400 mt-1"
-                style={{ textDecorationColor: "#ef4444", textDecorationThickness: "2px" }}
-              >
-                $280
-              </p>
-              {/* Precio promo grande */}
+              <p className="font-bold text-amber-800 text-sm mt-1">PRO</p>
               <p
                 className="text-3xl font-extrabold mt-0.5"
                 style={{
@@ -548,17 +542,7 @@ export default function LicenseTab({ license, onLicenseChange }: LicenseTabProps
                   textShadow: "0 1px 2px rgba(0,0,0,0.08)",
                 }}
               >
-                $180
-              </p>
-              {/* CTA llamativo */}
-              <p
-                className="text-xs font-bold mt-1"
-                style={{
-                  color: "#ef4444",
-                  animation: "ctaPulse 2s ease-in-out infinite",
-                }}
-              >
-                Ahorra $100 hoy
+                $220
               </p>
               <p className="text-[9px] text-amber-600 mt-0.5">
                 365 dias - Sin limites
@@ -569,10 +553,7 @@ export default function LicenseTab({ license, onLicenseChange }: LicenseTabProps
                   0%, 100% { box-shadow: 0 0 18px rgba(245,158,11,0.35), inset 0 0 12px rgba(245,158,11,0.08); transform: scale(1); }
                   50% { box-shadow: 0 0 28px rgba(245,158,11,0.55), inset 0 0 20px rgba(245,158,11,0.12); transform: scale(1.015); }
                 }
-                @keyframes ctaPulse {
-                  0%, 100% { opacity: 1; }
-                  50% { opacity: 0.65; }
-                }
+
               `}</style>
             </div>
           </div>

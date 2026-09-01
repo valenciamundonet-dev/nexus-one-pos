@@ -381,12 +381,26 @@ export default function QuotesTab({
     }
   }
 
-  function handlePrint(quote: Quote) {
+  async function handlePrint(quote: Quote) {
     const taxLabel = (item: QuoteItem) => {
       if (item.taxType === "exento" || item.taxType === "exento_bcv") return "Exento";
       if (item.taxType === "reducido") return "8%";
       return "16%";
     };
+
+    // Cargar datos de la empresa para el membrete
+    let storeName = "NexusOne POS";
+    let storeRif = "";
+    let storeAddress = "";
+    let storePhone = "";
+    try {
+      const stRes = await authFetch("/api/settings");
+      const st = await stRes.json();
+      storeName = st.storeName || "NexusOne POS";
+      storeRif = st.storeRif || "";
+      storeAddress = st.storeAddress || "";
+      storePhone = st.storePhone || "";
+    } catch {}
 
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
@@ -401,7 +415,12 @@ export default function QuotesTab({
         <title>Presupuesto ${quote.number}</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 24px; color: #1e293b; }
-          h1 { font-size: 20px; margin-bottom: 4px; }
+          .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #1e293b; padding-bottom: 12px; }
+          .header h1 { font-size: 22px; margin: 0 0 4px 0; }
+          .header .rif { font-size: 12px; color: #64748b; margin-bottom: 2px; }
+          .header .addr { font-size: 11px; color: #64748b; }
+          .doc-title { text-align: center; font-size: 16px; font-weight: 600; margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 1px; }
+          h2 { font-size: 16px; margin-bottom: 4px; }
           .meta { color: #64748b; font-size: 13px; margin-bottom: 16px; }
           table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
           th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-size: 13px; }
@@ -414,7 +433,13 @@ export default function QuotesTab({
         </style>
       </head>
       <body>
-        <h1>Presupuesto ${quote.number}</h1>
+        <div class="header">
+          <h1>${storeName}</h1>
+          ${storeRif ? `<div class="rif">RIF: ${storeRif}</div>` : ''}
+          ${storeAddress ? `<div class="addr">${storeAddress}</div>` : ''}
+          ${storePhone ? `<div class="addr">Tel: ${storePhone}</div>` : ''}
+        </div>
+        <div class="doc-title">Presupuesto Nro. ${quote.number}</div>
         <div class="meta">
           <p>Cliente: <strong>${quote.clientName}</strong></p>
           <p>Fecha: ${formatDate(quote.createdAt)} &nbsp;|&nbsp; Válido hasta: ${formatDate(quote.validUntil)}</p>

@@ -103,9 +103,26 @@ export default function DevolutionsTab({ bcvRate, currency }: DevolutionsTabProp
     setShowNewDialog(true);
   };
 
+  const [prevReturned, setPrevReturned] = useState<Map<string, number>>(new Map());
+
+  const getAlreadyReturnedForProduct = (saleId: string, productId: string): number => {
+    return devolutions
+      .filter((d) => d.saleId === saleId)
+      .flatMap((d) => d.items || [])
+      .filter((di: any) => di.productId === productId)
+      .reduce((sum: number, di: any) => sum + (di.quantity || 0), 0);
+  };
+
   const selectSale = (sale: Sale) => {
     setSelectedSale(sale);
     setReturnItems(new Map());
+    // Calcular cantidades ya devueltas por producto
+    const returnedMap = new Map<string, number>();
+    for (const item of sale.items || []) {
+      const alreadyReturned = getAlreadyReturnedForProduct(sale.id, item.productId);
+      returnedMap.set(item.productId, alreadyReturned);
+    }
+    setPrevReturned(returnedMap);
   };
 
   const setReturnQty = (productId: string, qty: number) => {
@@ -370,14 +387,33 @@ export default function DevolutionsTab({ bcvRate, currency }: DevolutionsTabProp
               <Separator />
 
               <div>
-                <Label className="mb-2 block">Productos a devolver</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Productos a devolver</Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const allItems = new Map<string, number>();
+                      for (const item of selectedSaleItems) {
+                        const alreadyRet = prevReturned.get(item.productId) || 0;
+                        const maxRet = item.quantity - alreadyRet;
+                        if (maxRet > 0) allItems.set(item.productId, maxRet);
+                      }
+                      setReturnItems(allItems);
+                    }}
+                  >
+                    Devolver Todo
+                  </Button>
+                </div>
                 <div className="space-y-2">
                   {selectedSaleItems.map((item) => {
                     const qty = returnItems.get(item.productId) || 0;
+                    const alreadyRet = prevReturned.get(item.productId) || 0;
+                    const maxReturnable = item.quantity - alreadyRet;
                     return (
                       <div
                         key={item.productId}
-                        className="flex items-center gap-3 p-2 rounded border"
+                        className={`flex items-center gap-3 p-2 rounded border ${maxReturnable <= 0 ? 'opacity-50' : ''}`}
                       >
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
@@ -385,6 +421,7 @@ export default function DevolutionsTab({ bcvRate, currency }: DevolutionsTabProp
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {currency} {item.unitPrice.toFixed(2)} c/u - Vendidos: {item.quantity}
+                            {alreadyRet > 0 && <span className="text-amber-600 ml-1">(Ya devueltos: {alreadyRet})</span>}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -403,9 +440,9 @@ export default function DevolutionsTab({ bcvRate, currency }: DevolutionsTabProp
                             size="icon"
                             className="w-7 h-7"
                             onClick={() =>
-                              setReturnQty(item.productId, Math.min(qty + 1, item.quantity))
+                              setReturnQty(item.productId, Math.min(qty + 1, maxReturnable))
                             }
-                            disabled={qty >= item.quantity}
+                            disabled={qty >= maxReturnable || maxReturnable <= 0}
                           >
                             +
                           </Button>

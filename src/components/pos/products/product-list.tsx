@@ -9,7 +9,7 @@ interface ProductListProps {
   currency: string;
   bcvRate: number;
   allowZeroStock: boolean;
-  onAddToCart: (product: Product) => void;
+  onAddToCart: (product: Product, qty?: number) => void;
 }
 
 // ─── Fase 3e: Virtualization constants ──
@@ -17,7 +17,7 @@ const VIRTUAL_THRESHOLD = 80;
 const ROW_HEIGHT = 52;
 const OVERSCAN = 5;
 
-function renderRow(product: Product, currency: string, bcvRate: number, allowZeroStock: boolean, onAddToCart: (p: Product) => void) {
+function renderRow(product: Product, currency: string, bcvRate: number, allowZeroStock: boolean, onAddToCart: (p: Product, qty?: number) => void) {
   const isOut = product.stock <= 0;
   const isLow = product.stock > 0 && product.stock <= (product.minStock || 5);
 
@@ -49,6 +49,15 @@ function renderRow(product: Product, currency: string, bcvRate: number, allowZer
       <Badge variant={isOut ? "destructive" : isLow ? "warning" : "secondary"} className="flex-shrink-0 text-[9px] px-1.5 py-0">
         {product.stock}
       </Badge>
+      {product.unitsPerBox && product.unitsPerBox > 0 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onAddToCart(product, product.unitsPerBox); }}
+          className="bg-amber-500 hover:bg-amber-600 text-white text-[9px] font-bold px-2 py-0.5 rounded flex-shrink-0 leading-none"
+          title={`Agregar ${product.unitsPerBox} unidades (bulto)`}
+        >
+          +{product.unitsPerBox} B
+        </button>
+      )}
     </button>
   );
 }

@@ -75,7 +75,22 @@ export async function GET() {
     const todayCreditCount = todaySales.filter(s => s.isCredit).length;
     const todayCreditUsd = todaySales.filter(s => s.isCredit).reduce((s, v) => s + v.total, 0);
 
-    // Productos mas vendidos hoy (incluye TODAS las ventas, tambien cashea)
+    // ===== DEVOLUCIONES DE HOY =====
+    const todayDevolutions = await db.devolution.findMany({
+      where: { date: { gte: startOfDay, lte: endOfDay } },
+    });
+    const todayDevolutionsUsd = todayDevolutions.reduce((s, d) => s + d.totalUsd, 0);
+    const todayDevolutionsBs = todayDevolutions.reduce((s, d) => s + d.totalBs, 0);
+    const todayDevolutionsCount = todayDevolutions.length;
+
+    // ===== GASTOS DE HOY =====
+    const todayExpenses = await db.expense.findMany({
+      where: { date: { gte: startOfDay, lte: endOfDay } },
+    });
+    const todayExpensesUsd = todayExpenses.reduce((s, e) => s + e.amount, 0);
+    const todayExpensesBs = todayExpenses.reduce((s, e) => s + e.amountBs, 0);
+
+    // ===== PRODUCTOS MAS VENDIDOS HOY (incluye TODAS las ventas, tambien cashea) =====
     const productMap: Record<string, { name: string; qty: number; total: number }> = {};
     for (const sale of todaySales) {
       for (const item of sale.items) {
@@ -178,6 +193,11 @@ export async function GET() {
         casheaCount: todayCasheaCount,
         casheaUsd: todayCasheaUsd,
         casheaBs: todayCasheaBs,
+        devolutionsUsd: todayDevolutionsUsd,
+        devolutionsBs: todayDevolutionsBs,
+        devolutionsCount: todayDevolutionsCount,
+        expensesUsd: todayExpensesUsd,
+        expensesBs: todayExpensesBs,
       },
       yesterday: {
         totalUsd: yesterdayTotal,
