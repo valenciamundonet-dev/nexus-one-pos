@@ -399,18 +399,57 @@ If Not objFSO.FileExists(strDir & "\.env") Then
     If objFSO.FileExists(strDir & "\.env.example") Then
         objFSO.CopyFile strDir & "\.env.example", strDir & "\.env", True
         LogWrite "  .env creado desde .env.example"
+        ' Verificar que JWT_SECRET no este comentado
+        Set envFile = objFSO.OpenTextFile(strDir & "\.env", 1)
+        envContent = envFile.ReadAll
+        envFile.Close
+        hasJwt = False
+        jwtLines = Split(envContent, vbCrLf)
+        For Each jl In jwtLines
+            jlTrim = Trim(jl)
+            If Left(jlTrim, 11) = "JWT_SECRET=" Then
+                hasJwt = True
+                Exit For
+            End If
+        Next
+        If Not hasJwt Then
+            Set envFile = objFSO.OpenTextFile(strDir & "\.env", 8)
+            envFile.WriteLine "JWT_SECRET=nexusone-pos-jwt-secret-v3.1.7-change-in-production"
+            envFile.Close
+            LogWrite "  JWT_SECRET agregado a .env (estaba comentado)"
+        End If
     Else
         Set envFile = objFSO.CreateTextFile(strDir & "\.env", True)
         envFile.WriteLine "DATABASE_URL=""file:./prisma/dev.db"""
         envFile.WriteLine "APP_PORT=3000"
         envFile.WriteLine "NODE_ENV=production"
-        envFile.WriteLine "JWT_SECRET=nexusone-pos-jwt-secret-v3.1.1-change-in-production"
+        envFile.WriteLine "JWT_SECRET=nexusone-pos-jwt-secret-v3.1.7-change-in-production"
         envFile.WriteLine "LICENSE_SECRET=NX1-L1C3NC3-S3CR3T-K3Y-2024-PROD"
         envFile.Close
         LogWrite "  .env creado con valores predeterminados"
     End If
 Else
-    LogWrite "  .env ya existe, conservado"
+    ' .env ya existe — verificar que tiene JWT_SECRET activo (no comentado)
+    Set envFile = objFSO.OpenTextFile(strDir & "\.env", 1)
+    envContent = envFile.ReadAll
+    envFile.Close
+    hasJwt = False
+    jwtLines = Split(envContent, vbCrLf)
+    For Each jl In jwtLines
+        jlTrim = Trim(jl)
+        If Left(jlTrim, 11) = "JWT_SECRET=" Then
+            hasJwt = True
+            Exit For
+        End If
+    Next
+    If Not hasJwt Then
+        Set envFile = objFSO.OpenTextFile(strDir & "\.env", 8)
+        envFile.WriteLine "JWT_SECRET=nexusone-pos-jwt-secret-v3.1.7-change-in-production"
+        envFile.Close
+        LogWrite "  JWT_SECRET agregado a .env existente (falta)"
+    Else
+        LogWrite "  .env ya existe con JWT_SECRET, conservado"
+    End If
 End If
 On Error GoTo 0
 
