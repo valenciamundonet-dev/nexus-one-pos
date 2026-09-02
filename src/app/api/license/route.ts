@@ -224,6 +224,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: validation.error || "Clave invalida" }, { status: 400 });
     }
 
+    // Use maxActivations from key if embedded, otherwise fall back to plan default
+    const effectiveMaxActivations = validation.maxActivations || getLicenseLimits(validation.licenseType).maxActivations;
+
     const cleanKey = licenseKey.trim().toUpperCase();
 
     let license = await db.license.findFirst();
@@ -245,7 +248,7 @@ export async function POST(req: NextRequest) {
             maxProducts: planInfo.maxProducts,
             maxDailySales: planInfo.maxDailySales,
             maxUsers: planInfo.maxUsers,
-            maxActivations: planInfo.maxActivations,
+            maxActivations: effectiveMaxActivations,
             isActive: true,
             blockedReason: '',
             ownerName: ownerName || license.ownerName,
@@ -300,7 +303,7 @@ export async function POST(req: NextRequest) {
               maxProducts: planInfo.maxProducts,
               maxDailySales: planInfo.maxDailySales,
               maxUsers: planInfo.maxUsers,
-              maxActivations: planInfo.maxActivations,
+              maxActivations: effectiveMaxActivations,
               isActive: true,
               activationCount: license.activationCount + 1,
               previousMachines: JSON.stringify(previousMachinesList),
@@ -350,7 +353,7 @@ export async function POST(req: NextRequest) {
             maxProducts: planInfo.maxProducts,
             maxDailySales: planInfo.maxDailySales,
             maxUsers: planInfo.maxUsers,
-            maxActivations: planInfo.maxActivations,
+            maxActivations: effectiveMaxActivations,
             isActive: true,
             activationCount: license.activationCount + 1,
             previousMachines: JSON.stringify(previousMachinesList),
@@ -394,7 +397,7 @@ export async function POST(req: NextRequest) {
         maxProducts: planInfo.maxProducts,
         maxDailySales: planInfo.maxDailySales,
         maxUsers: planInfo.maxUsers,
-        maxActivations: planInfo.maxActivations,
+        maxActivations: effectiveMaxActivations,
         isActive: true,
         activationCount: 1,
         previousMachines: '',

@@ -25,6 +25,7 @@ import SuppliersTab from "@/components/suppliers-tab";
 import PurchasesTab from "@/components/purchases-tab";
 import CreditTab from "@/components/credit-tab";
 import ExpensesTab from "@/components/expenses-tab";
+import AccountsPayableTab from "@/components/accounts-payable-tab";
 import DashboardTab from "@/components/dashboard-tab";
 import KardexTab from "@/components/kardex-tab";
 import HeldSalesTab from "@/components/held-sales-tab";
@@ -407,6 +408,7 @@ export default function Home() {
     { value: "quotes", label: "Presupuestos", icon: "📋" },
     { value: "delivery-notes", label: "Notas de Entrega", icon: "🚚" },
     { value: "expenses", label: "Gastos", icon: "💸" },
+    { value: "accounts-payable", label: "Cuentas por Pagar", icon: "💸" },
     { value: "catalog", label: "Catalogo", icon: "📖" },
     { value: "diagnostics", label: "Diagnosticos", icon: "🔧" },
     { value: "db-health", label: "Salud BD", icon: "💾" },
@@ -734,6 +736,11 @@ export default function Home() {
               sellerName={currentUser.fullName || currentUser.username}
               sellerRole={currentUser.role}
               userId={currentUser.id} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="accounts-payable" activeTab={activeTab}>
+          <ErrorBoundary name="Cuentas por Pagar">
+            <AccountsPayableTab bcvRate={settings.bcvRate ?? 36.5} currency={settings.currency} />
           </ErrorBoundary>
         </TabsContent>
         <TabsContent value="catalog" activeTab={activeTab}>

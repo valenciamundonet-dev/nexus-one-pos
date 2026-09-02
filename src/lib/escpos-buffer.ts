@@ -378,11 +378,16 @@ export function generateEscposBuffer(params: {
 
   // ═══ INFO VENTA — tamano normal ═══
   parts.push(textLine('Fecha: ' + dateStr + ' ' + timeStr));
-  // Número de factura / correlativo
+  // Número de documento / correlativo
   const invoiceNumber = (receipt as any).invoiceNumber || '';
-  if (invoiceNumber) {
+  const showInvoiceId = (settings as any).ticketShowInvoiceId !== false;
+  const invoiceAlign = (settings as any).ticketInvoiceIdAlign || 'left';
+  if (invoiceNumber && showInvoiceId) {
     parts.push(cmdBold(true));
-    parts.push(textLine(invoiceNumber));
+    const alignMap: Record<string, 0 | 1 | 2> = { left: 0, center: 1, right: 2 };
+    parts.push(cmdAlign(alignMap[invoiceAlign] || 0));
+    parts.push(textLine('DOCUMENTO ' + invoiceNumber));
+    parts.push(cmdAlign(0));
     parts.push(cmdBold(false));
   }
 
@@ -570,8 +575,10 @@ export function generateEscposBuffer(params: {
     }
   }
 
-  // ID al final (despues del mensaje footer)
-  parts.push(textLine('ID: ' + receipt.id.slice(0, 8)));
+  // ID al final (toggleable)
+  if (showInvoiceId) {
+    parts.push(textLine('ID: ' + receipt.id.slice(0, 8)));
+  }
 
   parts.push(cmdFeed(3));
   parts.push(cmdCut());

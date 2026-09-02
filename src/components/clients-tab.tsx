@@ -933,6 +933,7 @@ export default function ClientsTab({ bcvRate, currency, storeRif, storeName, sto
                 <thead className="bg-muted/50 sticky top-0">
                   <tr>
                     <th className="text-left p-2">Fecha</th>
+                    <th className="text-center p-2">Tipo</th>
                     <th className="text-left p-2">Pago</th>
                     <th className="text-right p-2">USD</th>
                     <th className="text-right p-2">Bs</th>
@@ -948,6 +949,13 @@ export default function ClientsTab({ bcvRate, currency, storeRif, storeName, sto
                         <td className="p-2">
                           <div>{new Date(sale.date).toLocaleDateString('es-VE')}</div>
                           <div className="text-muted-foreground">{new Date(sale.date).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })}</div>
+                        </td>
+                        <td className="p-2 text-center">
+                          {sale.isCredit ? (
+                            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400">CREDITO</span>
+                          ) : (
+                            <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400">CONTADO</span>
+                          )}
                         </td>
                         <td className="p-2">{PAYMENT_LABELS[sale.paymentMethod] || sale.paymentMethod}</td>
                         <td className="p-2 text-right font-medium">{currency} {(sale.total || 0).toFixed(2)}</td>

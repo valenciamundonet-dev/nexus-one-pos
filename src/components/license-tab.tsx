@@ -235,6 +235,24 @@ export default function LicenseTab({ license, onLicenseChange }: LicenseTabProps
         </Card>
       )}
 
+      {/* ====== Machine ID Prominente ====== */}
+      <Card className="border-blue-400 bg-blue-50">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-xs text-blue-600 font-semibold uppercase tracking-wide">Machine ID de este equipo</p>
+              <p className="font-mono font-bold text-lg mt-1 text-blue-900 tracking-wider select-all">{license.machineId}</p>
+              <p className="text-[11px] text-blue-600 mt-1">
+                Proporcione este ID al administrador para generar su licencia.
+              </p>
+            </div>
+            <Button variant="outline" className="ml-4 shrink-0" onClick={copyMachineId}>
+              {copied ? "✓ Copiado!" : "Copiar ID"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* ====== Estado actual ====== */}
       <Card className={isTrial ? "border-yellow-300 bg-yellow-50" : isExpired ? "border-red-300 bg-red-50" : "border-green-300 bg-green-50"}>
         <CardHeader>

@@ -195,9 +195,11 @@ export function generateLicenseKey(
   ownerName: string,
   machineId: string = "",
   days: number = 365,
-  secret: string = LICENSE_SECRET
+  secret: string = LICENSE_SECRET,
+  maxActivations: number = 0
 ): string {
   const typeCode = licenseType === "profesional" ? "PR0" : "B4S";
+  const actCode = maxActivations > 0 ? `A${maxActivations}` : "";
 
   const now = new Date();
   const expiry = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
@@ -206,10 +208,10 @@ export function generateLicenseKey(
   const nameHash = simpleHash(ownerName.toLowerCase().trim());
   const machineHash = machineId ? simpleHash(machineId) : simpleHash(licenseType + timeCode);
 
-  const payload = `${typeCode}${timeCode}${nameHash}${machineHash}`;
+  const payload = `${typeCode}${actCode}${timeCode}${nameHash}${machineHash}`;
   const checkDigit = computeCheckDigit(payload, secret);
 
-  const raw = `${typeCode}${timeCode}${nameHash}${machineHash}${checkDigit}`;
+  const raw = `${payload}${checkDigit}`;
   return formatKey(raw);
 }
 
@@ -224,6 +226,7 @@ export function validateLicenseKey(
   licenseType: "trial" | "basica" | "profesional";
   expiresAt: Date;
   activatedAt: Date;
+  maxActivations?: number;
   error?: string;
 } {
   try {
@@ -242,8 +245,18 @@ export function validateLicenseKey(
       return { valid: false, licenseType: "trial", expiresAt: new Date(), activatedAt: new Date(), error: "Tipo de licencia no reconocido" };
     }
 
-    if (clean.length >= 22) {
-      const expiryStr = clean.substring(11, 19);
+    // Detect new format with embedded maxActivations: TYPECODE + "A" + digit
+    let offset = 3; // default: typeCode is 3 chars
+    let maxActivations: number | undefined;
+    if (clean.length > 4 && clean[3] === "A" && /[1-9]/.test(clean[4])) {
+      maxActivations = parseInt(clean[4]);
+      offset = 5; // skip "A" + digit
+    }
+
+    if (clean.length >= offset + 18) {
+      const actStr = clean.substring(offset, offset + 8);
+      const expiryStr = clean.substring(offset + 8, offset + 16);
+      
       const year = parseInt(expiryStr.substring(0, 4));
       const month = parseInt(expiryStr.substring(4, 6));
       const day = parseInt(expiryStr.substring(6, 8));
@@ -258,7 +271,6 @@ export function validateLicenseKey(
         return { valid: false, licenseType, expiresAt, activatedAt: new Date(), error: "Licencia expirada" };
       }
 
-      const actStr = clean.substring(3, 11);
       const aYear = parseInt(actStr.substring(0, 4));
       const aMonth = parseInt(actStr.substring(4, 6));
       const aDay = parseInt(actStr.substring(6, 8));
@@ -271,7 +283,7 @@ export function validateLicenseKey(
         return { valid: false, licenseType, expiresAt, activatedAt, error: "Clave invalida - digito de verificacion incorrecto" };
       }
 
-      return { valid: true, licenseType, expiresAt, activatedAt };
+      return { valid: true, licenseType, expiresAt, activatedAt, maxActivations };
     }
 
     return { valid: false, licenseType: "trial", expiresAt: new Date(), activatedAt: new Date(), error: "Formato de clave invalido" };

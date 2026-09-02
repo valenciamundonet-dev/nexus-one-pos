@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { authFetch } from "@/lib/auth-fetch";
+import { Printer } from "lucide-react";
 
 interface Sale {
   id: string;
@@ -41,6 +42,7 @@ interface Devolution {
   totalUsd: number;
   totalBs: number;
   exchangeRate: number;
+  creditNoteNumber: number;
   status: string;
   sale?: Sale;
   items: DevolutionItem[];
@@ -205,6 +207,93 @@ export default function DevolutionsTab({ bcvRate, currency }: DevolutionsTabProp
       .reduce((sum, d) => sum + d.totalUsd, 0);
   };
 
+  const handlePrint = async (dev: Devolution) => {
+    // Cargar datos de la empresa para el membrete
+    let storeName = "NexusOne POS";
+    let storeRif = "";
+    let storeAddress = "";
+    let storePhone = "";
+    try {
+      const stRes = await authFetch("/api/settings");
+      const st = await stRes.json();
+      storeName = st.storeName || "NexusOne POS";
+      storeRif = st.storeRif || "";
+      storeAddress = st.storeAddress || "";
+      storePhone = st.storePhone || "";
+    } catch {}
+
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("No se pudo abrir la ventana de impresión");
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <title>Nota de Crédito ${dev.creditNoteNumber}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 24px; color: #1e293b; }
+          .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #1e293b; padding-bottom: 12px; }
+          .header h1 { font-size: 22px; margin: 0 0 4px 0; }
+          .header .rif { font-size: 12px; color: #64748b; margin-bottom: 2px; }
+          .header .addr { font-size: 11px; color: #64748b; }
+          .doc-title { text-align: center; font-size: 16px; font-weight: 600; margin: 16px 0 8px; text-transform: uppercase; letter-spacing: 1px; }
+          .meta { color: #64748b; font-size: 13px; margin-bottom: 16px; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+          th, td { border: 1px solid #cbd5e1; padding: 8px 10px; text-align: left; font-size: 13px; }
+          th { background: #f1f5f9; font-weight: 600; }
+          .totals { text-align: right; margin-top: 12px; }
+          .totals div { margin-bottom: 4px; font-size: 14px; }
+          .totals .grand { font-size: 18px; font-weight: 700; }
+          .notes { margin-top: 20px; padding: 12px; background: #f8fafc; border-radius: 6px; font-size: 13px; }
+          @media print { body { padding: 0; } }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${storeName}</h1>
+          ${storeRif ? `<div class="rif">RIF: ${storeRif}</div>` : ''}
+          ${storeAddress ? `<div class="addr">${storeAddress}</div>` : ''}
+          ${storePhone ? `<div class="addr">Tel: ${storePhone}</div>` : ''}
+        </div>
+        <div class="doc-title">Nota de Crédito ${dev.creditNoteNumber}</div>
+        <div class="meta">
+          <p>Cliente: <strong>${dev.sale?.customerName || "-"}</strong></p>
+          <p>Fecha: ${new Date(dev.date).toLocaleString("es-VE")}</p>
+          <p>Venta: ${dev.saleId.slice(0, 8)}</p>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Producto</th><th>Cant.</th><th>P. Unit.</th><th>Total</th></tr>
+          </thead>
+          <tbody>
+            ${(dev.items || [])
+              .map(
+                (i) =>
+                  `<tr>
+                    <td>${i.productName}</td>
+                    <td>${i.quantity}</td>
+                    <td>$${i.unitPrice.toFixed(2)}</td>
+                    <td>-$${i.total.toFixed(2)}</td>
+                  </tr>`
+              )
+              .join("")}
+          </tbody>
+        </table>
+        <div class="totals">
+          <div class="grand">Total: -$${dev.totalUsd.toFixed(2)}</div>
+          <div style="color:#64748b;">Total Bs: -Bs ${dev.totalBs.toFixed(2)}</div>
+        </div>
+        ${dev.reason ? `<div class="notes"><strong>Motivo:</strong> ${dev.reason}</div>` : ""}
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -256,11 +345,11 @@ export default function DevolutionsTab({ bcvRate, currency }: DevolutionsTabProp
               <thead className="bg-muted/50 sticky top-0">
                 <tr>
                   <th className="text-left p-2 font-medium">Fecha</th>
+                  <th className="text-left p-2 font-medium">Nota de Crédito</th>
                   <th className="text-left p-2 font-medium">Venta ID</th>
                   <th className="text-left p-2 font-medium">Cliente</th>
                   <th className="text-left p-2 font-medium">Motivo</th>
                   <th className="text-right p-2 font-medium">Total ($)</th>
-                  <th className="text-right p-2 font-medium">Total (Bs)</th>
                   <th className="text-center p-2 font-medium">Estado</th>
                 </tr>
               </thead>
@@ -270,21 +359,33 @@ export default function DevolutionsTab({ bcvRate, currency }: DevolutionsTabProp
                     <td className="p-2 text-xs">
                       {new Date(dev.date).toLocaleString("es-VE")}
                     </td>
+                    <td className="p-2 text-xs font-semibold">
+                      {dev.creditNoteNumber > 0 ? `Nota de Crédito ${dev.creditNoteNumber}` : "-"}
+                    </td>
                     <td className="p-2 text-xs font-mono">{dev.saleId.slice(0, 8)}</td>
                     <td className="p-2 text-xs">{dev.sale?.customerName || "-"}</td>
                     <td className="p-2 text-xs">{dev.reason}</td>
                     <td className="p-2 text-right text-destructive font-medium">
                       -${dev.totalUsd.toFixed(2)}
                     </td>
-                    <td className="p-2 text-right text-destructive font-medium">
-                      -Bs {dev.totalBs.toFixed(2)}
-                    </td>
                     <td className="p-2 text-center">
-                      <Badge
-                        variant={dev.status === "completada" ? "success" : "warning"}
-                      >
-                        {dev.status}
-                      </Badge>
+                      <div className="flex items-center justify-center gap-1">
+                        {dev.creditNoteNumber > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => handlePrint(dev)}
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        <Badge
+                          variant={dev.status === "completada" ? "success" : "warning"}
+                        >
+                          {dev.status}
+                        </Badge>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -333,7 +434,7 @@ export default function DevolutionsTab({ bcvRate, currency }: DevolutionsTabProp
                     >
                       <div className="flex justify-between items-center">
                         <div>
-                          <span className="font-mono text-xs">{sale.id.slice(0, 8)}</span>
+                          <span className="font-mono text-xs">{sale.invoiceNumber || sale.id.slice(0, 8)}</span>
                           <span className="text-sm ml-2">
                             {sale.customerName || "Cliente General"}
                           </span>

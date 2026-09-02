@@ -104,6 +104,30 @@
   }
   .days-presets button:hover { border-color: #3b82f6; color: #3b82f6; }
   .days-presets button.active { border-color: #3b82f6; color: #3b82f6; background: rgba(59,130,246,0.1); }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .btn-batch {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white;
+    margin-top: 8px;
+  }
+  .btn-batch:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(139,92,246,0.4); }
+  .batch-results { margin-top: 12px; }
+  .batch-item {
+    padding: 10px 12px; border-radius: 8px; background: #0f172a;
+    border: 1px solid #334155; margin-bottom: 8px;
+  }
+  .batch-item-header { color: #64748b; font-size: 11px; margin-bottom: 4px; }
+  .batch-item-key {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 13px; color: #22c55e; font-weight: 700;
+    user-select: all; cursor: pointer; word-break: break-all;
+  }
+  .batch-item-meta { color: #475569; font-size: 10px; margin-top: 4px; }
+  .btn-batch-copy {
+    padding: 4px 10px; border-radius: 4px; background: #334155; color: #e2e8f0;
+    border: 1px solid #475569; font-size: 10px; cursor: pointer; margin-top: 6px;
+    transition: all 0.2s;
+  }
+  .btn-batch-copy:hover { background: #475569; }
 </style>
 </head>
 <body>
@@ -143,13 +167,26 @@
     </div>
   </div>
 
+  <div class="row-2">
+    <div class="input-group">
+      <label class="label">Max. Instalaciones</label>
+      <input type="number" id="maxActivations" value="2" min="1" max="9" />
+    </div>
+    <div class="input-group">
+      <label class="label">Cantidad de Licencias</label>
+      <input type="number" id="batchCount" value="1" min="1" max="50" />
+    </div>
+  </div>
+
   <button class="btn btn-generate" onclick="generate()">Generar Licencia</button>
+  <button class="btn btn-batch" id="btnBatch" onclick="generateBatch()" style="display:none">Generar Lote (<span id="batchLabel">1</span>)</button>
 
   <div class="result-box" id="resultBox">
     <div class="result-label">Licencia Generada</div>
     <div class="license-key" id="licenseKey"></div>
     <div class="result-info" id="resultInfo"></div>
     <button class="btn-copy" id="btnCopy" onclick="copyKey()">Copiar al portapapeles</button>
+    <div class="batch-results" id="batchResults"></div>
   </div>
 
   <div class="history" id="historySection" style="display:none">
@@ -194,17 +231,18 @@ function formatKey(raw) {
   return groups.join('-');
 }
 
-function generateLicenseKey(licenseType, ownerName, days) {
+function generateLicenseKey(licenseType, ownerName, days, maxAct) {
   const typeCode = licenseType === 'profesional' ? 'PR0' : 'B4S';
+  const actCode = 'A' + (maxAct || 1);
   const now = new Date();
   const expiry = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
   const pad = (n, l) => String(n).padStart(l || 2, '0');
   const timeCode = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${expiry.getFullYear()}${pad(expiry.getMonth()+1)}${pad(expiry.getDate())}`;
   const nameHash = simpleHash(ownerName.toLowerCase().trim());
   const machineHash = simpleHash(licenseType + timeCode);
-  const payload = `${typeCode}${timeCode}${nameHash}${machineHash}`;
+  const payload = `${typeCode}${actCode}${timeCode}${nameHash}${machineHash}`;
   const checkDigit = computeCheckDigit(payload, LICENSE_SECRET);
-  return formatKey(`${typeCode}${timeCode}${nameHash}${machineHash}${checkDigit}`);
+  return formatKey(`${payload}${checkDigit}`);
 }
 
 // ===== UI =====
@@ -217,6 +255,7 @@ function selectPlan(plan) {
     c.className = 'plan-card';
   });
   document.getElementById('card-' + plan).classList.add('selected-' + plan);
+  document.getElementById('maxActivations').value = plan === 'profesional' ? '3' : '2';
 }
 
 function setDays(d) {
@@ -228,6 +267,7 @@ function setDays(d) {
 function generate() {
   const name = document.getElementById('ownerName').value.trim();
   const days = parseInt(document.getElementById('days').value) || 365;
+  const maxAct = Math.max(1, Math.min(9, parseInt(document.getElementById('maxActivations').value) || 1));
 
   if (!name) {
     document.getElementById('ownerName').style.borderColor = '#ef4444';
@@ -236,7 +276,7 @@ function generate() {
   }
   document.getElementById('ownerName').style.borderColor = '';
 
-  const key = generateLicenseKey(selectedPlan, name, days);
+  const key = generateLicenseKey(selectedPlan, name, days, maxAct);
   const now = new Date();
   const expiry = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 
@@ -244,18 +284,95 @@ function generate() {
   document.getElementById('resultInfo').innerHTML =
     `<strong>Plan:</strong> ${selectedPlan.toUpperCase()} &nbsp;|&nbsp; ` +
     `<strong>Cliente:</strong> ${name} &nbsp;|&nbsp; ` +
-    `<strong>Validez:</strong> ${days} dias<br>` +
+    `<strong>Validez:</strong> ${days} dias &nbsp;|&nbsp; ` +
+    `<strong>Max. Instalaciones:</strong> ${maxAct}<br>` +
     `<strong>Activacion:</strong> ${now.toLocaleDateString('es-VE')} &nbsp;|&nbsp; ` +
     `<strong>Vence:</strong> ${expiry.toLocaleDateString('es-VE')}`;
 
   document.getElementById('resultBox').classList.add('show');
+  document.getElementById('batchResults').innerHTML = '';
+  document.getElementById('btnCopy').style.display = '';
   document.getElementById('btnCopy').textContent = 'Copiar al portapapeles';
   document.getElementById('btnCopy').classList.remove('copied');
 
   // Add to history
-  history.unshift({ plan: selectedPlan.toUpperCase(), name, days, key, date: new Date().toLocaleString('es-VE') });
-  if (history.length > 10) history.pop();
+  history.unshift({ plan: selectedPlan.toUpperCase(), name, days, maxAct, key, date: new Date().toLocaleString('es-VE') });
+  if (history.length > 50) history.pop();
   renderHistory();
+}
+
+function generateBatch() {
+  const name = document.getElementById('ownerName').value.trim();
+  const days = parseInt(document.getElementById('days').value) || 365;
+  const maxAct = Math.max(1, Math.min(9, parseInt(document.getElementById('maxActivations').value) || 1));
+  const count = Math.max(1, Math.min(50, parseInt(document.getElementById('batchCount').value) || 1));
+
+  if (!name) {
+    document.getElementById('ownerName').style.borderColor = '#ef4444';
+    document.getElementById('ownerName').focus();
+    return;
+  }
+  document.getElementById('ownerName').style.borderColor = '';
+
+  const now = new Date();
+  const expiry = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+  const keys = [];
+
+  for (let i = 0; i < count; i++) {
+    const key = generateLicenseKey(selectedPlan, name, days, maxAct);
+    keys.push(key);
+    history.unshift({ plan: selectedPlan.toUpperCase(), name, days, maxAct, key, date: new Date().toLocaleString('es-VE'), batch: count > 1 ? `#${i+1}/${count}` : '' });
+  }
+  if (history.length > 50) history.length = 50;
+
+  // Show single key for single, batch for multiple
+  document.getElementById('resultBox').classList.add('show');
+
+  if (count === 1) {
+    document.getElementById('licenseKey').textContent = keys[0];
+    document.getElementById('resultInfo').innerHTML =
+      `<strong>Plan:</strong> ${selectedPlan.toUpperCase()} &nbsp;|&nbsp; ` +
+      `<strong>Cliente:</strong> ${name} &nbsp;|&nbsp; ` +
+      `<strong>Validez:</strong> ${days} dias &nbsp;|&nbsp; ` +
+      `<strong>Max. Instalaciones:</strong> ${maxAct}<br>` +
+      `<strong>Activacion:</strong> ${now.toLocaleDateString('es-VE')} &nbsp;|&nbsp; ` +
+      `<strong>Vence:</strong> ${expiry.toLocaleDateString('es-VE')}`;
+    document.getElementById('btnCopy').style.display = '';
+    document.getElementById('btnCopy').textContent = 'Copiar al portapapeles';
+    document.getElementById('btnCopy').classList.remove('copied');
+    document.getElementById('batchResults').innerHTML = '';
+  } else {
+    document.getElementById('licenseKey').textContent = '';
+    document.getElementById('resultInfo').innerHTML =
+      `<strong>Lote:</strong> ${count} licencias &nbsp;|&nbsp; ` +
+      `<strong>Plan:</strong> ${selectedPlan.toUpperCase()} &nbsp;|&nbsp; ` +
+      `<strong>Cliente:</strong> ${name} &nbsp;|&nbsp; ` +
+      `<strong>Validez:</strong> ${days} dias &nbsp;|&nbsp; ` +
+      `<strong>Max. Instalaciones:</strong> ${maxAct}`;
+    document.getElementById('btnCopy').style.display = 'none';
+    document.getElementById('batchResults').innerHTML = keys.map((k, i) =>
+      `<div class="batch-item">` +
+        `<div class="batch-item-header">Licencia #${i+1} de ${count}</div>` +
+        `<div class="batch-item-key" onclick="navigator.clipboard.writeText('${k}')">${k}</div>` +
+        `<div class="batch-item-meta">Activacion: ${now.toLocaleDateString('es-VE')} — Vence: ${expiry.toLocaleDateString('es-VE')}</div>` +
+        `<button class="btn-batch-copy" onclick="navigator.clipboard.writeText('${k}');this.textContent='Copiado!';setTimeout(()=>this.textContent='Copiar',1500)">Copiar</button>` +
+      `</div>`
+    ).join('');
+  }
+
+  renderHistory();
+}
+
+function updateBatchButton() {
+  const count = parseInt(document.getElementById('batchCount').value) || 1;
+  const btn = document.getElementById('btnBatch');
+  const label = document.getElementById('batchLabel');
+  if (count > 1) {
+    btn.style.display = '';
+    label.textContent = count;
+  } else {
+    btn.style.display = 'none';
+  }
 }
 
 function copyKey() {
@@ -274,7 +391,7 @@ function renderHistory() {
   const list = document.getElementById('historyList');
   list.innerHTML = history.map((h, i) =>
     `<div class="history-item" onclick="navigator.clipboard.writeText('${h.key}')">
-      <div><strong>${h.plan}</strong> — ${h.name} (${h.days}d)<br><span style="color:#475569">${h.date}</span></div>
+      <div><strong>${h.plan}</strong>${h.batch ? ' ' + h.batch : ''} — ${h.name} (${h.days}d, ${h.maxAct || '?'} act.)<br><span style="color:#475569">${h.date}</span></div>
       <div class="history-key">${h.key}</div>
     </div>`
   ).join('');
@@ -282,6 +399,7 @@ function renderHistory() {
 
 // Auto-select profesional on load
 selectPlan('profesional');
+document.getElementById('batchCount').addEventListener('input', updateBatchButton);
 </script>
 </body>
 </html>

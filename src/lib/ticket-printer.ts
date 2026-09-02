@@ -385,7 +385,9 @@ function printViaHtml(params: {
 
   const base = Math.min(Math.max(ticketFontSize || preset.baseFontSize, preset.minFontSize), preset.maxFontSize);
   const small = Math.max(preset.minFontSize, preset.smallFontSize);
-  const storeNameSize = Math.min(base + 1, preset.maxFontSize + 1);
+  // Tamaño del nombre de la empresa: personalizado (ticketHeaderFontSize > 0) o auto (base + 1)
+  const customHeaderSize = (settings as any).ticketHeaderFontSize;
+  const storeNameSize = customHeaderSize > 0 ? Math.min(customHeaderSize, 24) : Math.min(base + 1, preset.maxFontSize + 1);
   const totalSize = Math.min(base + 1, preset.maxFontSize + 1);
   const footerSize = Math.max(4, base - 1);
 
@@ -510,6 +512,13 @@ ${ticketHeaderMsg ? `<div class="b" style="font-size:${base}px;margin-top:1px;wh
 ${invoiceNumHtml ? `
 <div class="b" style="font-size:${base}px">${escHtml(invoiceNumHtml)}</div>
 ` : ''}
+${invoiceNumHtml ? (() => {
+  const showInvoiceId = (settings as any).ticketShowInvoiceId !== false;
+  const invoiceAlign = (settings as any).ticketInvoiceIdAlign || 'left';
+  const alignStyle = invoiceAlign === 'center' ? 'text-align:center' : invoiceAlign === 'right' ? 'text-align:right' : '';
+  if (!showInvoiceId) return '';
+  return `<div class=\"b\" style=\"font-size:${base}px;${alignStyle}\">DOCUMENTO ${escHtml(invoiceNumHtml)}</div>`;
+})() : ''}
 ${!isFinalClient ? `
   <div style="font-size:${base}px;font-weight:bold;white-space:pre-wrap">Cliente: ${escHtml(clientName)}</div>
   ${receipt.clientDocNumber ? `<div class="s">CI/RIF: ${escHtml(receipt.clientDocType || 'V')}-${escHtml(receipt.clientDocNumber)}</div>` : ''}
@@ -562,7 +571,7 @@ ${ticketFooterMsg ? (ticketShowSlogan
   : `<div class="fc">${escHtml(ticketFooterMsg)}</div>`
 ) : ''}
 
-<div class="s" style="text-align:center;margin-top:2px">ID: ${escHtml(receipt.id.slice(0, 8))}</div>
+${((settings as any).ticketShowInvoiceId !== false) ? `<div class="s" style="text-align:center;margin-top:2px">ID: ${escHtml(receipt.id.slice(0, 8))}</div>` : ''}
 
 <script>window.onload=function(){window.print();window.close();}<\/script>
 </body></html>`);

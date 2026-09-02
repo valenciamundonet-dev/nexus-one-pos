@@ -42,6 +42,9 @@ interface Settings {
   ticketAgentUrl: string;
   ticketShowCashReceived: boolean;
   ticketShowLogo: boolean;
+  ticketHeaderFontSize: number;
+  ticketShowInvoiceId: boolean;
+  ticketInvoiceIdAlign: string;
   storeLogo: string;
   businessType: string;
   taxMode: string;
@@ -484,6 +487,9 @@ export default function ConfigTab({ settings, onSettingsChange, licenseFeatures 
   const [ticketAgentUrl, setTicketAgentUrl] = useState(settings.ticketAgentUrl || 'http://localhost:9100');
   const [ticketShowCashReceived, setTicketShowCashReceived] = useState(settings.ticketShowCashReceived !== false);
   const [ticketShowLogo, setTicketShowLogo] = useState(settings.ticketShowLogo !== false);
+  const [ticketHeaderFontSize, setTicketHeaderFontSize] = useState((settings as any).ticketHeaderFontSize || 0);
+  const [ticketShowInvoiceId, setTicketShowInvoiceId] = useState((settings as any).ticketShowInvoiceId !== false);
+  const [ticketInvoiceIdAlign, setTicketInvoiceIdAlign] = useState((settings as any).ticketInvoiceIdAlign || 'left');
   const [agentStatus, setAgentStatus] = useState<'unknown' | 'online' | 'offline'>('unknown');
   const [agentInfo, setAgentInfo] = useState<any>(null);
   const [storeLogo, setStoreLogo] = useState(settings.storeLogo || '');
@@ -669,6 +675,9 @@ export default function ConfigTab({ settings, onSettingsChange, licenseFeatures 
         ticketAgentUrl: ticketAgentUrl.replace(/\/+$/, ''),
         ticketShowCashReceived,
         ticketShowLogo,
+        ticketHeaderFontSize: parseInt(String(ticketHeaderFontSize)) || 0,
+        ticketShowInvoiceId,
+        ticketInvoiceIdAlign,
         storeLogo,
         businessType,
         taxMode,
@@ -1427,6 +1436,39 @@ export default function ConfigTab({ settings, onSettingsChange, licenseFeatures 
                   <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                 </label>
               </div>
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="flex-1">
+                  <Label className="font-medium text-sm">Mostrar ID Documento</Label>
+                  <p className="text-xs text-muted-foreground">Muestra el numero de documento y ID en el ticket</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" checked={ticketShowInvoiceId} onChange={(e) => setTicketShowInvoiceId(e.target.checked)} className="sr-only peer" />
+                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                </label>
+              </div>
+              {ticketShowInvoiceId && (
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="flex-1">
+                  <Label className="font-medium text-sm">Alineacion del ID</Label>
+                  <p className="text-xs text-muted-foreground">Ubicacion del numero de documento en el ticket</p>
+                </div>
+                <select value={ticketInvoiceIdAlign} onChange={(e) => setTicketInvoiceIdAlign(e.target.value)} className="text-xs border rounded px-2 py-1 bg-background">
+                  <option value="left">Izquierda</option>
+                  <option value="center">Centrado</option>
+                  <option value="right">Derecha</option>
+                </select>
+              </div>
+              )}
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div className="flex-1">
+                  <Label className="font-medium text-sm">Tamano Encabezado</Label>
+                  <p className="text-xs text-muted-foreground">Tamano de letra del nombre de la empresa (0 = automatico)</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-primary">{ticketHeaderFontSize === 0 ? 'Auto' : ticketHeaderFontSize + 'px'}</span>
+                  <input type="range" min="0" max="20" step="1" value={ticketHeaderFontSize} onChange={(e) => setTicketHeaderFontSize(parseInt(e.target.value))} className="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1544,13 +1586,31 @@ export default function ConfigTab({ settings, onSettingsChange, licenseFeatures 
                 </div>
               </div>
 
-              {agentStatus === 'online' && agentInfo && (
+              {agentStatus === 'online' && (
                 <div className="p-2.5 rounded-lg bg-green-50 border border-green-200 text-xs text-green-700 space-y-1">
-                  <strong>Info del agente:</strong>
+                  <div className="flex items-center justify-between">
+                    <strong>Info del agente:</strong>
+                    <Button variant="outline" size="sm" className="h-7 text-[10px] text-red-600 border-red-300 hover:bg-red-50"
+                      onClick={async () => {
+                        try {
+                          const res = await authFetch('/api/print-agent', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'cancel' }),
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            toast.success(data.message || 'Impresiones canceladas');
+                            checkAgent();
+                          } else {
+                            toast.error(data.error || 'Error al cancelar');
+                          }
+                        } catch (e: any) { toast.error(e.message); }
+                      }}>Cancelar Impresiones</Button>
+                  </div>
                   <p>Version: {agentInfo.version || 'N/A'}</p>
                   <p>Impresora detectada: {agentInfo.autoPrinter || agentInfo.connectedPort || 'No detectada'}</p>
                   <p>Impresiones realizadas: {agentInfo.printCount || 0}</p>
-                  <p>Serial disponible: {agentInfo.serialAvailable ? 'Si' : 'No (modo archivo)'}</p>
                 </div>
               )}
 

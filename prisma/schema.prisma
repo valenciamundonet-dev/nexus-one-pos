@@ -177,6 +177,10 @@ model Settings {
   ticketAgentUrl       String @default("http://localhost:9100")
   ticketShowCashReceived Boolean @default(true)
   ticketShowLogo        Boolean @default(true)
+  // Ticket: encabezado empresa + ID configurable
+  ticketHeaderFontSize  Int    @default(0)
+  ticketShowInvoiceId   Boolean @default(true)
+  ticketInvoiceIdAlign  String @default("left")
   // Logo del negocio
   storeLogo            String  @default("")
   businessType         String  @default("general")
@@ -196,17 +200,18 @@ model Settings {
 }
 
 model Devolution {
-  id           String   @id @default(cuid())
-  saleId       String
-  sale         Sale     @relation(fields: [saleId], references: [id])
-  date         DateTime @default(now())
-  reason       String
-  totalUsd     Float
-  totalBs      Float
-  exchangeRate Float
-  items        DevolutionItem[]
-  status       String   @default("completada")
-  createdAt    DateTime @default(now())
+  id               String   @id @default(cuid())
+  saleId           String
+  sale             Sale     @relation(fields: [saleId], references: [id])
+  date             DateTime @default(now())
+  reason           String
+  totalUsd         Float
+  totalBs          Float
+  exchangeRate     Float
+  creditNoteNumber Int      @default(0)
+  items            DevolutionItem[]
+  status           String   @default("completada")
+  createdAt        DateTime @default(now())
 
   @@index([date])
   @@index([saleId])
@@ -327,6 +332,7 @@ model Supplier {
   notes      String     @default("")
   isActive   Boolean    @default(true)
   purchases  Purchase[]
+  payables   PayableAccount[]
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 
@@ -578,4 +584,48 @@ model Expense {
   @@index([date])
   @@index([categoryId])
   @@index([userId])
+}
+
+// ===== CUENTAS POR PAGAR =====
+model PayableAccount {
+  id              String           @id @default(cuid())
+  supplierId      String?
+  supplier        Supplier?        @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  purchaseId      String?
+  description     String
+  totalUsd        Float            @default(0)
+  totalBs         Float            @default(0)
+  paidUsd         Float            @default(0)
+  paidBs          Float            @default(0)
+  remainingUsd    Float            @default(0)
+  remainingBs     Float            @default(0)
+  exchangeRate    Float            @default(0)
+  dueDate         DateTime?
+  status          String           @default("pendiente") // pendiente, parcial, pagada, vencida
+  notes           String           @default("")
+  payments        PayablePayment[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([status])
+  @@index([supplierId])
+  @@index([dueDate])
+}
+
+model PayablePayment {
+  id              String           @id @default(cuid())
+  payableId       String
+  payable         PayableAccount   @relation(fields: [payableId], references: [id], onDelete: Cascade)
+  date            DateTime         @default(now())
+  amountUsd       Float
+  amountBs        Float
+  exchangeRate    Float
+  method          String           @default("transferencia")
+  reference       String           @default("")
+  notes           String           @default("")
+  createdBy       String           @default("")
+  createdAt       DateTime         @default(now())
+
+  @@index([date])
+  @@index([payableId])
 }

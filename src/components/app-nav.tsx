@@ -108,7 +108,7 @@ function buildGroups(tabs: NavItem[], stockAlertCount: number): NavGroup[] {
         groupMap.inventario.items.push(item); break
       case 'clients': case 'suppliers': case 'credit':
         groupMap.personas.items.push(item); break
-      case 'purchases': case 'devolutions': case 'expenses':
+      case 'purchases': case 'devolutions': case 'expenses': case 'accounts-payable':
         groupMap.operaciones.items.push(item); break
       case 'reports':
         groupMap.informes.items.push(item); break
@@ -208,7 +208,7 @@ export default function AppNav({
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-bold text-white truncate">{storeName || 'NexusOne'}</h2>
-            <p className="text-[10px] text-blue-300/70 font-medium">NexusOne POS v{version || '3.1.6'}</p>
+            <p className="text-[10px] text-blue-300/70 font-medium">NexusOne POS v{version || '---'}</p>
           </div>
         </div>
       </div>
@@ -437,12 +437,6 @@ function TopNavBar({ groups, activeTab, onTabChange, stockAlertCount }: {
                 className="absolute top-full left-0 mt-1 w-56 z-50 rounded-xl border shadow-xl shadow-black/10 bg-card border-slate-200/80 dark:border-slate-700/50 dark:bg-slate-900 overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <GroupIcon emoji={group.icon} className="w-3.5 h-3.5" />
-                    {group.label}
-                  </p>
-                </div>
                 <div className="py-1">
                   {group.items.map((item) => {
                     const isActive = activeTab === item.value

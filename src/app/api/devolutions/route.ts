@@ -91,6 +91,13 @@ export async function POST(req: NextRequest) {
 
     // TRANSACTIONAL: create devolution + restore stock
     const devolution = await db.$transaction(async (tx) => {
+      // Get next sequential credit note number
+      const lastDevolution = await tx.devolution.findFirst({
+        orderBy: { creditNoteNumber: 'desc' },
+        select: { creditNoteNumber: true },
+      });
+      const nextCreditNoteNumber = (lastDevolution?.creditNoteNumber || 0) + 1;
+
       const newDevolution = await tx.devolution.create({
         data: {
           saleId: body.saleId,
@@ -98,6 +105,7 @@ export async function POST(req: NextRequest) {
           totalUsd,
           totalBs: totalUsd * rate,
           exchangeRate: rate,
+          creditNoteNumber: nextCreditNoteNumber,
           status: body.status || 'completada',
           items: {
       // Calcular total server-side por cada item (no confiar en el cliente)

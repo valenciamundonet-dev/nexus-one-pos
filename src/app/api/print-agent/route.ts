@@ -58,6 +58,13 @@ export async function POST(request: NextRequest) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       };
+    } else if (action === 'cancel') {
+      // Cancelar todas las impresiones pendientes
+      url = `${AGENT_BASE}/cancel`;
+      fetchOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      };
     } else {
       // action === 'print'
       url = `${AGENT_BASE}/print`;

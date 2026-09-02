@@ -239,6 +239,16 @@ var server = http.createServer(function(req, res) {
   }
 
   if (req.method === 'POST' && req.url === '/print') {
+    // Anti-bucle: limitar impresiones rapidas (max 5 en 30 segundos)
+    var now = Date.now();
+    if (!global.__printTimes) global.__printTimes = [];
+    global.__printTimes = global.__printTimes.filter(function(t) { return now - t < 30000; });
+    if (global.__printTimes.length >= 5) {
+      res.writeHead(429, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: false, error: 'Demasiadas impresiones rapidas. Espere 30 segundos o use Cancelar Impresiones.' }));
+      return;
+    }
+    global.__printTimes.push(now);
     var chunks = [];
     req.on('data', function(chunk) { chunks.push(chunk); });
     req.on('end', function() {
@@ -329,6 +339,26 @@ var server = http.createServer(function(req, res) {
         res.end(JSON.stringify({ success: false, error: e.message }));
       }
     });
+    return;
+  }
+
+  if (req.method === 'POST' && req.url === '/cancel') {
+    // Cancelar todas las impresiones pendientes
+    try {
+      if (global.__printTimes) global.__printTimes = [];
+      // Intentar cancelar trabajos de impresion encolados via PowerShell
+      var psCmd = 'powershell -NoProfile -Command "Get-WmiObject -Class Win32_PrintJob | Where-Object { $_.Status -ne \'Printing\' } | ForEach-Object { $_.Cancel() }; Write-Host OK"';
+      execSync(psCmd, { encoding: 'utf8', timeout: 10000, windowsHide: true });
+      console.log('[CANCEL] Impresiones pendientes canceladas');
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, message: 'Impresiones pendientes canceladas' }));
+    } catch (e) {
+      // Aunque el comando falle, limpiamos el contador interno
+      if (global.__printTimes) global.__printTimes = [];
+      console.log('[CANCEL] Limpiado contador interno: ' + e.message);
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, message: 'Contador de impresiones reiniciado' }));
+    }
     return;
   }
 
