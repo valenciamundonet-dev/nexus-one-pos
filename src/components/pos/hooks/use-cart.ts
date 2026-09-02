@@ -179,6 +179,29 @@ export function useCart({ products, allowZeroStock, maxDiscountPct, bcvRate, eur
     [cart, products, allowZeroStock],
   );
 
+  // ── Toggle Box (Bulto/Unidad) ──────────────────────────────
+  const toggleBox = useCallback(
+    (id: string) => {
+      const product = products.find((p) => p.id === id);
+      if (!product || !product.unitsPerBox || !product.boxPrice || product.boxPrice <= 0) return;
+      setCart((prev) =>
+        prev.map((item) => {
+          if (item.id !== id) return item;
+          const toBox = !item.isBox;
+          if (toBox) {
+            // Switch to bulto: price = boxPrice, qty = 1
+            return { ...item, isBox: true, price: product.boxPrice!, quantity: 1, total: product.boxPrice! };
+          } else {
+            // Switch to unidad: price = normal price, qty = 1
+            const unitPrice = item.isWholesale ? (product.wholesalePrice || product.price) : product.price;
+            return { ...item, isBox: false, price: unitPrice, quantity: 1, total: unitPrice };
+          }
+        }),
+      );
+    },
+    [products],
+  );
+
   // ── Remove / Clear ────────────────────────────────────────────
   const removeFromCart = useCallback((id: string) => setCart((prev) => prev.filter((i) => i.id !== id)), []);
 
@@ -207,6 +230,6 @@ export function useCart({ products, allowZeroStock, maxDiscountPct, bcvRate, eur
     creditClientName, setCreditClientName, creditClientDebt, setCreditClientDebt,
     creditDays, setCreditDays,
     addToCart, updateQuantity, removeFromCart, clearCart, toggleWholesale,
-    isGranMayorMode, toggleGranMayor,
+    isGranMayorMode, toggleGranMayor, toggleBox,
   };
 }

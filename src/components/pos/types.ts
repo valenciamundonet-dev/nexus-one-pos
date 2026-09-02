@@ -29,6 +29,7 @@ export interface CartItem extends Product {
   quantity: number;
   total: number;
   isWholesale: boolean;
+  isBox?: boolean;
   pesoIngresado?: boolean;
 }
 

@@ -19,6 +19,7 @@ interface CartPanelProps {
   onUpdateQty: (id: string, qty: number) => void;
   onRemove: (id: string) => void;
   onToggleWholesale: (id: string) => void;
+  onToggleBox?: (id: string) => void;
   isGranMayorMode: boolean;
   onToggleGranMayor: () => void;
 
@@ -89,7 +90,7 @@ interface CartPanelProps {
 
 export const CartPanel = React.memo(function CartPanel({
   cart, products, currency, allowZeroStock,
-  onClearCart, onUpdateQty, onRemove, onToggleWholesale,
+  onClearCart, onUpdateQty, onRemove, onToggleWholesale, onToggleBox,
   isGranMayorMode, onToggleGranMayor,
   selectedClient, onOpenClientDialog, onOpenQrModal,
   paymentMethod, setPaymentMethod, referenceNumber, setReferenceNumber,
@@ -173,6 +174,7 @@ export const CartPanel = React.memo(function CartPanel({
               onUpdateQty={onUpdateQty}
               onRemove={onRemove}
               onToggleWholesale={onToggleWholesale}
+              onToggleBox={onToggleBox}
             />
           ))}
           {cart.length === 0 && (

@@ -57,7 +57,7 @@ export default function PosTab(props: PosTabProps) {
 
   const {
     addToCart, updateQuantity, removeFromCart, clearCart, toggleWholesale,
-    isGranMayorMode, toggleGranMayor,
+    isGranMayorMode, toggleGranMayor, toggleBox,
     cart, subtotal, discount, setDiscount, notes, setNotes,
     paymentMethod, setPaymentMethod, referenceNumber, setReferenceNumber,
     cashReceived, setCashReceived, cashReceivedUsd, setCashReceivedUsd,
@@ -371,7 +371,7 @@ export default function PosTab(props: PosTabProps) {
       <CartPanel
         cart={cart} products={products} currency={currency} allowZeroStock={allowZeroStock}
         onClearCart={() => setShowClearCartConfirm(true)} onUpdateQty={updateQuantity} onRemove={removeFromCart}
-        onToggleWholesale={toggleWholesale}
+        onToggleWholesale={toggleWholesale} onToggleBox={toggleBox}
         isGranMayorMode={isGranMayorMode} onToggleGranMayor={toggleGranMayor}
         selectedClient={selectedClient} onOpenClientDialog={() => setShowClientDialog(true)}
         onOpenQrModal={() => setShowQrModal(true)}

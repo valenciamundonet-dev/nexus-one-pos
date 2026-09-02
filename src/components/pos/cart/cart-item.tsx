@@ -11,9 +11,10 @@ interface CartItemRowProps {
   onUpdateQty: (id: string, qty: number) => void;
   onRemove: (id: string) => void;
   onToggleWholesale: (id: string) => void;
+  onToggleBox?: (id: string) => void;
 }
 
-export function CartItemRow({ item, product, currency, allowZeroStock, onUpdateQty, onRemove, onToggleWholesale }: CartItemRowProps) {
+export function CartItemRow({ item, product, currency, allowZeroStock, onUpdateQty, onRemove, onToggleWholesale, onToggleBox }: CartItemRowProps) {
   const isOver = product && !allowZeroStock && item.quantity > product.stock;
   const step = item.vendePorPeso ? 0.1 : 1;
 
@@ -26,6 +27,7 @@ export function CartItemRow({ item, product, currency, allowZeroStock, onUpdateQ
         <div className="font-medium truncate text-xs">
           {item.name}
           {item.isWholesale && <span className="text-emerald-600 text-[9px] ml-1 font-bold">MAYORISTA</span>}
+          {item.isBox && <span className="text-orange-600 text-[9px] ml-1 font-bold">BULTO x{item.unitsPerBox || 0}</span>}
           {item.vendePorPeso ? <span className="text-orange-600 text-[9px] ml-1">({item.unidadPeso || "kg"})</span> : ""}
         </div>
         <div className="text-muted-foreground text-[11px]">
@@ -57,6 +59,17 @@ export function CartItemRow({ item, product, currency, allowZeroStock, onUpdateQ
 
       {/* Actions */}
       <div className="flex flex-col gap-0.5">
+        {product && product.unitsPerBox && product.unitsPerBox > 0 && product.boxPrice && product.boxPrice > 0 && onToggleBox && (
+          <button
+            onClick={() => onToggleBox(item.id)}
+            className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
+              item.isBox ? "bg-orange-500 text-white border-orange-600 shadow-sm" : "bg-orange-50 text-orange-700 border-orange-300 hover:bg-orange-100"
+            } hover:opacity-80`}
+            title={item.isBox ? `Cambiar a unidad (1 bulto = ${product.unitsPerBox} uds)` : `Cambiar a bulto (${product.unitsPerBox} uds)`}
+          >
+            {item.isBox ? "BULTO" : "UD"}
+          </button>
+        )}
         {product && product.wholesalePrice > 0 && (
           <button
             onClick={() => onToggleWholesale(item.id)}

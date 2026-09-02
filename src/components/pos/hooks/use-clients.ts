@@ -82,9 +82,14 @@ export function useClients() {
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
       const client = await res.json();
+      setClients(prev => [...prev, client]);
       setSelectedClient(client);
       setShowNewClientDialog(false);
       setShowClientDialog(false);
+      setNewClientForm({
+        type: "natural", docType: "V", docNumber: "", firstName: "", lastName: "",
+        businessName: "", phone: "", email: "", address: "",
+      });
       toast.success("Cliente creado y seleccionado");
     } catch (e: any) { toast.error(e.message); }
   };

@@ -22,7 +22,7 @@ interface PurchaseItem {
 interface PurchaseRecord {
   id: string; date: string; number: string; totalUsd: number; totalBs: number;
   exchangeRate: number; notes: string; supplier?: { id: string; name: string; rif: string; };
-  items: PurchaseItem[];
+  items: PurchaseItem[]; paymentMethod?: string; isCredit?: boolean;
 }
 
 export default function PurchasesTab({ bcvRate = 36.5 }: { bcvRate?: number }) {
@@ -39,6 +39,7 @@ export default function PurchasesTab({ bcvRate = 36.5 }: { bcvRate?: number }) {
   const [productSearch, setProductSearch] = useState("");
   const [showProductDropdown, setShowProductDropdown] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [purchasePaymentMethod, setPurchasePaymentMethod] = useState("contado");
 
   useEffect(() => {
     Promise.all([
@@ -180,7 +181,7 @@ export default function PurchasesTab({ bcvRate = 36.5 }: { bcvRate?: number }) {
       const res = await authFetch("/api/purchases", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ supplierId: supplierId || null, items, notes, exchangeRate: bcvRate }),
+        body: JSON.stringify({ supplierId: supplierId || null, items, notes, exchangeRate: bcvRate, paymentMethod: purchasePaymentMethod, isCredit: purchasePaymentMethod === 'credito' }),
       });
       if (!res.ok) throw new Error((await res.json()).error);
       toast.success(`Compra registrada: $${totalUsd.toFixed(2)} (${items.length} productos)`);
@@ -445,6 +446,19 @@ export default function PurchasesTab({ bcvRate = 36.5 }: { bcvRate?: number }) {
               )}
 
               <div className="p-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Label className="text-xs whitespace-nowrap">Forma de Pago:</Label>
+                  <div className="flex gap-1">
+                    <button type="button" onClick={() => setPurchasePaymentMethod('contado')}
+                      className={`flex-1 p-1.5 rounded border text-xs font-medium ${purchasePaymentMethod === 'contado' ? 'bg-green-100 text-green-700 border-green-300' : ''}`}>
+                      Contado
+                    </button>
+                    <button type="button" onClick={() => setPurchasePaymentMethod('credito')}
+                      className={`flex-1 p-1.5 rounded border text-xs font-medium ${purchasePaymentMethod === 'credito' ? 'bg-amber-100 text-amber-700 border-amber-300' : ''}`}>
+                      Credito
+                    </button>
+                  </div>
+                </div>
                 <Button className="w-full" onClick={savePurchase} disabled={saving || items.length === 0}>
                   {saving ? "Registrando..." : `Registrar Compra — ${items.length} producto(s), $${totalUsd.toFixed(2)}`}
                 </Button>
@@ -520,6 +534,7 @@ export default function PurchasesTab({ bcvRate = 36.5 }: { bcvRate?: number }) {
                   <th className="text-left p-2">Fecha</th>
                   <th className="text-left p-2">Proveedor</th>
                   <th className="text-center p-2">Items</th>
+                  <th className="text-center p-2">Pago</th>
                   <th className="text-right p-2">Total USD</th>
                   <th className="text-right p-2">Total Bs</th>
                   <th className="text-center p-2">Acciones</th>
@@ -544,6 +559,13 @@ export default function PurchasesTab({ bcvRate = 36.5 }: { bcvRate?: number }) {
                           {p.supplier?.rif && <span className="text-muted-foreground text-[10px] block ml-4">{p.supplier.rif}</span>}
                         </td>
                         <td className="p-2 text-center">{p.items?.length || 0}</td>
+                        <td className="p-2 text-center">
+                          {p.isCredit ? (
+                            <Badge className="bg-amber-100 text-amber-700 border-amber-300 text-[9px]">CREDITO</Badge>
+                          ) : (
+                            <Badge variant="secondary" className="text-[9px]">CONTADO</Badge>
+                          )}
+                        </td>
                         <td className="p-2 text-right font-bold">${(p.totalUsd || 0).toFixed(2)}</td>
                         <td className="p-2 text-right text-xs text-muted-foreground">Bs. {(p.totalBs || 0).toFixed(2)}</td>
                         <td className="p-2 text-center" onClick={(e) => e.stopPropagation()}>
@@ -557,7 +579,7 @@ export default function PurchasesTab({ bcvRate = 36.5 }: { bcvRate?: number }) {
                       </tr>
                       {isExpanded && p.items?.length > 0 && (
                         <tr key={`${p.id}-detail`} className="border-t bg-muted/10">
-                          <td colSpan={7} className="p-0">
+                          <td colSpan={8} className="p-0">
                             <div className="p-3 pl-10">
                               <table className="w-full text-xs">
                                 <thead>
@@ -594,7 +616,7 @@ export default function PurchasesTab({ bcvRate = 36.5 }: { bcvRate?: number }) {
                   );
                 })}
                 {filteredPurchases.length === 0 && (
-                  <tr><td colSpan={7} className="text-center p-6 text-muted-foreground">{loading ? "Cargando..." : "No hay compras registradas"}</td></tr>
+                  <tr><td colSpan={8} className="text-center p-6 text-muted-foreground">{loading ? "Cargando..." : "No hay compras registradas"}</td></tr>
                 )}
               </tbody>
             </table>

@@ -382,8 +382,7 @@ export function generateEscposBuffer(params: {
   const invoiceNumber = (receipt as any).invoiceNumber || '';
   if (invoiceNumber) {
     parts.push(cmdBold(true));
-    parts.push(textLine('FACTURA DE VENTA'));
-    parts.push(textLine('N. ' + invoiceNumber));
+    parts.push(textLine(invoiceNumber));
     parts.push(cmdBold(false));
   }
 

@@ -54,6 +54,8 @@ export async function POST(req: NextRequest) {
           totalBs: parseFloat((itemsTotal * exchangeRate).toFixed(2)),
           exchangeRate,
           notes: body.notes || '',
+          paymentMethod: body.paymentMethod || 'contado',
+          isCredit: body.isCredit || false,
           items: {
             create: body.items.map((item: any) => {
               if (item.isBox) {

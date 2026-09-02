@@ -264,7 +264,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const date = body.date ? new Date(body.date) : new Date();
+    const rawDate = body.date ? new Date(body.date) : getVenezuelaNow();
+    const date = getVenezuelaNow(); // Always use Venezuela time for day boundaries
     const closingType = body.closingType || 'final';
     const sellerName = body.sellerName || '';
     const sellerRole = body.sellerRole || '';

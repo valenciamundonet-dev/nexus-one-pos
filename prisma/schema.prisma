@@ -343,6 +343,8 @@ model Purchase {
   totalBs      Float          @default(0)
   exchangeRate Float          @default(0)
   notes        String         @default("")
+  paymentMethod String        @default("contado")
+  isCredit     Boolean        @default(false)
   items        PurchaseItem[]
   createdAt    DateTime       @default(now())
   updatedAt    DateTime       @updatedAt

@@ -508,8 +508,7 @@ ${ticketHeaderMsg ? `<div class="b" style="font-size:${base}px;margin-top:1px;wh
 
 <div class="s">Fecha: ${dateStr} ${timeStr}</div>
 ${invoiceNumHtml ? `
-<div class="b" style="font-size:${base}px">FACTURA DE VENTA</div>
-<div class="b" style="font-size:${base}px">N. ${escHtml(invoiceNumHtml)}</div>
+<div class="b" style="font-size:${base}px">${escHtml(invoiceNumHtml)}</div>
 ` : ''}
 ${!isFinalClient ? `
   <div style="font-size:${base}px;font-weight:bold;white-space:pre-wrap">Cliente: ${escHtml(clientName)}</div>

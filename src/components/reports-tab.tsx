@@ -206,6 +206,13 @@ export default function ReportsTab({ bcvRate, currency }: ReportsTabProps) {
   // Ventas Brutas (incluye TODO: efectivo, credito, cashea, etc.)
   const [grossTotalSales, setGrossTotalSales] = useState(0);
   const [grossTotalBs, setGrossTotalBs] = useState(0);
+  // Devoluciones
+  const [devolutionsCount, setDevolutionsCount] = useState(0);
+  const [devolutionsTotalUsd, setDevolutionsTotalUsd] = useState(0);
+  const [devolutionsTotalBs, setDevolutionsTotalBs] = useState(0);
+  // Gastos
+  const [expensesTotalUsd, setExpensesTotalUsd] = useState(0);
+  const [expensesTotalBs, setExpensesTotalBs] = useState(0);
 
   const loadReport = async () => {
     setLoading(true);
@@ -225,6 +232,8 @@ export default function ReportsTab({ bcvRate, currency }: ReportsTabProps) {
         setSellerBreakdown([]); setSellerList([]);
         setGrossTotalSales(0); setGrossTotalBs(0);
         setCasheaSalesCount(0); setCasheaSalesTotal(0); setCasheaSalesTotalBs(0);
+        setDevolutionsCount(0); setDevolutionsTotalUsd(0); setDevolutionsTotalBs(0);
+        setExpensesTotalUsd(0); setExpensesTotalBs(0);
       } else {
         setSales(data.sales || []);
         setTotalSales(data.totalSales || 0);
@@ -255,6 +264,13 @@ export default function ReportsTab({ bcvRate, currency }: ReportsTabProps) {
         setCasheaSalesCount(data.casheaSalesCount || 0);
         setCasheaSalesTotal(data.casheaSalesTotal || 0);
         setCasheaSalesTotalBs(data.casheaSalesTotalBs || 0);
+        // Devoluciones
+        setDevolutionsCount(data.devolutionsCount || 0);
+        setDevolutionsTotalUsd(data.devolutionsTotalUsd || 0);
+        setDevolutionsTotalBs(data.devolutionsTotalBs || 0);
+        // Gastos
+        setExpensesTotalUsd(data.expensesTotalUsd || 0);
+        setExpensesTotalBs(data.expensesTotalBs || 0);
       }
     } catch {
       toast.error("Error al cargar reporte");
@@ -448,6 +464,9 @@ export default function ReportsTab({ bcvRate, currency }: ReportsTabProps) {
         <tr><td>Ventas por Cashea</td><td>${casheaSalesCount}</td><td>$ ${casheaSalesTotal.toFixed(2)}</td><td>Bs ${casheaSalesTotalBs.toFixed(2)}</td></tr>
         <tr><td colspan="4" style="font-size:10px;color:#6b21a8;font-style:italic">El dinero de Cashea se recibe despues desde la app, no entra a caja en el momento de la venta.</td></tr>
       </tbody></table>` : ''}
+      <h2>Devoluciones</h2><table><thead><tr><th>Concepto</th><th>Cantidad</th><th>Total $</th><th>Total Bs</th></tr></thead><tbody>
+        <tr><td>Devoluciones en Periodo</td><td>${devolutionsCount}</td><td style="color:red">$ ${devolutionsTotalUsd.toFixed(2)}</td><td style="color:red">Bs ${devolutionsTotalBs.toFixed(2)}</td></tr>
+      </tbody></table>
       <h2>Desglose por Metodo de Pago</h2>
       <table><thead><tr><th>Metodo</th><th>Cant.</th><th>Total $</th><th>Total Bs</th><th>%</th></tr></thead><tbody>
         ${payRows}
@@ -848,6 +867,13 @@ export default function ReportsTab({ bcvRate, currency }: ReportsTabProps) {
             <p className="text-[10px] text-muted-foreground">Entradas Netas ($)</p>
             <p className="text-xl font-bold text-green-600">{currency} {totalSales.toFixed(2)}</p>
             <p className="text-[9px] text-muted-foreground">Num. Ventas: {salesCount} | Prom: Bs {avgTicket.toFixed(2)}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-red-500 bg-red-50/30">
+          <CardContent className="p-3">
+            <p className="text-[10px] text-muted-foreground">Devoluciones ({devolutionsCount})</p>
+            <p className="text-xl font-bold text-red-600">Bs {devolutionsTotalBs.toFixed(2)}</p>
+            <p className="text-[9px] text-muted-foreground">{currency} {devolutionsTotalUsd.toFixed(2)}</p>
           </CardContent>
         </Card>
       </div>

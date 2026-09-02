@@ -439,7 +439,7 @@ export default function QuotesTab({
           ${storeAddress ? `<div class="addr">${storeAddress}</div>` : ''}
           ${storePhone ? `<div class="addr">Tel: ${storePhone}</div>` : ''}
         </div>
-        <div class="doc-title">Presupuesto Nro. ${quote.number}</div>
+        <div class="doc-title">Presupuesto ${quote.number}</div>
         <div class="meta">
           <p>Cliente: <strong>${quote.clientName}</strong></p>
           <p>Fecha: ${formatDate(quote.createdAt)} &nbsp;|&nbsp; Válido hasta: ${formatDate(quote.validUntil)}</p>
