@@ -21,6 +21,7 @@ interface Supplier {
   address: string;
   contact: string;
   notes: string;
+  creditDays: number;
   isActive: boolean;
   _count?: { purchases: number };
 }
@@ -32,7 +33,7 @@ export default function SuppliersTab() {
   const [showDialog, setShowDialog] = useState(false);
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState({ name: "", rif: "", phone: "", email: "", address: "", contact: "", notes: "" });
+  const [form, setForm] = useState({ name: "", rif: "", phone: "", email: "", address: "", contact: "", notes: "", creditDays: 0 });
   const searchRef = useRef<NodeJS.Timeout | null>(null);
 
   const load = async (q?: string) => {
@@ -54,13 +55,13 @@ export default function SuppliersTab() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: "", rif: "", phone: "", email: "", address: "", contact: "", notes: "" });
+    setForm({ name: "", rif: "", phone: "", email: "", address: "", contact: "", notes: "", creditDays: 0 });
     setShowDialog(true);
   };
 
   const openEdit = (s: Supplier) => {
     setEditing(s);
-    setForm({ name: s.name, rif: s.rif, phone: s.phone, email: s.email, address: s.address, contact: s.contact, notes: s.notes });
+    setForm({ name: s.name, rif: s.rif, phone: s.phone, email: s.email, address: s.address, contact: s.contact, notes: s.notes, creditDays: s.creditDays || 0 });
     setShowDialog(true);
   };
 
@@ -127,6 +128,7 @@ export default function SuppliersTab() {
                   <th className="text-left p-3 font-medium">Nombre</th>
                   <th className="text-left p-3 font-medium">RIF</th>
                   <th className="text-left p-3 font-medium">Contacto</th>
+                  <th className="text-center p-3 font-medium">Credito</th>
                   <th className="text-right p-3 font-medium">Compras</th>
                   <th className="text-center p-3 font-medium">Acciones</th>
                 </tr>
@@ -147,6 +149,9 @@ export default function SuppliersTab() {
                       {s.phone && <p className="text-muted-foreground">{s.phone}</p>}
                       {s.email && <p className="text-muted-foreground">{s.email}</p>}
                     </td>
+                    <td className="p-3 text-center">
+                      {s.creditDays > 0 ? <Badge variant="secondary" className="text-[10px]">{s.creditDays}d</Badge> : <span className="text-xs text-muted-foreground">-</span>}
+                    </td>
                     <td className="p-3 text-right font-bold">{s._count?.purchases || 0}</td>
                     <td className="p-3 text-center">
                       <div className="flex gap-1 justify-center">
@@ -157,7 +162,7 @@ export default function SuppliersTab() {
                   </tr>
                 ))}
                 {suppliers.length === 0 && (
-                  <tr><td colSpan={5} className="text-center p-8 text-muted-foreground">{loading ? "Cargando..." : "No hay proveedores registrados"}</td></tr>
+                  <tr><td colSpan={6} className="text-center p-8 text-muted-foreground">{loading ? "Cargando..." : "No hay proveedores registrados"}</td></tr>
                 )}
               </tbody>
             </table>
@@ -200,6 +205,18 @@ export default function SuppliersTab() {
               <div className="col-span-2">
                 <Label>Notas</Label>
                 <Input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Observaciones adicionales" />
+              </div>
+              <div>
+                <Label>Dias de Credito</Label>
+                <select
+                  className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm"
+                  value={form.creditDays}
+                  onChange={(e) => setForm({ ...form, creditDays: parseInt(e.target.value) || 0 })}
+                >
+                  {[0, 15, 20, 30, 45, 60, 90, 120, 180, 360].map((d) => (
+                    <option key={d} value={d}>{d === 0 ? 'Contado' : `${d} dias`}</option>
+                  ))}
+                </select>
               </div>
             </div>
             <Button className="w-full" onClick={save} disabled={saving}>{saving ? "Guardando..." : editing ? "Actualizar" : "Registrar Proveedor"}</Button>

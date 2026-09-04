@@ -32,6 +32,7 @@ import HeldSalesTab from "@/components/held-sales-tab";
 import QuotesTab from "@/components/quotes-tab";
 import DeliveryNotesTab from "@/components/delivery-notes-tab";
 import CatalogTab from "@/components/catalog-tab";
+import PrintConfigTab from "@/components/print-config-tab";
 import DiagnosticsTab from "@/components/diagnostics-tab";
 import DbHealthTab from "@/components/db-health-tab";
 import TaxReloadTab from "@/components/tax-reload-tab";
@@ -60,10 +61,23 @@ interface Settings {
   ticketMarginRight: number;
   ticketUseAgent: boolean;
   ticketAgentUrl: string;
-ticketCurrencyMode: string;
+  ticketCurrencyMode: string;
   storeLogo: string;
   businessType: string;
   taxMode: string;
+  themeMode: string;
+  euroUsdtRate: number;
+  ticketHeaderFontSize: number;
+  ticketShowInvoiceId: boolean;
+  ticketInvoiceIdAlign: string;
+  ticketLineSpacing: number;
+  ticketColSpacing: number;
+  ticketBodyFontSize: number;
+  ticketItemFontSize: number;
+  ticketTotalFontSize: number;
+  ticketFooterFontSize: number;
+  ticketRifFontSize: number;
+  ticketAddressFontSize: number;
 }
 interface LicenseInfo {
   isValid: boolean; licenseType: "trial" | "basica" | "profesional"; machineId: string;
@@ -102,7 +116,11 @@ export default function Home() {
     ticketMarginLeft: 0, ticketMarginRight: 0,
     ticketUseAgent: true, ticketAgentUrl: 'http://localhost:9100',
     ticketCurrencyMode: 'dual',
-    storeLogo: '', businessType: 'general', taxMode: 'included', themeMode: 'light',
+    storeLogo: '', businessType: 'general', taxMode: 'included', themeMode: 'light', euroUsdtRate: 0,
+    ticketHeaderFontSize: 0, ticketShowInvoiceId: true, ticketInvoiceIdAlign: 'center',
+    ticketLineSpacing: 1.0, ticketColSpacing: 1.0,
+    ticketBodyFontSize: 0, ticketItemFontSize: 0, ticketTotalFontSize: 0,
+    ticketFooterFontSize: 0, ticketRifFontSize: 0, ticketAddressFontSize: 0,
   });
   const [license, setLicense] = useState<LicenseInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -385,7 +403,7 @@ export default function Home() {
   const canFrequentCustomers = featureFlags['pos.basic'] || false;
 
   // Admin-only and role-gated tabs
-  const ADMIN_ONLY_TABS = new Set(['users', 'config', 'license', 'backup', 'diagnostics', 'db-health', 'tax-reload']);
+  const ADMIN_ONLY_TABS = new Set(['users', 'config', 'print-config', 'license', 'backup', 'diagnostics', 'db-health', 'tax-reload']);
   const ROLE_PERMISSION_MAP: Record<string, string> = { suppliers: 'suppliers', purchases: 'purchases', credit: 'credit' };
 
   const allTabs = [
@@ -397,6 +415,7 @@ export default function Home() {
     { value: "devolutions", label: "Devoluciones", icon: "🔄" },
     { value: "cash-closing", label: "Cierre de Caja", icon: "💰" },
     { value: "config", label: "Configuracion", icon: "⚙️" },
+    { value: "print-config", label: "Impresion", icon: "🖨️" },
     { value: "license", label: "Licencia", icon: "🔑" },
     { value: "users", label: "Usuarios", icon: "👤" },
     { value: "backup", label: "Respaldo", icon: "💾" },
@@ -491,7 +510,7 @@ export default function Home() {
               const tab = availableTabs.find(t => t.value === v);
               if (!tab) return;
               safeSetTab(v);
-            }} tabs={availableTabs.map(t => ({ value: t.value, label: t.label, icon: t.icon, restricted: false, plan: '' }))} stockAlertCount={stockAlertCount} currentUser={currentUser.fullName || currentUser.username} onLogout={handleLogout} version={appVersion} />
+            }} tabs={availableTabs.map(t => ({ value: t.value, label: t.label, icon: t.icon, restricted: false, plan: '' }))} stockAlertCount={stockAlertCount} currentUser={currentUser.fullName || currentUser.username} onLogout={handleLogout} version={appVersion} machineId={license?.machineId || ''} />
             <div>
               <h1 className="text-xl font-bold text-primary">
                 {settings.storeName}
@@ -591,6 +610,11 @@ export default function Home() {
               storeLogo={settings.storeLogo || ''}
               businessType={settings.businessType || 'general'}
               taxMode={settings.taxMode || 'included'}
+              ticketHeaderFontSize={settings.ticketHeaderFontSize ?? 0}
+              ticketShowInvoiceId={settings.ticketShowInvoiceId !== false}
+              ticketInvoiceIdAlign={settings.ticketInvoiceIdAlign || 'center'}
+              ticketLineSpacing={settings.ticketLineSpacing ?? 1.0}
+              ticketColSpacing={settings.ticketColSpacing ?? 1.0}
               onSaleComplete={loadData}
               onHoldSale={async (heldData: any) => {
                 try {
@@ -664,6 +688,11 @@ export default function Home() {
           <ErrorBoundary name="Configuracion">
             <ConfigTab settings={settings} onSettingsChange={(s) => { setSettings(s); loadData(); }}
               licenseFeatures={{ autoBackup: license?.features?.autoBackup || false, exportImport: license?.features?.exportImport || false, allowZeroStockConfig: license?.features?.allowZeroStockConfig || false, productDiscount: license?.features?.productDiscount || false }} />
+          </ErrorBoundary>
+        </TabsContent>
+        <TabsContent value="print-config" activeTab={activeTab}>
+          <ErrorBoundary name="Config. Impresion">
+            <PrintConfigTab settings={settings} onSettingsChange={(s) => { setSettings(s); loadData(); }} />
           </ErrorBoundary>
         </TabsContent>
         <TabsContent value="license" activeTab={activeTab}>

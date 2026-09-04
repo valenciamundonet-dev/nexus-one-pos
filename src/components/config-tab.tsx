@@ -48,6 +48,19 @@ interface Settings {
   storeLogo: string;
   businessType: string;
   taxMode: string;
+  themeMode: string;
+  euroUsdtRate: number;
+  ticketHeaderFontSize: number;
+  ticketShowInvoiceId: boolean;
+  ticketInvoiceIdAlign: string;
+  ticketLineSpacing: number;
+  ticketColSpacing: number;
+  ticketBodyFontSize: number;
+  ticketItemFontSize: number;
+  ticketTotalFontSize: number;
+  ticketFooterFontSize: number;
+  ticketRifFontSize: number;
+  ticketAddressFontSize: number;
 }
 
 interface BackupStatus {

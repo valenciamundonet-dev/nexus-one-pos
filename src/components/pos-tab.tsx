@@ -47,7 +47,11 @@ export default function PosTab(props: PosTabProps) {
     ticketMarginLeft = 0, ticketMarginRight = 0,
     ticketUseAgent = true, ticketAgentUrl = "http://localhost:9100",
     ticketCurrencyMode = "dual", storeLogo = "", businessType = "general",
-    taxMode = "included", onSaleComplete, onHoldSale,
+    taxMode = "included",
+    ticketHeaderFontSize = 0, ticketShowInvoiceId = true,
+    ticketInvoiceIdAlign = 'center', ticketLineSpacing = 1.0,
+    ticketColSpacing = 1.0,
+    onSaleComplete, onHoldSale,
     initialCart, initialClient, initialNotes, initialDiscount, initialPaymentMethod,
   } = props;
 
@@ -353,6 +357,8 @@ export default function PosTab(props: PosTabProps) {
       ticketAgentUrl: ticketAgentUrl || "http://localhost:9100",
       ticketCurrencyMode: ticketCurrencyMode || "dual",
       storeLogo, businessType, taxMode, taxRate,
+      ticketHeaderFontSize, ticketShowInvoiceId,
+      ticketInvoiceIdAlign, ticketLineSpacing, ticketColSpacing,
     };
     try {
       const ok = await _printTicket({ receipt, settings: ticketSettings, currency, defaultSellerName: sellerName });
@@ -362,6 +368,7 @@ export default function PosTab(props: PosTabProps) {
     ticketShowPhone, ticketShowSeller, ticketShowExchange, ticketShowSlogan,
     ticketShowCashReceived, ticketShowLogo, ticketPaperWidth, ticketMarginLeft, ticketMarginRight, ticketHeaderMsg, ticketFooterMsg,
     ticketUseAgent, ticketAgentUrl, ticketCurrencyMode, storeLogo, businessType, taxMode, taxRate,
+    ticketHeaderFontSize, ticketShowInvoiceId, ticketInvoiceIdAlign, ticketLineSpacing, ticketColSpacing,
     currency, sellerName]);
 
   // ─── Render ───────────────────────────────────────────────────

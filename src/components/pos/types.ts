@@ -119,6 +119,11 @@ export interface PosTabProps {
   storeLogo?: string;
   businessType?: string;
   taxMode?: string;
+  ticketHeaderFontSize?: number;
+  ticketShowInvoiceId?: boolean;
+  ticketInvoiceIdAlign?: string;
+  ticketLineSpacing?: number;
+  ticketColSpacing?: number;
   onSaleComplete?: () => void;
   onHoldSale?: (data: HeldSaleData) => void | Promise<void>;
   initialCart?: CartItem[] | null;

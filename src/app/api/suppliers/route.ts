@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
         address: body.address || '',
         contact: body.contact || '',
         notes: body.notes || '',
+        creditDays: body.creditDays || 0,
       },
     });
     return NextResponse.json(supplier);
@@ -62,6 +63,7 @@ export async function PUT(req: NextRequest) {
         address: body.address || undefined,
         contact: body.contact || undefined,
         notes: body.notes || undefined,
+        creditDays: body.creditDays !== undefined ? body.creditDays : undefined,
         isActive: body.isActive !== undefined ? body.isActive : undefined,
       },
     });

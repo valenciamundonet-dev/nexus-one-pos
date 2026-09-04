@@ -83,19 +83,23 @@ const args = process.argv.slice(2);
 let mode = args[0] || '';
 let owner = args[1] || '';
 let days = parseInt(args[2]) || 365;
+let machineId = args[3] || '';
 
-if (mode !== 'basica' && mode !== 'profesional' && mode !== 'test') {
+if (mode !== 'basica' && mode !== 'profesional' && mode !== 'test' && mode !== 'batch') {
   console.log('  Uso:');
-  console.log('    node GENERAR-LICENCIA.js <tipo> <nombre> [dias]');
+  console.log('    node GENERAR-LICENCIA.js <tipo> <nombre> [dias] [machineId]');
+  console.log('    node GENERAR-LICENCIA.js batch <tipo> <nombre> <count> [dias]');
   console.log('');
   console.log('  Tipos:');
   console.log('    basica       — Plan Basico ($160/mes) - 1 usuario, 300 productos');
   console.log('    profesional  — Plan Profesional ($220/mes) - 5 usuarios, ilimitado');
   console.log('    test         — Genera 3 licencias de prueba');
+  console.log('    batch        — Genera N licencias en lote');
   console.log('');
   console.log('  Ejemplos:');
   console.log('    node GENERAR-LICENCIA.js basica "Mi Negocio" 365');
-  console.log('    node GENERAR-LICENCIA.js profesional "Mi Negocio" 365');
+  console.log('    node GENERAR-LICENCIA.js profesional "Mi Negocio" 365 MACHINE-ID-123');
+  console.log('    node GENERAR-LICENCIA.js batch profesional "Mi Negocio" 5 365');
   console.log('    node GENERAR-LICENCIA.js test');
   console.log('');
   
@@ -129,6 +133,40 @@ if (mode === 'test') {
   process.exit(0);
 }
 
+if (mode === 'batch') {
+  const batchType = args[1] || '';
+  const batchName = args[2] || '';
+  const batchCount = parseInt(args[3]) || 1;
+  const batchDays = parseInt(args[4]) || 365;
+  
+  if (batchType !== 'basica' && batchType !== 'profesional') {
+    console.error('  ERROR: Tipo debe ser basica o profesional');
+    process.exit(1);
+  }
+  if (!batchName) {
+    console.error('  ERROR: Debe especificar el nombre del cliente');
+    process.exit(1);
+  }
+  
+  console.log('  ======================================================');
+  console.log('  BATCH: Generando ' + batchCount + ' licencias');
+  console.log('  ======================================================');
+  console.log('  Plan: ' + batchType.toUpperCase());
+  console.log('  Cliente: ' + batchName);
+  console.log('  Validez: ' + batchDays + ' dias');
+  console.log('');
+  
+  for (let i = 0; i < batchCount; i++) {
+    const mid = 'BATCH-' + (i + 1) + '-' + Date.now().toString(36).toUpperCase();
+    const key = generateLicense(batchType, batchName, mid, batchDays, secret);
+    console.log('  [' + (i + 1) + '] Machine: ' + mid);
+    console.log('      Licencia: ' + key);
+    console.log('');
+  }
+  
+  process.exit(0);
+}
+
 // Generar licencia con los parametros dados
 if (!owner) {
   console.error('  ERROR: Debe especificar el nombre del cliente');
@@ -136,13 +174,16 @@ if (!owner) {
   process.exit(1);
 }
 
-const key = generateLicense(mode, owner, '', days, secret);
+const key = generateLicense(mode, owner, machineId, days, secret);
+const maxActivations = mode === 'basica' ? 2 : 3;
 console.log('  ======================================================');
 console.log('  LICENCIA GENERADA');
 console.log('  ======================================================');
 console.log('  Plan:      ' + mode.toUpperCase());
 console.log('  Cliente:   ' + owner);
 console.log('  Valida por: ' + days + ' dias');
+if (machineId) console.log('  Machine ID: ' + machineId);
+console.log('  Max Activ: ' + maxActivations);
 console.log('  Licencia:  ' + key);
 console.log('');
 console.log('  Copie esta licencia y peguela en la pantalla de');

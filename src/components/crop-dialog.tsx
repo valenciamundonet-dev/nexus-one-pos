@@ -42,13 +42,12 @@ export function CropDialog({ open, imageSrc, onCropComplete, onCancel }: CropDia
     setDisplayScale(scale);
     setImgSize({ w: img.naturalWidth, h: img.naturalHeight });
 
-    // Inicializar área de recorte al centro, 80% de la imagen
-    const margin = img.naturalWidth * 0.1;
+    // Inicializar área de recorte al 100% de la imagen (sin margen)
     setCrop({
-      x: margin,
-      y: margin,
-      width: img.naturalWidth - margin * 2,
-      height: img.naturalHeight - margin * 2,
+      x: 0,
+      y: 0,
+      width: img.naturalWidth,
+      height: img.naturalHeight,
     });
   }, []);
 

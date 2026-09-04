@@ -645,7 +645,7 @@ export default function ProductsTab({ products, categories, brands, bcvRate, eur
                   const mg = product.cost > 0 && product.price > 0 ? ((product.price - product.cost) / product.price * 100) : 0;
                   return (
                     <tr key={product.id} className="border-t hover:bg-muted/30 cursor-pointer" onDoubleClick={() => openEdit(product)}>
-                      <td className="p-2">{product.image ? <img src={product.image} alt="" crossOrigin="anonymous" className="w-7 h-7 rounded object-cover" /> : <span className="text-base">{product.icon || ''}</span>}</td>
+                      <td className="p-2">{product.image ? <img src={product.image} alt="" crossOrigin="anonymous" className="w-7 h-7 rounded object-contain" /> : <span className="text-base">{product.icon || ''}</span>}</td>
                       <td className="p-2">
                         <div className="font-medium whitespace-normal min-w-[200px]">{product.name}
                           <div className="flex gap-1 mt-0.5">
@@ -958,7 +958,7 @@ export default function ProductsTab({ products, categories, brands, bcvRate, eur
             <Block title="Foto y Codigos de Barras" icon="📸" defaultOpen={false}>
               <div className="flex items-start gap-3">
                 <div className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50 flex-shrink-0">
-                  {formData.image ? <img src={formData.image} alt="Producto" crossOrigin="anonymous" className="w-full h-full object-cover" /> : <span className="text-2xl text-gray-300">📷</span>}
+                  {formData.image ? <img src={formData.image} alt="Producto" crossOrigin="anonymous" className="w-full h-full object-contain" /> : <span className="text-2xl text-gray-300">📷</span>}
                 </div>
                 <div className="space-y-2 flex-1">
                   <div className="flex gap-2">
